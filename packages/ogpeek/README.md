@@ -63,7 +63,9 @@ type OgDebugResult = {
 
 외부 URL을 가져와 HTML 문자열로 반환한다. 타임아웃, 응답 크기 상한, 리디렉션
 추적이 기본 내장. 리디렉션은 `redirect: "manual"` 로 받아 hop 마다
-`options.guard` 를 다시 돌린다.
+`options.guard` 를 다시 돌린다. 결과의 `redirects: { from, to, status }[]` 에
+모든 리디렉션 hop 이 발생 순서대로 담긴다 — UI 에서 "URL 입력 → 302 → 최종"
+같은 흐름을 그대로 그릴 수 있다.
 
 - `options.userAgent` — 외부 요청 User-Agent. 기본값은 브라우저 유사 UA.
 - `options.timeoutMs` — 요청 타임아웃. 기본 8000.

@@ -1,12 +1,14 @@
 import { parse, type OgDebugResult } from "ogpeek";
-import { FetchError, fetchHtml } from "ogpeek/fetch";
+import { FetchError, fetchHtml, type RedirectHop } from "ogpeek/fetch";
 import { ssrfGuard } from "./ssrf-guard";
+import { normalizeUrlInput } from "./url-normalize";
 
 export type ServerParseSuccess = {
   ok: true;
   target: string;
   finalUrl: string;
   status: number;
+  redirects: RedirectHop[];
   fetchedAt: string;
   result: OgDebugResult;
   // Raw HTML is opt-in: callers must pass { includeHtml: true } to avoid
@@ -35,12 +37,13 @@ export async function runParse(
   opts: RunParseOptions = {},
 ): Promise<ServerParseOutcome> {
   const target = rawUrl.trim();
+  const normalized = normalizeUrlInput(target);
   // When OGPEEK_USER_AGENT is unset we fall back to the engine's own
   // browser-like default — single source of truth lives in ogpeek/fetch.
   const userAgent = process.env.OGPEEK_USER_AGENT;
 
   try {
-    const fetched = await fetchHtml(target, {
+    const fetched = await fetchHtml(normalized, {
       ...(userAgent ? { userAgent } : {}),
       guard: ssrfGuard,
     });
@@ -51,6 +54,7 @@ export async function runParse(
       target,
       finalUrl: fetched.finalUrl,
       status: fetched.status,
+      redirects: fetched.redirects,
       fetchedAt: new Date().toISOString(),
       result,
     };

@@ -65,6 +65,7 @@ describe("fetchHtml()", () => {
     expect(result.status).toBe(200);
     expect(result.finalUrl).toBe("https://public.test/page");
     expect(result.html).toContain("<title>Hi</title>");
+    expect(result.redirects).toEqual([]);
   });
 
   it("rejects non-html content types", async () => {
@@ -118,6 +119,26 @@ describe("fetchHtml()", () => {
     expect(call).toBe(2);
     expect(result.finalUrl).toBe("https://public.test/final");
     expect(result.html).toContain("ok");
+    expect(result.redirects).toEqual([
+      { from: "https://public.test/", to: "https://public.test/final", status: 302 },
+    ]);
+  });
+
+  it("exposes status code per hop in the redirect chain", async () => {
+    let call = 0;
+    globalThis.fetch = vi.fn(async () => {
+      call++;
+      if (call === 1) return redirectResponse("https://public.test/hop1", 301);
+      if (call === 2) return redirectResponse("https://public.test/final", 308);
+      return mockResponse({ body: "<html>ok</html>" });
+    }) as typeof fetch;
+
+    const result = await fetchHtml("https://public.test/start");
+    expect(result.finalUrl).toBe("https://public.test/final");
+    expect(result.redirects).toEqual([
+      { from: "https://public.test/start", to: "https://public.test/hop1", status: 301 },
+      { from: "https://public.test/hop1", to: "https://public.test/final", status: 308 },
+    ]);
   });
 
   it("rejects redirect loops", async () => {

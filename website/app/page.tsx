@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { UrlInput } from "@/components/UrlInput";
 import { ValidationPanel } from "@/components/ValidationPanel";
+import { RedirectFlow } from "@/components/RedirectFlow";
 import { TagTable } from "@/components/TagTable";
 import { RawHtmlToggle } from "@/components/RawHtmlToggle";
 import { Preview } from "@/components/previews/Preview";
@@ -123,15 +124,17 @@ function Results({ outcome }: { outcome: PageOutcome }) {
     <div className="flex flex-col gap-6">
       <ValidationPanel warnings={outcome.result.warnings} />
 
+      <RedirectFlow
+        finalUrl={outcome.finalUrl}
+        status={outcome.status}
+        redirects={outcome.redirects}
+        canonical={outcome.result.meta.canonical}
+      />
+
       <TagTable result={outcome.result} />
 
       <section className="flex flex-col gap-2">
-        <header className="flex items-baseline justify-between">
-          <h2 className="text-sm font-medium">미리보기</h2>
-          <span className="text-xs text-[color:rgb(var(--muted))]">
-            {outcome.finalUrl} · HTTP {outcome.status}
-          </span>
-        </header>
+        <h2 className="text-sm font-medium">미리보기</h2>
         <div className="max-w-md">
           <Preview data={preview} />
         </div>
