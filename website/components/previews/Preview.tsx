@@ -1,6 +1,6 @@
 import type { PreviewData } from "./shared";
 
-export function Facebook({ data }: { data: PreviewData }) {
+export function Preview({ data }: { data: PreviewData }) {
   return (
     <figure className="overflow-hidden rounded-2xl border border-[color:rgb(var(--border))] bg-white">
       {data.image ? (

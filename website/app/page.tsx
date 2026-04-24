@@ -3,7 +3,7 @@ import { UrlInput } from "@/components/UrlInput";
 import { ValidationPanel } from "@/components/ValidationPanel";
 import { TagTable } from "@/components/TagTable";
 import { RawHtmlToggle } from "@/components/RawHtmlToggle";
-import { Facebook } from "@/components/previews/Facebook";
+import { Preview } from "@/components/previews/Preview";
 import { derivePreviewData } from "@/components/previews/shared";
 import { Hero } from "@/components/landing/Hero";
 import { Footer } from "@/components/landing/Footer";
@@ -133,7 +133,7 @@ function Results({ outcome }: { outcome: PageOutcome }) {
           </span>
         </header>
         <div className="max-w-md">
-          <Facebook data={preview} />
+          <Preview data={preview} />
         </div>
       </section>
 
