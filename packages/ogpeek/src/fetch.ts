@@ -19,10 +19,17 @@ export type FetchOptions = {
   fetch?: (url: string, init: RequestInit) => Promise<Response>;
 };
 
+export type RedirectHop = {
+  from: string;
+  to: string;
+  status: number;
+};
+
 export type FetchResult = {
   html: string;
   finalUrl: string;
   status: number;
+  redirects: RedirectHop[];
 };
 
 export class FetchError extends Error {
@@ -59,6 +66,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
 
   let finalRes: Response;
   let finalUrl: string;
+  let redirects: RedirectHop[];
   try {
     const hop = await followRedirects(target, {
       userAgent,
@@ -68,6 +76,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
     });
     finalRes = hop.res;
     finalUrl = hop.finalUrl;
+    redirects = hop.redirects;
   } catch (err) {
     if (err instanceof FetchError) throw err;
     if (err instanceof Error && err.name === "AbortError") {
@@ -114,7 +123,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   }
   buf += decoder.decode();
 
-  return { html: buf, finalUrl, status: finalRes.status };
+  return { html: buf, finalUrl, status: finalRes.status, redirects };
 }
 
 // Manual redirect following so every hop's URL goes through the caller-
@@ -129,8 +138,9 @@ async function followRedirects(
     fetch: (url: string, init: RequestInit) => Promise<Response>;
     signal: AbortSignal;
   },
-): Promise<{ res: Response; finalUrl: string }> {
+): Promise<{ res: Response; finalUrl: string; redirects: RedirectHop[] }> {
   const visited = new Set<string>([start.toString()]);
+  const redirects: RedirectHop[] = [];
   let current = start;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
@@ -146,7 +156,7 @@ async function followRedirects(
     });
 
     if (!isRedirect(res.status) || !res.headers.has("location")) {
-      return { res, finalUrl: current.toString() };
+      return { res, finalUrl: current.toString(), redirects };
     }
 
     await discard(res);
@@ -169,6 +179,7 @@ async function followRedirects(
         `redirect to unsupported scheme ${next.protocol}`,
       );
     }
+    redirects.push({ from: current.toString(), to: next.toString(), status: res.status });
     const key = next.toString();
     if (visited.has(key)) {
       throw new FetchError("REDIRECT_LOOP", 502, `redirect loop detected at ${key}`);
