@@ -20,11 +20,6 @@ export type FetchOptions = {
   timeoutMs?: number;
   maxBytes?: number;
   ssrf?: SsrfMode;
-  /**
-   * @deprecated `ssrf: false`를 사용하라. `ssrf` 옵션이 명시되지 않은 경우에만
-   *   레거시 호환으로 처리된다 (true → ssrf: false와 동등).
-   */
-  allowPrivateNetwork?: boolean;
 };
 
 export type FetchResult = {
@@ -58,7 +53,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
   const userAgent = opts.userAgent ?? DEFAULT_USER_AGENT;
-  const ssrf = resolveSsrfMode(opts);
+  const ssrf = opts.ssrf ?? "strict";
 
   const target = parseUrl(rawUrl);
 
@@ -205,13 +200,6 @@ function parseUrl(raw: string): URL {
     throw new FetchError("UNSUPPORTED_SCHEME", 400, "only http and https urls are supported");
   }
   return parsed;
-}
-
-function resolveSsrfMode(opts: FetchOptions): SsrfMode {
-  if (opts.ssrf !== undefined) return opts.ssrf;
-  // legacy: `allowPrivateNetwork: true` 는 가드를 끄는 것과 동등.
-  if (opts.allowPrivateNetwork === true) return false;
-  return "strict";
 }
 
 async function guardHost(hostname: string, mode: SsrfMode): Promise<void> {

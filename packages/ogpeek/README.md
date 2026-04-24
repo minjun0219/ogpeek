@@ -72,8 +72,6 @@ type OgDebugResult = {
   - `"hostname"` — hostname 문자열 검사만. `localhost`/`*.localhost`/리터럴
     사설 IP를 차단. DNS 리졸브 없음. 엣지 런타임 호환.
   - `false` — 검사 비활성. 신뢰된 URL만 처리하는 소비자용. **기본값을 끄지 마라**.
-- `options.allowPrivateNetwork` — (deprecated) `ssrf: false` 와 동등. `ssrf`
-  옵션이 명시되지 않은 경우에만 호환을 위해 처리된다.
 
 실패 시 `FetchError`(필드: `code`, `status`, `message`)를 throw한다.
 

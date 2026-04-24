@@ -22,46 +22,6 @@ pnpm -F website dev      # http://localhost:3000
 pnpm -F ogpeek test      # 35개 단위 테스트
 ```
 
-## 배포
-
-운영 배포는 **Docker**가 정본. 패키지 소개용 무료 호스팅으로 **Cloudflare
-Workers**를 보조 채널로 둔다.
-
-### Docker
-
-```bash
-docker build -t ogpeek -f website/Dockerfile .
-docker run --rm -p 3000:3000 -e NEXT_PUBLIC_MODE=public ogpeek
-# internal 모드 (사내용, 랜딩 숨김):
-docker run --rm -p 3000:3000 -e NEXT_PUBLIC_MODE=internal ogpeek
-```
-
-### Cloudflare Workers
-
-`@opennextjs/cloudflare` 어댑터로 빌드/배포한다. `website/wrangler.json`은
-`nodejs_compat` 플래그를 켜둔 상태.
-
-```bash
-pnpm -F website cf:build      # OpenNext 빌드 → .open-next/worker.js
-pnpm -F website cf:preview    # 로컬 wrangler 미리보기
-pnpm -F website cf:deploy     # 실제 배포 (wrangler login 필요)
-```
-
-엣지에서는 `node:dns/promises`의 `lookup()` 호출이 throw 할 수 있으므로
-SSRF 가드를 hostname 검사 모드로 두는 걸 권장한다 — 환경변수
-`OGPEEK_SSRF_MODE=hostname`. Workers Vars 또는 `wrangler.json` `vars` 에
-넣는다.
-
-## 환경 변수
-
-| 변수 | 기본값 | 설명 |
-| --- | --- | --- |
-| `NEXT_PUBLIC_MODE` | `public` | `public` 또는 `internal`. internal은 랜딩 숨김 + rate limit 해제 |
-| `OGPEEK_USER_AGENT` | 브라우저 유사 UA | 외부 페이지 fetch 시 사용할 User-Agent |
-| `OGPEEK_SSRF_MODE` | `strict` | `strict`(DNS 리졸브 + 사설 IP 차단) / `hostname`(문자열 검사만, 엣지 호환) / `off`(검사 비활성) |
-| `OGPEEK_ALLOW_PRIVATE_NETWORK` | `0` | (레거시) `1`로 설정 시 가드 해제. `OGPEEK_SSRF_MODE`가 우선 |
-| `OGPEEK_RATE_LIMIT_PER_MIN` | `20` | public 모드에서 IP당 분당 요청 수. 0 이하는 무제한 |
-
 ## 주요 검증 규칙
 
 `packages/ogpeek/src/validate.ts`에서 관리하는 12개 규칙:
