@@ -7,14 +7,6 @@ export function Hero() {
         <span className="size-1.5 rounded-full bg-emerald-500" />
         Open Graph debugger
       </div>
-      <h1 className="max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
-        어느 페이지든 오픈그래프 메타태그를
-        <br className="hidden sm:block" /> 바로 들여다봅니다.
-      </h1>
-      <p className="max-w-xl text-sm text-[color:rgb(var(--muted))] sm:text-base">
-        URL 한 줄로 카카오톡·슬랙·페이스북·X·링크드인에서의 실제 미리보기와
-        스펙 위반 경고를 즉시 확인하세요.
-      </p>
       <div className="w-full max-w-xl">
         <UrlInput />
       </div>

@@ -10,7 +10,6 @@ import { X } from "@/components/previews/X";
 import { LinkedIn } from "@/components/previews/LinkedIn";
 import { derivePreviewData } from "@/components/previews/shared";
 import { Hero } from "@/components/landing/Hero";
-import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
 import { clientIpFromHeaders, isPublicMode, rateLimit } from "@/lib/rate-limit";
@@ -92,7 +91,6 @@ function PublicLayout({ outcome }: { outcome: PageOutcome | null }) {
         <EmptyState />
       )}
 
-      <Features />
       <Footer />
     </main>
   );
@@ -129,6 +127,8 @@ function Results({ outcome }: { outcome: PageOutcome }) {
     <div className="flex flex-col gap-6">
       <ValidationPanel warnings={outcome.result.warnings} />
 
+      <TagTable result={outcome.result} />
+
       <section className="flex flex-col gap-2">
         <header className="flex items-baseline justify-between">
           <h2 className="text-sm font-medium">플랫폼 미리보기</h2>
@@ -144,8 +144,6 @@ function Results({ outcome }: { outcome: PageOutcome }) {
           <LinkedIn data={preview} />
         </div>
       </section>
-
-      <TagTable result={outcome.result} />
 
       {outcome.html ? <RawHtmlToggle html={outcome.html} /> : null}
     </div>
