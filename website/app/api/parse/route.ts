@@ -54,7 +54,10 @@ async function handle(req: Request): Promise<Response> {
   const { target, includeHtml: requestedInclude } = await readRequest(req);
   if (!target) {
     return NextResponse.json(
-      { ok: false, error: { code: "MISSING_URL", message: "url parameter is required" } },
+      {
+        ok: false,
+        error: { code: "MISSING_URL", status: 400, message: "url parameter is required" },
+      },
       { status: 400 },
     );
   }
@@ -67,8 +70,10 @@ async function handle(req: Request): Promise<Response> {
       return NextResponse.json(
         {
           ok: false,
+          target,
           error: {
             code: "RATE_LIMITED",
+            status: 429,
             message: `too many requests, retry in ${decision.retryAfterSec}s`,
           },
         },

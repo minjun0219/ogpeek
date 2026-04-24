@@ -77,14 +77,38 @@ function touch(key: string, bucket: Bucket): void {
   }
 }
 
-export function clientIpFromHeaders(h: Headers): string {
+// Structural type so we accept both the standard fetch `Headers` and Next's
+// ReadonlyHeaders (from next/headers), and stay decoupled from runtime-
+// specific types.
+export type HeaderBag = { get(name: string): string | null };
+
+// Platform-specific "real client" headers we'll trust before falling back to
+// the proxy chain. Order matters — most specific first. If none of these and
+// no x-forwarded-for/x-real-ip are present, we give up and return "unknown";
+// that means the limiter effectively becomes a global throttle, which is the
+// safest default for a misconfigured proxy. Operators that terminate TLS
+// elsewhere should ensure at least one of these is forwarded.
+const TRUSTED_CLIENT_IP_HEADERS = [
+  "cf-connecting-ip", // Cloudflare
+  "true-client-ip", // Akamai / Cloudflare Enterprise
+  "fly-client-ip", // Fly.io
+  "fastly-client-ip", // Fastly
+  "x-real-ip", // nginx
+];
+
+export function clientIpFromHeaders(h: HeaderBag): string {
+  for (const name of TRUSTED_CLIENT_IP_HEADERS) {
+    const v = h.get(name);
+    if (v) {
+      const trimmed = v.trim();
+      if (trimmed) return trimmed;
+    }
+  }
   const xff = h.get("x-forwarded-for");
   if (xff) {
     const first = xff.split(",")[0]?.trim();
     if (first) return first;
   }
-  const real = h.get("x-real-ip");
-  if (real) return real;
   return "unknown";
 }
 
