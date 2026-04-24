@@ -22,11 +22,6 @@ pnpm -F website dev      # http://localhost:3000
 pnpm -F ogpeek test      # 35개 단위 테스트
 ```
 
-## 배포 · 환경 변수
-
-Docker / Cloudflare Workers 배포 절차와 환경 변수 목록은
-[`website/README.md`](./website/README.md)에 정리돼 있다.
-
 ## 주요 검증 규칙
 
 `packages/ogpeek/src/validate.ts`에서 관리하는 12개 규칙:
