@@ -73,14 +73,11 @@ export async function runParse(
   }
 }
 
-// 우선순위: OGPEEK_SSRF_MODE 가 명시되어 있으면 그것을 사용,
-// 없으면 레거시 OGPEEK_ALLOW_PRIVATE_NETWORK=1 → 가드 끔, 그 외 strict.
 // Cloudflare Workers 등 엣지 배포에서는 OGPEEK_SSRF_MODE=hostname 권장.
 function resolveSsrfMode(): SsrfMode {
   const explicit = process.env.OGPEEK_SSRF_MODE?.trim().toLowerCase();
   if (explicit === "strict") return "strict";
   if (explicit === "hostname") return "hostname";
   if (explicit === "off" || explicit === "false") return false;
-  if (process.env.OGPEEK_ALLOW_PRIVATE_NETWORK === "1") return false;
   return "strict";
 }

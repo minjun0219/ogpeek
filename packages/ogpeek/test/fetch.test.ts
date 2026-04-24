@@ -100,12 +100,6 @@ describe("fetchHtml()", () => {
     });
   });
 
-  it("allows private ranges when allowPrivateNetwork is true", async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
-    const result = await fetchHtml("http://10.0.0.5/", { allowPrivateNetwork: true });
-    expect(result.html).toContain("ok");
-  });
-
   it("fetches and decodes an html body", async () => {
     globalThis.fetch = vi.fn(async () =>
       mockResponse({
@@ -248,13 +242,6 @@ describe("fetchHtml() — ssrf modes", () => {
     const result = await fetchHtml("http://10.0.0.5/", { ssrf: false });
     expect(result.html).toContain("ok");
     expect(mockedLookup).not.toHaveBeenCalled();
-  });
-
-  it("explicit ssrf option takes precedence over legacy allowPrivateNetwork", async () => {
-    // ssrf: "strict" overrides allowPrivateNetwork: true
-    await expect(
-      fetchHtml("http://10.0.0.1/", { ssrf: "strict", allowPrivateNetwork: true }),
-    ).rejects.toMatchObject({ code: "BLOCKED_PRIVATE_IP" });
   });
 
   it('strict mode reports SSRF_UNSUPPORTED when lookup throws "Not implemented"', async () => {
