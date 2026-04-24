@@ -4,9 +4,7 @@ export type PreviewData = {
   title: string;
   description: string;
   image: string | null;
-  siteName: string;
   domain: string;
-  finalUrl: string;
 };
 
 export function derivePreviewData(
@@ -33,8 +31,6 @@ export function derivePreviewData(
     title: og.title || tw["twitter:title"] || result.meta.title || domain,
     description: og.description || tw["twitter:description"] || "",
     image,
-    siteName: og.site_name || tw["twitter:site"] || domain,
     domain,
-    finalUrl,
   };
 }

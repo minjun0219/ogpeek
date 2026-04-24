@@ -153,6 +153,23 @@ describe("fetchHtml()", () => {
       code: "TIMEOUT",
     });
   });
+
+  it("uses injected fetch over globalThis.fetch", async () => {
+    globalThis.fetch = vi.fn(async () => {
+      throw new Error("globalThis.fetch should not be called");
+    }) as typeof fetch;
+    const customFetch = vi.fn(async () =>
+      mockResponse({ body: "<html>injected</html>", url: "https://public.test/" }),
+    );
+
+    const result = await fetchHtml("https://public.test/", {
+      fetch: customFetch as unknown as typeof fetch,
+    });
+
+    expect(customFetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(result.html).toContain("injected");
+  });
 });
 
 describe("fetchHtml() — guard hook", () => {

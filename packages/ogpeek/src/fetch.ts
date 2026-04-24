@@ -9,6 +9,14 @@ export type FetchOptions = {
    * 적절한 가드 구현이 다르므로 호출자 책임이다.
    */
   guard?: (url: URL) => Promise<void> | void;
+  /**
+   * 한 hop 의 HTTP 전송만 수행하는 함수. fetchHtml 이 각 리디렉션 hop 마다
+   * 이 함수를 호출해서 단일 Response 를 받는다. 리디렉션 추적 · timeout ·
+   * maxBytes · content-type 판정 · guard 호출은 fetchHtml 이 계속 소유하므로
+   * 이 주입점은 "전송 정책만" 바꾸는 좁은 슬롯이다 (커스텀 dispatcher,
+   * DoH 리졸버, mTLS 등). 기본값은 globalThis.fetch.
+   */
+  fetch?: (url: string, init: RequestInit) => Promise<Response>;
 };
 
 export type FetchResult = {
@@ -42,6 +50,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
   const userAgent = opts.userAgent ?? DEFAULT_USER_AGENT;
+  const fetchImpl = opts.fetch ?? fetch;
 
   const target = parseUrl(rawUrl);
 
@@ -54,6 +63,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
     const hop = await followRedirects(target, {
       userAgent,
       guard: opts.guard,
+      fetch: fetchImpl,
       signal: controller.signal,
     });
     finalRes = hop.res;
@@ -116,6 +126,7 @@ async function followRedirects(
   opts: {
     userAgent: string;
     guard: ((url: URL) => Promise<void> | void) | undefined;
+    fetch: (url: string, init: RequestInit) => Promise<Response>;
     signal: AbortSignal;
   },
 ): Promise<{ res: Response; finalUrl: string }> {
@@ -125,7 +136,7 @@ async function followRedirects(
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     await runGuard(opts.guard, current);
 
-    const res = await fetch(current.toString(), {
+    const res = await opts.fetch(current.toString(), {
       headers: {
         "user-agent": opts.userAgent,
         accept: "text/html,application/xhtml+xml",
