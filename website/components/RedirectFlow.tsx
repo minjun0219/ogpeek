@@ -9,8 +9,6 @@ type Props = {
 
 export function RedirectFlow({ finalUrl, status, redirects, canonical }: Props) {
   const canonicalDiffers = canonical != null && !sameResource(canonical, finalUrl);
-  if (redirects.length === 0 && !canonicalDiffers) return null;
-
   const initialUrl = redirects[0]?.from ?? finalUrl;
 
   return (
