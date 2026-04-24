@@ -1,4 +1,5 @@
 import { isIP } from "node:net";
+import { resolve4, resolve6 } from "node:dns/promises";
 import { FetchError } from "ogpeek/fetch";
 
 // ogpeek 엔진은 SSRF 정책을 판단하지 않는다 (fetchHtml FetchOptions.guard
@@ -6,13 +7,14 @@ import { FetchError } from "ogpeek/fetch";
 // 서버에서 fetch 하기 직전에 호출된다. 구현 전략:
 //   1) hostname 문자열 검사: localhost / *.localhost / 리터럴 사설 IP 차단.
 //   2) strict DNS 리졸브: resolve4/6 으로 hostname 을 IP 로 풀고 사설/루프백/
-//      링크로컬/CGNAT/멀티캐스트/메타데이터 대역을 차단.
+//      링크로컬/CGNAT/멀티캐스트(v4/v6)/메타데이터 대역을 차단.
 //
 // strict 단계는 Node 20+ 의 `node:dns/promises` 가 필요하며 API route 의
 // `export const runtime = "nodejs"` 를 전제한다. Cloudflare Workers 등
-// nodejs_compat 의 resolve4/6 이 미구현인 환경에서는 strict 단계가 throw
-// 하는데, 그 경우 호출자(website)가 배포 모드에 맞춰 hostname-only 로 대체
-// 하거나 배포 전략 자체를 재고해야 한다 — 엔진의 기본값을 뒤집는 게 아니라.
+// nodejs_compat 의 resolve4/6 이 "Not implemented" 로 reject 하는 환경에서는
+// `SSRF_UNSUPPORTED` 로 즉시 throw 한다 — 한 쪽이라도 미구현이면 공격자가
+// IPv4-only/IPv6-only 경로로 숨어 우회할 수 있으므로 partial pass 는 허용하지
+// 않는다.
 //
 // DNS rebinding TOCTOU: resolve 는 요청 전에, fetch() 는 연결 시에 다시 해석
 // 한다. 완전 방어는 검증한 IP 로 직접 connect 하고 Host/SNI 에 원 hostname 을
@@ -42,29 +44,40 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
   // 리터럴 IP는 assertSafeHostname 에서 이미 판정.
   if (isIP(hostname) !== 0) return;
 
-  let resolve4: typeof import("node:dns/promises").resolve4;
-  let resolve6: typeof import("node:dns/promises").resolve6;
-  try {
-    ({ resolve4, resolve6 } = await import("node:dns/promises"));
-  } catch {
-    throw new FetchError(
-      "SSRF_UNSUPPORTED",
-      500,
-      "current runtime does not support node:dns/promises",
-    );
+  const results = await Promise.allSettled([resolve4(hostname), resolve6(hostname)]);
+
+  // "Not implemented" 류 에러는 런타임 미지원이다 — ENODATA (해당 record
+  // type 없음) 같은 정상적 DNS 결과와 섞어서 DNS_FAILED 로 내보내면 안 된다.
+  // 한쪽이라도 미지원이면 가드가 무력화되는 것이므로 바로 500 으로 throw.
+  for (const [idx, r] of results.entries()) {
+    if (r.status !== "rejected") continue;
+    const msg = r.reason instanceof Error ? r.reason.message : String(r.reason);
+    if (/not implemented/i.test(msg)) {
+      throw new FetchError(
+        "SSRF_UNSUPPORTED",
+        500,
+        `dns.${idx === 0 ? "resolve4" : "resolve6"} is not implemented in this runtime: ${msg}`,
+      );
+    }
   }
 
-  const results = await Promise.allSettled([resolve4(hostname), resolve6(hostname)]);
   const addrs: Array<{ address: string; family: 4 | 6 }> = [];
   for (const [idx, r] of results.entries()) {
     if (r.status === "fulfilled") {
       for (const a of r.value) addrs.push({ address: a, family: idx === 0 ? 4 : 6 });
     }
   }
-  // 둘 다 실패했으면 DNS 자체가 실패한 것 — 명시적으로 보고.
+
+  // 둘 다 실패했고 미지원 케이스도 아니면 진짜 DNS 실패. 원인을 메시지에 남겨
+  // 운영 디버깅을 돕는다.
   if (addrs.length === 0) {
-    throw new FetchError("DNS_FAILED", 400, `failed to resolve "${hostname}"`);
+    const reasons = results
+      .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+      .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)))
+      .join("; ");
+    throw new FetchError("DNS_FAILED", 400, `failed to resolve "${hostname}": ${reasons}`);
   }
+
   for (const { address, family } of addrs) {
     if (isPrivateIp(address, family)) {
       throw new FetchError(
@@ -104,7 +117,8 @@ function isPrivateIpv6(ip: string): boolean {
   if (lower === "::" || lower === "::1") return true;
   if (lower.startsWith("fe80:") || lower.startsWith("fe8") || lower.startsWith("fe9")) return true;
   if (lower.startsWith("fea") || lower.startsWith("feb")) return true;
-  if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // fc00::/7
+  if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // fc00::/7 unique-local
+  if (lower.startsWith("ff")) return true; // ff00::/8 multicast
   if (lower.startsWith("::ffff:")) {
     const v4 = lower.slice("::ffff:".length);
     if (isIP(v4) === 4) return isPrivateIpv4(v4);
