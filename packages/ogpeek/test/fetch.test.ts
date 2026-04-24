@@ -13,7 +13,10 @@ vi.mock("node:dns/promises", () => {
   };
 });
 
+import * as dnsPromises from "node:dns/promises";
 import { FetchError, fetchHtml } from "../src/fetch";
+
+const mockedLookup = vi.mocked(dnsPromises.lookup);
 
 type MockResponseInit = {
   status?: number;
@@ -232,14 +235,19 @@ describe("fetchHtml() — ssrf modes", () => {
 
   it('"hostname" mode allows public hostnames whose DNS resolves to private (no lookup)', async () => {
     globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
+    mockedLookup.mockClear();
     const result = await fetchHtml("http://edge-private.test/", { ssrf: "hostname" });
     expect(result.html).toContain("ok");
+    // hostname 모드는 dns.lookup()을 절대 부르지 않는다 — 회귀 방지.
+    expect(mockedLookup).not.toHaveBeenCalled();
   });
 
-  it("ssrf: false skips all checks (private IP literal allowed)", async () => {
+  it("ssrf: false skips all checks (private IP literal allowed) and does not call lookup", async () => {
     globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
+    mockedLookup.mockClear();
     const result = await fetchHtml("http://10.0.0.5/", { ssrf: false });
     expect(result.html).toContain("ok");
+    expect(mockedLookup).not.toHaveBeenCalled();
   });
 
   it("explicit ssrf option takes precedence over legacy allowPrivateNetwork", async () => {
@@ -247,5 +255,14 @@ describe("fetchHtml() — ssrf modes", () => {
     await expect(
       fetchHtml("http://10.0.0.1/", { ssrf: "strict", allowPrivateNetwork: true }),
     ).rejects.toMatchObject({ code: "BLOCKED_PRIVATE_IP" });
+  });
+
+  it('strict mode reports SSRF_UNSUPPORTED when lookup throws "Not implemented"', async () => {
+    mockedLookup.mockImplementationOnce(async () => {
+      throw new Error("Not implemented");
+    });
+    await expect(
+      fetchHtml("https://public.test/", { ssrf: "strict" }),
+    ).rejects.toMatchObject({ code: "SSRF_UNSUPPORTED" });
   });
 });

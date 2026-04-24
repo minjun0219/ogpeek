@@ -1,12 +1,17 @@
-import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
+
+// `node:dns/promises`는 strict 모드에서만 필요하므로 모듈 최상단에서 정적
+// import 하지 않는다. dns 모듈 자체가 없거나 (Vercel Edge 등) lookup이
+// 미구현인 (Cloudflare Workers) 런타임에서도 hostname 모드/false 모드는
+// 영향 없이 로드되어야 한다. assertResolvesToPublic() 안에서 동적 import.
 
 // SSRF 가드 모드.
 // - "strict": DNS 리졸브 + 사설/루프백/링크로컬 대역 차단. node:dns/promises의
-//   lookup()을 사용하므로 Node.js 환경 전용 (Cloudflare Workers 등 엣지 런타임에선
-//   호출 시 throw). 기본값.
+//   lookup()을 사용하므로 Node.js 환경 전용. 엣지 런타임에서 strict로 호출하면
+//   동적 import / lookup 실패를 잡아 명시적 SSRF_UNSUPPORTED 에러로 안내한다.
+//   기본값.
 // - "hostname": hostname 문자열 검사만 — localhost·.localhost·리터럴 사설 IP 차단.
-//   DNS 리졸브 없음. 엣지 런타임 호환.
+//   DNS 리졸브 없음. node:dns 의존이 전혀 발생하지 않으므로 엣지 런타임 호환.
 // - false: SSRF 검사 비활성화 (소비자 책임).
 export type SsrfMode = "strict" | "hostname" | false;
 
@@ -241,15 +246,36 @@ function assertSafeHostname(hostname: string): void {
 // mitigating this would require connecting to the literal IP we validated
 // and sending the original Host header (plus SNI for HTTPS) — not feasible
 // without pulling in a custom undici Agent, which would outweigh the risk
-// for a workspace-only engine. If that changes, revisit here.
+// for the current scope. If that changes, revisit here.
 async function assertResolvesToPublic(hostname: string): Promise<void> {
   // 리터럴 IP는 이미 assertSafeHostname에서 사설 여부를 판정했으므로 통과시켜야 한다.
   if (isIP(hostname) !== 0) return;
 
+  let lookup: typeof import("node:dns/promises").lookup;
+  try {
+    ({ lookup } = await import("node:dns/promises"));
+  } catch {
+    throw new FetchError(
+      "SSRF_UNSUPPORTED",
+      500,
+      'current runtime does not support node:dns/promises; switch to ssrf: "hostname"',
+    );
+  }
+
   let resolved;
   try {
     resolved = await lookup(hostname, { all: true });
-  } catch {
+  } catch (err) {
+    // Cloudflare Workers 등에서는 lookup() 자체가 "Not implemented"로 throw 한다.
+    // 일반적인 DNS 실패와 구분해서 명시적인 안내 코드로 알린다.
+    const message = err instanceof Error ? err.message : String(err);
+    if (/not implemented/i.test(message)) {
+      throw new FetchError(
+        "SSRF_UNSUPPORTED",
+        500,
+        'current runtime does not implement dns.lookup(); switch to ssrf: "hostname"',
+      );
+    }
     throw new FetchError("DNS_FAILED", 400, `failed to resolve "${hostname}"`);
   }
   for (const { address, family } of resolved) {
