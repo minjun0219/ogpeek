@@ -19,7 +19,7 @@
     "ogpeek": "workspace:*",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "undici": "7.25.0"
+    "undici": "8.1.0"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.19.4",
