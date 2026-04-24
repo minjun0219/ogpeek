@@ -9,6 +9,15 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        serif: [
+          "var(--font-serif-kr)",
+          "Noto Serif KR",
+          "Nanum Myeongjo",
+          "Batang",
+          "ui-serif",
+          "Georgia",
+          "serif",
+        ],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
     },
