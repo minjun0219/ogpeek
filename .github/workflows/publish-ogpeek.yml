@@ -64,7 +64,6 @@ jobs:
       - name: Publish to npm
         working-directory: packages/ogpeek
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           DIST_TAG: ${{ github.event.inputs.tag || 'latest' }}
           DRY_RUN: ${{ github.event.inputs.dry-run || 'false' }}
         run: |
