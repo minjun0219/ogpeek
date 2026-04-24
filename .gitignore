@@ -3,7 +3,9 @@ dist/
 coverage/
 .next/
 out/
+.open-next/
 .turbo/
+.wrangler/
 .DS_Store
 *.log
 *.tsbuildinfo
