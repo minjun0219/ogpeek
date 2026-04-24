@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
+
+const notoSansKr = Noto_Sans_KR({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-sans-kr",
+});
 
 export const metadata: Metadata = {
   title: "ogpeek — 어느 페이지든 오픈그래프 메타태그를 바로 들여다봅니다",
@@ -10,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={notoSansKr.variable}>
       <body className="min-h-screen font-sans">{children}</body>
     </html>
   );
