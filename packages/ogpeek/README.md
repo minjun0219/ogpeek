@@ -72,6 +72,12 @@ type OgDebugResult = {
   리디렉션 hop 직전에 호출된다.** 차단하려면 `FetchError` 를 throw, 통과
   시키려면 그냥 return. 미지정 시 아무 검사도 하지 않는다 — ogpeek 은 SSRF
   정책을 판단하지 않는다.
+- `options.fetch` — `(url: string, init: RequestInit) => Promise<Response>`.
+  한 hop 의 HTTP 전송만 수행하는 함수. fetchHtml 이 각 리디렉션 hop 마다
+  이 함수를 호출해서 단일 응답을 받는다. 리디렉션 추적 · timeout · maxBytes
+  · content-type 판정 · guard 호출은 fetchHtml 이 계속 소유하므로 이 주입점
+  은 "전송 정책만" 바꾸는 좁은 슬롯이다 (커스텀 dispatcher, DoH 리졸버, mTLS
+  등). 기본값은 `globalThis.fetch`.
 
 실패 시 `FetchError`(필드: `code`, `status`, `message`)를 throw한다. 주요
 코드: `INVALID_URL`, `UNSUPPORTED_SCHEME`, `TIMEOUT`, `NETWORK`,
@@ -103,7 +109,9 @@ connect(DNS rebinding 방어) 순으로 쌓는다. `ipaddr.js` 로 대역을 분
 undici `Agent({ connect: { lookup } })` 로 검증한 IP 에 직접 connect 하는
 패턴이 표준이다. 전체 위협 모델과 구현 레퍼런스는 [OWASP SSRF Prevention
 Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)
-를 참고하라. 이 레포의 `website/lib/ssrf-guard.ts` 가 하나의 구체 예시다.
+를 참고하라. 이 레포의 `website/lib/ssrf-guard.ts` 가 pre-flight 가드의,
+`website/lib/safe-dispatcher.ts` 가 connect-time dispatcher 의 구체 예시다 —
+두 계층을 함께 꽂아 hop 마다 이중 검증한다.
 
 ## 경고 코드
 
