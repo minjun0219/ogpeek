@@ -1,4 +1,4 @@
-import type { OgDebugResult } from "ogpeek-core";
+import type { OgDebugResult } from "ogpeek";
 
 export function TagTable({ result }: { result: OgDebugResult }) {
   const groups = buildGroups(result);

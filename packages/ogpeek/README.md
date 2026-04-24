@@ -1,22 +1,22 @@
-# ogpeek-core
+# ogpeek
 
-ogpeek 웹 앱을 구동하는 OGP 엔진. **workspace 전용** — npm 배포 대상이 아니다.
+ogpeek 웹사이트를 구동하는 OGP 엔진. **workspace 전용** — npm 배포 대상이 아니다.
 
 두 개의 엔트리포인트로 구성된다.
 
 | 엔트리 | 용도 | 런타임 | 의존성 |
 | --- | --- | --- | --- |
-| `ogpeek-core` | `parse`, `validate`, 타입 | Node · Bun · Workers · 브라우저 어디서든 | `htmlparser2` |
-| `ogpeek-core/fetch` | 외부 URL 가져오기 + SSRF 가드 | Node 20+ only | `node:dns/promises`, `node:net` |
+| `ogpeek` | `parse`, `validate`, 타입 | Node · Bun · Workers · 브라우저 어디서든 | `htmlparser2` |
+| `ogpeek/fetch` | 외부 URL 가져오기 + SSRF 가드 | Node 20+ only | `node:dns/promises`, `node:net` |
 
-파서 루트 엔트리는 순수 로직이라 `ogpeek-core/fetch`를 import 하지 않는 한
+파서 루트 엔트리는 순수 로직이라 `ogpeek/fetch`를 import 하지 않는 한
 Node 전용 모듈이 번들에 끌려오지 않는다.
 
 ## 사용
 
 ```ts
-import { parse } from "ogpeek-core";
-import { fetchHtml } from "ogpeek-core/fetch";
+import { parse } from "ogpeek";
+import { fetchHtml } from "ogpeek/fetch";
 
 const { html, finalUrl } = await fetchHtml("https://ogp.me");
 const result = parse(html, { url: finalUrl });

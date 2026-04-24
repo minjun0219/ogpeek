@@ -1,5 +1,5 @@
 {
-  "name": "ogpeek",
+  "name": "ogpeek-monorepo",
   "private": true,
   "version": "0.2.0",
   "description": "peek into any page's Open Graph tags",
@@ -8,10 +8,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm -F web build",
+    "build": "pnpm -F website build",
     "test": "pnpm -r --filter './packages/*' test",
     "typecheck": "pnpm -r typecheck",
-    "dev": "pnpm -F web dev"
+    "dev": "pnpm -F website dev"
   },
   "devDependencies": {
     "typescript": "5.9.2"

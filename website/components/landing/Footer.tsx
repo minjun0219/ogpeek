@@ -37,7 +37,7 @@ export function Footer() {
               </a>
             </li>
             <li>Next.js 15 · TypeScript · Tailwind</li>
-            <li>ogpeek-core · htmlparser2 · Node 20+</li>
+            <li>ogpeek · htmlparser2 · Node 20+</li>
             <li className="pt-2 text-xs">
               &copy; {new Date().getFullYear()} ogpeek
             </li>

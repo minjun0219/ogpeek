@@ -1,7 +1,7 @@
 {
-  "name": "ogpeek-core",
+  "name": "ogpeek",
   "version": "0.2.0",
-  "description": "Parser, fetcher and validator that power ogpeek — peek into any page's Open Graph tags.",
+  "description": "Parser, fetcher and validator engine — peek into any page's Open Graph tags.",
   "private": true,
   "keywords": ["open-graph", "ogp", "og", "parser", "debug", "validator", "ogpeek"],
   "license": "MIT",

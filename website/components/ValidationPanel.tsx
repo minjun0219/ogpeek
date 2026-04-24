@@ -1,4 +1,4 @@
-import type { Warning } from "ogpeek-core";
+import type { Warning } from "ogpeek";
 import { cn } from "@/lib/cn";
 
 const SEVERITY_LABEL: Record<Warning["severity"], string> = {
