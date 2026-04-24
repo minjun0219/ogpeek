@@ -7,7 +7,7 @@ ogpeek 웹사이트를 구동하는 OGP 엔진.
 | 엔트리 | 용도 | 런타임 | 의존성 |
 | --- | --- | --- | --- |
 | `ogpeek` | `parse`, `validate`, 타입 | Node · Bun · Workers · 브라우저 어디서든 | `htmlparser2` |
-| `ogpeek/fetch` | 외부 URL 가져오기 + SSRF 가드 | Node 20+ (엣지 런타임은 `ssrf: "hostname"` 필요) | `node:dns/promises`, `node:net` |
+| `ogpeek/fetch` | 외부 URL 가져오기 + SSRF 가드 | Node 20+ 및 `nodejs_compat` Cloudflare Workers | `node:dns/promises`, `node:net` |
 
 파서 루트 엔트리는 순수 로직이라 `ogpeek/fetch`를 import 하지 않는 한
 Node 전용 모듈이 번들에 끌려오지 않는다.
@@ -66,11 +66,13 @@ type OgDebugResult = {
 - `options.timeoutMs` — 요청 타임아웃. 기본 8000.
 - `options.maxBytes` — 응답 크기 상한. 기본 5 MiB. 초과 시 스트림을 취소한다.
 - `options.ssrf` — SSRF 가드 모드. 기본 `"strict"`.
-  - `"strict"` — `node:dns/promises`의 `lookup()` 으로 hostname을 IP로
-    리졸브하고 사설/루프백/링크로컬 대역을 차단. **Node.js 환경 전용** (Cloudflare
-    Workers 등 엣지에서는 `lookup()` 이 throw할 수 있다).
+  - `"strict"` — `node:dns/promises`의 `resolve4()` / `resolve6()` 으로
+    A·AAAA 레코드를 DNS 서버에 직접 질의해 사설/루프백/링크로컬 대역을 차단.
+    Node.js 및 `nodejs_compat` 플래그가 켜진 Cloudflare Workers 양쪽에서
+    동작한다.
   - `"hostname"` — hostname 문자열 검사만. `localhost`/`*.localhost`/리터럴
-    사설 IP를 차단. DNS 리졸브 없음. 엣지 런타임 호환.
+    사설 IP를 차단. DNS 리졸브 없음. 엣지 런타임 호환이며 DNS subrequest
+    비용을 아끼고 싶을 때 적합.
   - `false` — 검사 비활성. 신뢰된 URL만 처리하는 소비자용. **기본값을 끄지 마라**.
 - `options.allowPrivateNetwork` — (deprecated) `ssrf: false` 와 동등. `ssrf`
   옵션이 명시되지 않은 경우에만 호환을 위해 처리된다.
@@ -79,12 +81,13 @@ type OgDebugResult = {
 
 ### 알려진 한계 — DNS rebinding (`"strict"` 모드)
 
-SSRF 가드의 strict 모드는 요청 **전에** `dns.lookup()`으로 hostname을 해석하지만,
-실제 `fetch()`는 연결 시점에 다시 해석한다. 공격자 제어 DNS가 첫 lookup에는
-공개 IP를, 연결 시에는 사설 IP를 돌려주는 시나리오에 TOCTOU 틈이 있다.
-완전한 방어는 검증한 리터럴 IP로 직접 연결하면서 원 hostname을 Host 헤더
-/ SNI에 넣는 커스텀 undici Agent가 필요하고, 현재 범위에는 과한 복잡도라
-도입하지 않았다. 공개 DNS가 신뢰 가능한 배포 환경을 전제한다.
+SSRF 가드의 strict 모드는 요청 **전에** `dns.resolve4()` / `dns.resolve6()` 으로
+hostname 을 해석하지만, 실제 `fetch()` 는 연결 시점에 다시 해석한다. 공격자 제어
+DNS 가 첫 질의에는 공개 IP 를, 연결 시에는 사설 IP 를 돌려주는 시나리오에
+TOCTOU 틈이 있다. 완전한 방어는 검증한 리터럴 IP 로 직접 연결하면서 원
+hostname 을 Host 헤더 / SNI 에 넣는 커스텀 undici Agent 가 필요하고, 현재
+범위에는 과한 복잡도라 도입하지 않았다. 공개 DNS 가 신뢰 가능한 배포 환경을
+전제한다.
 
 `"hostname"` 모드는 DNS 리졸브를 아예 하지 않으므로, **공개 hostname이 사설
 IP로 리졸브되는 경우는 통과시킨다**. Cloudflare Workers처럼 같은 네트워크 안에

@@ -2,13 +2,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("node:dns/promises", () => {
   return {
-    lookup: vi.fn(async (hostname: string) => {
-      if (hostname === "public.test") return [{ address: "93.184.216.34", family: 4 }];
-      if (hostname === "internal.test") return [{ address: "10.0.0.5", family: 4 }];
-      if (hostname === "loopback6.test") return [{ address: "::1", family: 6 }];
-      if (hostname === "missing.test") throw new Error("ENOTFOUND");
-      if (hostname === "edge-private.test") return [{ address: "10.0.0.5", family: 4 }];
-      return [{ address: "93.184.216.34", family: 4 }];
+    resolve4: vi.fn(async (hostname: string) => {
+      if (hostname === "public.test") return ["93.184.216.34"];
+      if (hostname === "internal.test") return ["10.0.0.5"];
+      if (hostname === "edge-private.test") return ["10.0.0.5"];
+      if (hostname === "missing.test") {
+        throw Object.assign(new Error("ENOTFOUND"), { code: "ENOTFOUND" });
+      }
+      if (hostname === "loopback6.test") {
+        throw Object.assign(new Error("ENODATA"), { code: "ENODATA" });
+      }
+      return ["93.184.216.34"];
+    }),
+    resolve6: vi.fn(async (hostname: string) => {
+      if (hostname === "loopback6.test") return ["::1"];
+      throw Object.assign(new Error("ENODATA"), { code: "ENODATA" });
     }),
   };
 });
@@ -16,7 +24,8 @@ vi.mock("node:dns/promises", () => {
 import * as dnsPromises from "node:dns/promises";
 import { FetchError, fetchHtml } from "../src/fetch";
 
-const mockedLookup = vi.mocked(dnsPromises.lookup);
+const mockedResolve4 = vi.mocked(dnsPromises.resolve4);
+const mockedResolve6 = vi.mocked(dnsPromises.resolve6);
 
 type MockResponseInit = {
   status?: number;
@@ -235,19 +244,23 @@ describe("fetchHtml() — ssrf modes", () => {
 
   it('"hostname" mode allows public hostnames whose DNS resolves to private (no lookup)', async () => {
     globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
-    mockedLookup.mockClear();
+    mockedResolve4.mockClear();
+    mockedResolve6.mockClear();
     const result = await fetchHtml("http://edge-private.test/", { ssrf: "hostname" });
     expect(result.html).toContain("ok");
-    // hostname 모드는 dns.lookup()을 절대 부르지 않는다 — 회귀 방지.
-    expect(mockedLookup).not.toHaveBeenCalled();
+    // hostname 모드는 DNS 를 절대 부르지 않는다 — 회귀 방지.
+    expect(mockedResolve4).not.toHaveBeenCalled();
+    expect(mockedResolve6).not.toHaveBeenCalled();
   });
 
   it("ssrf: false skips all checks (private IP literal allowed) and does not call lookup", async () => {
     globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
-    mockedLookup.mockClear();
+    mockedResolve4.mockClear();
+    mockedResolve6.mockClear();
     const result = await fetchHtml("http://10.0.0.5/", { ssrf: false });
     expect(result.html).toContain("ok");
-    expect(mockedLookup).not.toHaveBeenCalled();
+    expect(mockedResolve4).not.toHaveBeenCalled();
+    expect(mockedResolve6).not.toHaveBeenCalled();
   });
 
   it("explicit ssrf option takes precedence over legacy allowPrivateNetwork", async () => {
@@ -257,12 +270,29 @@ describe("fetchHtml() — ssrf modes", () => {
     ).rejects.toMatchObject({ code: "BLOCKED_PRIVATE_IP" });
   });
 
-  it('strict mode reports SSRF_UNSUPPORTED when lookup throws "Not implemented"', async () => {
-    mockedLookup.mockImplementationOnce(async () => {
+  it('strict mode reports SSRF_UNSUPPORTED when resolve4/resolve6 throw "Not implemented"', async () => {
+    mockedResolve4.mockImplementationOnce(async () => {
+      throw new Error("Not implemented");
+    });
+    mockedResolve6.mockImplementationOnce(async () => {
       throw new Error("Not implemented");
     });
     await expect(
       fetchHtml("https://public.test/", { ssrf: "strict" }),
     ).rejects.toMatchObject({ code: "SSRF_UNSUPPORTED" });
+  });
+
+  // Workers nodejs_compat lookup() 폴리필이 CNAME 체인의 호스트명을 address
+  // 로 반환하던 버그(예: www.naver.com → www.naver.com.nheos.com)를 resolve4
+  // 는 재현하지 않는다 — 최종 A 레코드 문자열 배열만 돌려준다. 회귀 방지.
+  it("public resolve4 returns proper IPv4 array and hostname passes strict", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({ body: "<html>ok</html>", url: "https://public.test/" }),
+    ) as typeof fetch;
+    mockedResolve4.mockClear();
+    mockedResolve6.mockClear();
+    const result = await fetchHtml("https://public.test/", { ssrf: "strict" });
+    expect(result.html).toContain("ok");
+    expect(mockedResolve4).toHaveBeenCalledWith("public.test");
   });
 });

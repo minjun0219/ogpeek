@@ -1,17 +1,19 @@
 import { isIP } from "node:net";
 
 // `node:dns/promises`는 strict 모드에서만 필요하므로 모듈 최상단에서 정적
-// import 하지 않는다. dns 모듈 자체가 없거나 (Vercel Edge 등) lookup이
-// 미구현인 (Cloudflare Workers) 런타임에서도 hostname 모드/false 모드는
-// 영향 없이 로드되어야 한다. assertResolvesToPublic() 안에서 동적 import.
+// import 하지 않는다. dns 모듈 자체가 없는 (Vercel Edge 등) 런타임에서도
+// hostname 모드/false 모드는 영향 없이 로드되어야 한다.
+// assertResolvesToPublic() 안에서 동적 import.
 
 // SSRF 가드 모드.
 // - "strict": DNS 리졸브 + 사설/루프백/링크로컬 대역 차단. node:dns/promises의
-//   lookup()을 사용하므로 Node.js 환경 전용. 엣지 런타임에서 strict로 호출하면
-//   동적 import / lookup 실패를 잡아 명시적 SSRF_UNSUPPORTED 에러로 안내한다.
-//   기본값.
+//   resolve4/resolve6 로 A·AAAA 레코드를 직접 조회하므로 Node.js 와
+//   `nodejs_compat` 플래그가 켜진 Cloudflare Workers 양쪽에서 동작한다.
+//   resolve4/6 자체가 구현되지 않은 런타임이면 명시적 SSRF_UNSUPPORTED 에러로
+//   안내한다. 기본값.
 // - "hostname": hostname 문자열 검사만 — localhost·.localhost·리터럴 사설 IP 차단.
-//   DNS 리졸브 없음. node:dns 의존이 전혀 발생하지 않으므로 엣지 런타임 호환.
+//   DNS 리졸브 없음. node:dns 의존이 전혀 발생하지 않으므로 엣지 런타임 호환이며
+//   DNS subrequest 비용도 아낄 수 있다.
 // - false: SSRF 검사 비활성화 (소비자 책임).
 export type SsrfMode = "strict" | "hostname" | false;
 
@@ -240,9 +242,9 @@ function assertSafeHostname(hostname: string): void {
 }
 
 // NOTE: DNS rebinding — this check resolves the hostname with
-// dns.lookup() *before* the request, but fetch() will re-resolve it at
-// connect time. An attacker-controlled DNS that returns a public IP for the
-// first lookup and a private IP for the connect opens a TOCTOU gap. Fully
+// dns.resolve4()/resolve6() *before* the request, but fetch() will re-resolve
+// it at connect time. An attacker-controlled DNS that returns a public IP for
+// the first lookup and a private IP for the connect opens a TOCTOU gap. Fully
 // mitigating this would require connecting to the literal IP we validated
 // and sending the original Host header (plus SNI for HTTPS) — not feasible
 // without pulling in a custom undici Agent, which would outweigh the risk
@@ -251,9 +253,10 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
   // 리터럴 IP는 이미 assertSafeHostname에서 사설 여부를 판정했으므로 통과시켜야 한다.
   if (isIP(hostname) !== 0) return;
 
-  let lookup: typeof import("node:dns/promises").lookup;
+  let resolve4: typeof import("node:dns/promises").resolve4;
+  let resolve6: typeof import("node:dns/promises").resolve6;
   try {
-    ({ lookup } = await import("node:dns/promises"));
+    ({ resolve4, resolve6 } = await import("node:dns/promises"));
   } catch {
     throw new FetchError(
       "SSRF_UNSUPPORTED",
@@ -262,30 +265,48 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
     );
   }
 
-  let resolved;
-  try {
-    resolved = await lookup(hostname, { all: true });
-  } catch (err) {
-    // Cloudflare Workers 등에서는 lookup() 자체가 "Not implemented"로 throw 한다.
-    // 일반적인 DNS 실패와 구분해서 명시적인 안내 코드로 알린다.
-    const message = err instanceof Error ? err.message : String(err);
-    if (/not implemented/i.test(message)) {
+  // resolve4/resolve6 는 A/AAAA 레코드를 DNS 서버에서 직접 가져와 IP 문자열
+  // 배열을 돌려준다. lookup()과 달리 CNAME 체인은 DNS 서버가 따라가 최종
+  // 레코드만 반환하므로, Cloudflare Workers nodejs_compat 의 lookup() 폴리필이
+  // CNAME 체인의 호스트명을 address 로 반환하는 버그를 우회할 수 있다.
+  const [v4, v6] = await Promise.allSettled([resolve4(hostname), resolve6(hostname)]);
+
+  if (v4.status === "fulfilled") {
+    for (const ip of v4.value) {
+      if (isPrivateIp(ip, 4)) {
+        throw new FetchError(
+          "BLOCKED_PRIVATE_IP",
+          400,
+          `hostname "${hostname}" resolves to private ip ${ip}`,
+        );
+      }
+    }
+  }
+  if (v6.status === "fulfilled") {
+    for (const ip of v6.value) {
+      if (isPrivateIp(ip, 6)) {
+        throw new FetchError(
+          "BLOCKED_PRIVATE_IP",
+          400,
+          `hostname "${hostname}" resolves to private ip ${ip}`,
+        );
+      }
+    }
+  }
+
+  // AAAA-only 도메인에서 resolve4 가 ENODATA 로 실패하는 건 정상이므로
+  // "하나라도 성공" 이면 통과. 둘 다 실패일 때만 에러를 구분해서 올린다.
+  if (v4.status === "rejected" && v6.status === "rejected") {
+    const msg4 = v4.reason instanceof Error ? v4.reason.message : String(v4.reason);
+    const msg6 = v6.reason instanceof Error ? v6.reason.message : String(v6.reason);
+    if (/not implemented/i.test(msg4) || /not implemented/i.test(msg6)) {
       throw new FetchError(
         "SSRF_UNSUPPORTED",
         500,
-        'current runtime does not implement dns.lookup(); switch to ssrf: "hostname"',
+        'current runtime does not implement dns.resolve4/resolve6; switch to ssrf: "hostname"',
       );
     }
     throw new FetchError("DNS_FAILED", 400, `failed to resolve "${hostname}"`);
-  }
-  for (const { address, family } of resolved) {
-    if (isPrivateIp(address, family)) {
-      throw new FetchError(
-        "BLOCKED_PRIVATE_IP",
-        400,
-        `hostname "${hostname}" resolves to private ip ${address}`,
-      );
-    }
   }
 }
 
