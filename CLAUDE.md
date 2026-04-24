@@ -57,9 +57,9 @@ pnpm -F website cf:deploy  # Workers 배포
 
 ## 디렉토리 약속
 
-- API route는 `website/app/api/<name>/route.ts`에 둔다. runtime은
-  `nodejs`이어야 한다 (`website/lib/ssrf-guard.ts` 가 `node:dns/promises`
-  `resolve4/6` 을 쓰기 때문).
+- API route는 `website/app/api/<name>/route.ts`에 둔다. runtime 은 별도로
+  지정하지 않는다 — `lib/ssrf-guard.ts` 가 DoH(`cloudflare-dns.com/dns-query`)
+  를 fetch 하므로 Node 도, Workers 도 동일하게 굴러간다.
 - 플랫폼 프리뷰는 `website/components/previews/*.tsx` 하나 파일 = 하나 플랫폼.
 - 서버 전용 로직은 `website/lib/*.ts`, 클라이언트 컴포넌트는 `"use client"`
   지시문을 파일 최상단에 둔다.
@@ -85,19 +85,21 @@ Docker / Vercel / 자체 호스팅 옵션은 모두 정리했다 — website 는
 - `website/open-next.config.ts` — OpenNext 어댑터 설정. 기본은 인메모리 캐시.
 - `website/package.json` 의 `cf:build` / `cf:preview` / `cf:deploy` 스크립트.
 
-### SSRF 가드와 런타임 차이
+### SSRF 가드와 런타임
 
-`website/lib/ssrf-guard.ts` 는 `node:dns/promises` `resolve4/6` 을 쓰고,
-`website/lib/safe-dispatcher.ts` 는 undici `Agent` 의 custom `connect.lookup`
-으로 connect-time IP 재검증을 한다. 둘 다 **Node-only** 다 — 로컬 dev (Node
-24) 에서는 동작하지만, Workers 런타임에는 raw TCP / 완전한 `node:dns` 가
-없어서 그대로 굴러가지 않는다.
+`website/lib/ssrf-guard.ts` 는 hostname 문자열 검사 + Cloudflare DoH JSON
+API(`cloudflare-dns.com/dns-query`) 로 A/AAAA 를 풀고 `ipaddr.js` 의
+`range()` 로 사설/예약 대역을 일괄 차단한다. fetch() 한 발만 쓰니 Node 와
+Workers 양쪽에서 동일하게 동작한다 — Node-only 의존(`node:dns`, undici
+Agent) 은 모두 제거됐다.
 
-엔진은 SSRF 정책을 판단하지 않는다(원칙 3). 호환 가드 구현을 깔끔하게 정리
-하기 전까지는 데모 사이트의 SSRF 방어가 Workers 런타임에서 부분적으로만
-작동한다는 사실을 인지하고, 새 가드를 짤 때는 hostname-only 검사 + DoH
-어댑터(예: `1.1.1.1/dns-query` fetch) 조합 같은 Workers-호환 경로로 재설계
-하라.
+DNS rebinding TOCTOU 창은 열려 있다(검증 시점 IP 와 실제 fetch connect
+시점 IP 사이). Workers 는 raw TCP 를 열어주지 않아 connect-time IP pinning
+이 불가능하므로 데모 수준에서는 의도적으로 얕은 방어까지만 둔다 — 운영용
+도구가 아니라 엔진 소개 사이트라는 위치 매김 하에 합의된 trade-off.
+
+엔진은 SSRF 정책을 판단하지 않는다(원칙 3). 가드를 손볼 때는 ssrf-guard.ts
+한 곳만 수정하고, 엔진(`packages/ogpeek`) 으로 SSRF 로직이 새지 않게 해라.
 
 ## 제외 사항
 

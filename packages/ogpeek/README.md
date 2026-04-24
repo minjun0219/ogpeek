@@ -104,14 +104,15 @@ await fetchHtml(userInput, {
 });
 ```
 
-실전 가드는 hostname 검사 → DNS 리졸브 → IP 대역 분류 → pinned
-connect(DNS rebinding 방어) 순으로 쌓는다. `ipaddr.js` 로 대역을 분류하고
-undici `Agent({ connect: { lookup } })` 로 검증한 IP 에 직접 connect 하는
-패턴이 표준이다. 전체 위협 모델과 구현 레퍼런스는 [OWASP SSRF Prevention
-Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)
-를 참고하라. 이 레포의 `website/lib/ssrf-guard.ts` 가 pre-flight 가드의,
-`website/lib/safe-dispatcher.ts` 가 connect-time dispatcher 의 구체 예시다 —
-두 계층을 함께 꽂아 hop 마다 이중 검증한다.
+실전 가드는 hostname 검사 → DNS 리졸브 → IP 대역 분류 순으로 쌓는다.
+`ipaddr.js` 로 대역을 분류하고, Node 환경이라면 undici
+`Agent({ connect: { lookup } })` 로 검증한 IP 에 직접 connect 해 DNS rebinding
+까지 막는 게 정석. 엣지 런타임 (Cloudflare Workers 등) 은 raw TCP 를 열어주지
+않으니 DoH(`cloudflare-dns.com/dns-query`) + hostname 검사 까지가 현실적인
+범위다. 전체 위협 모델과 구현 레퍼런스는 [OWASP SSRF Prevention Cheat
+Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)
+참고. 이 레포의 `website/lib/ssrf-guard.ts` 가 Workers 호환 DoH 가드의 구체
+예시다.
 
 ## 경고 코드
 

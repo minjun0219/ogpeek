@@ -22,17 +22,22 @@ pnpm -F website cf:preview  # 로컬 wrangler 미리보기
 pnpm -F website cf:deploy   # 실제 배포 (wrangler login 필요)
 ```
 
-## SSRF 가드와 런타임 차이
+## SSRF 가드
 
-`lib/ssrf-guard.ts` (pre-flight DNS 검사) 와 `lib/safe-dispatcher.ts`
-(connect-time IP 재검증) 는 **Node-only** 구현이다 — `node:dns/promises` 와
-undici `Agent` 의 custom `connect.lookup` 을 쓴다. 로컬 dev 서버 (Node 24)
-에서는 둘 다 동작하지만, Workers 런타임에는 raw TCP / 완전한 `node:dns` 가
-없어서 그대로 적용되지 않는다.
+`lib/ssrf-guard.ts` 는 다음 두 단계로 동작한다:
 
-엔진(`packages/ogpeek`)은 SSRF 정책을 판단하지 않는다. 데모 사이트의 가드를
-Workers 호환으로 재설계할 때까지는 hostname-only 검사 + DoH 어댑터(예:
-`1.1.1.1/dns-query` 를 fetch) 조합으로 갈아끼우는 경로를 권장한다.
+1. **hostname 검사** — `localhost` / `*.localhost` / 리터럴 사설 IP 차단.
+2. **DoH(DNS-over-HTTPS) 조회** — Cloudflare 의 `cloudflare-dns.com/dns-query`
+   JSON API 로 A/AAAA 를 받아 `ipaddr.js` `range()` 가 `unicast` 가 아닌 모든
+   대역을 차단.
+
+fetch() 한 발이면 끝나므로 Node 도, Workers 도 동일하게 동작한다 — 별도의
+runtime 분기 없이 같은 코드 경로.
+
+DNS rebinding 완전 방어는 connect-time IP pinning(검증한 IP 로 직접 connect)
+이 필요하지만 Workers 는 raw TCP 를 열어주지 않는다. 데모 사이트라는 위치
+매김 상 의도적으로 얕은 방어까지만 둔 것 — 운영용 도구로 쓰려면 자체 호스팅
+인스턴스에서 undici Agent + node:dns 기반 connect-time 가드를 따로 짜라.
 
 ## 환경 변수
 

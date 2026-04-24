@@ -1,6 +1,5 @@
 import { parse, type OgDebugResult } from "ogpeek";
 import { FetchError, fetchHtml } from "ogpeek/fetch";
-import { safeFetch } from "./safe-dispatcher";
 import { ssrfGuard } from "./ssrf-guard";
 
 export type ServerParseSuccess = {
@@ -44,7 +43,6 @@ export async function runParse(
     const fetched = await fetchHtml(target, {
       ...(userAgent ? { userAgent } : {}),
       guard: ssrfGuard,
-      fetch: safeFetch,
     });
     const result = parse(fetched.html, { url: fetched.finalUrl });
 
