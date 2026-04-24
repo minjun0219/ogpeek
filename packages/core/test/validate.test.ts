@@ -63,4 +63,32 @@ describe("validate()", () => {
     const prefix = result.warnings.find((w) => w.code === "MISSING_PREFIX_ATTR");
     expect(prefix?.severity).toBe("info");
   });
+
+  it("flags titles longer than 60 characters", () => {
+    const long = "가".repeat(61);
+    const html = `<html><head><title>T</title><meta property="og:title" content="${long}"><meta property="og:type" content="website"><meta property="og:url" content="https://a.com"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
+    const result = parse(html);
+    const tooLong = result.warnings.find((w) => w.code === "OG_TITLE_TOO_LONG");
+    expect(tooLong?.severity).toBe("warn");
+    expect(tooLong?.value).toBe(long);
+  });
+
+  it("accepts titles at exactly 60 characters", () => {
+    const ok = "가".repeat(60);
+    const html = `<html><head><title>T</title><meta property="og:title" content="${ok}"><meta property="og:type" content="website"><meta property="og:url" content="https://a.com"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
+    const got = codes(parse(html).warnings);
+    expect(got).not.toContain("OG_TITLE_TOO_LONG");
+  });
+
+  it("flags mismatched og:url vs requested URL", () => {
+    const html = `<html><head><title>T</title><meta property="og:title" content="T"><meta property="og:type" content="website"><meta property="og:url" content="https://canonical.example/"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
+    const got = codes(parse(html, { url: "https://staging.example/path" }).warnings);
+    expect(got).toContain("OG_URL_MISMATCH");
+  });
+
+  it("treats trailing-slash-only differences as same resource", () => {
+    const html = `<html><head><title>T</title><meta property="og:title" content="T"><meta property="og:type" content="website"><meta property="og:url" content="https://a.com/"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
+    const got = codes(parse(html, { url: "https://a.com" }).warnings);
+    expect(got).not.toContain("OG_URL_MISMATCH");
+  });
 });

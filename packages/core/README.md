@@ -1,19 +1,17 @@
-# og-debug
+# ogpeek-core
 
-Open Graph Protocol 파서. HTML 문자열을 받아 OGP 메타를 구조화된 트리와
-경고 목록으로 돌려준다. fetch/DOM 의존성 없음 — Node, Bun, Cloudflare
-Workers, 브라우저에서 동일하게 동작한다.
-
-## 설치
-
-```bash
-npm install og-debug
-```
+ogpeek 웹 앱을 구동하는 OGP 엔진. 외부 URL 가져오기(`fetch`), head 스캔 기반
+파싱(`parse`), 스펙 검증(`validate`)을 한 곳에 모았다. DOM 의존성 없음 — Node,
+Bun, Cloudflare Workers, 브라우저에서 동일하게 동작한다. workspace 전용 —
+npm 배포 대상이 아니다.
 
 ## 사용
 
 ```ts
-import { parse } from "og-debug";
+import { fetch, parse } from "ogpeek-core";
+
+const { html, finalUrl } = await fetch("https://ogp.me");
+const result = parse(html, { url: finalUrl });
 
 const html = await (await fetch("https://ogp.me")).text();
 const result = parse(html, { url: "https://ogp.me" });
@@ -59,9 +57,11 @@ type OgDebugResult = {
 | code | severity | 설명 |
 | --- | --- | --- |
 | `OG_TITLE_MISSING` | error | `og:title` 누락 |
+| `OG_TITLE_TOO_LONG` | warn | `og:title` 이 60자 초과 — 카카오톡에서 잘림 |
 | `OG_TYPE_MISSING` | error | `og:type` 누락 |
 | `OG_IMAGE_MISSING` | error | `og:image` 누락 |
 | `OG_URL_MISSING` | error | `og:url` 누락 |
+| `OG_URL_MISMATCH` | warn | `og:url` 이 실제 요청 URL과 host/path가 다름 |
 | `OG_TYPE_UNKNOWN` | warn | `og:type` 값이 OGP 스펙 화이트리스트에 없음 |
 | `URL_NOT_ABSOLUTE` | warn | URL 계열 속성이 절대 URL 아님 |
 | `DUPLICATE_SINGLETON` | warn | 단일값 속성이 여러 번 선언됨 |

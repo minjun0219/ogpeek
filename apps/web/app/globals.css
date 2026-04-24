@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 255 255 255;
+  --foreground: 17 24 39;
+  --muted: 107 114 128;
+  --surface: 249 250 251;
+  --border: 229 231 235;
+  --accent: 16 185 129;
+  --danger: 239 68 68;
+  --warning: 245 158 11;
+  --info: 59 130 246;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 15 17 21;
+    --foreground: 226 232 240;
+    --muted: 148 163 184;
+    --surface: 24 28 35;
+    --border: 44 50 60;
+  }
+}
+
+html,
+body {
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+}
+
+body {
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
