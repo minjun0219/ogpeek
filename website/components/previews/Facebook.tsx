@@ -3,9 +3,6 @@ import type { PreviewData } from "./shared";
 export function Facebook({ data }: { data: PreviewData }) {
   return (
     <figure className="overflow-hidden rounded-2xl border border-[color:rgb(var(--border))] bg-white">
-      <figcaption className="border-b border-slate-200 px-4 py-2 text-xs font-medium text-slate-700">
-        Facebook
-      </figcaption>
       {data.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
