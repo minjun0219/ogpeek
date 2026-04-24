@@ -1,13 +1,14 @@
 # ogpeek
 
-ogpeek 웹사이트를 구동하는 OGP 엔진. **workspace 전용** — npm 배포 대상이 아니다.
+ogpeek 웹사이트를 구동하는 OGP 엔진. 현재는 workspace 내부에서만 쓰이지만
+**추후 npm 공개 패키지로 배포 예정**이다.
 
 두 개의 엔트리포인트로 구성된다.
 
 | 엔트리 | 용도 | 런타임 | 의존성 |
 | --- | --- | --- | --- |
 | `ogpeek` | `parse`, `validate`, 타입 | Node · Bun · Workers · 브라우저 어디서든 | `htmlparser2` |
-| `ogpeek/fetch` | 외부 URL 가져오기 + SSRF 가드 | Node 20+ only | `node:dns/promises`, `node:net` |
+| `ogpeek/fetch` | 외부 URL 가져오기 + SSRF 가드 | Node 20+ (엣지 런타임은 `ssrf: "hostname"` 필요) | `node:dns/promises`, `node:net` |
 
 파서 루트 엔트리는 순수 로직이라 `ogpeek/fetch`를 import 하지 않는 한
 Node 전용 모듈이 번들에 끌려오지 않는다.
@@ -60,25 +61,35 @@ type OgDebugResult = {
 ### `fetchHtml(url: string, options?: FetchOptions): Promise<FetchResult>`
 
 외부 URL을 가져와 HTML 문자열로 반환한다. SSRF 가드, 타임아웃, 응답 크기
-상한이 기본 내장.
+상한이 기본 내장. 리디렉션은 `redirect: "manual"` 로 받아 hop 마다 가드를 다시 돌린다.
 
 - `options.userAgent` — 외부 요청 User-Agent. 기본값은 브라우저 유사 UA.
 - `options.timeoutMs` — 요청 타임아웃. 기본 8000.
 - `options.maxBytes` — 응답 크기 상한. 기본 5 MiB. 초과 시 스트림을 취소한다.
-- `options.allowPrivateNetwork` — `true`일 때만 사설/루프백/링크로컬 대역을
-  허용한다. 기본 `false`. 리디렉션 체인의 모든 hop을 동일 기준으로 검증한다.
+- `options.ssrf` — SSRF 가드 모드. 기본 `"strict"`.
+  - `"strict"` — `node:dns/promises`의 `lookup()` 으로 hostname을 IP로
+    리졸브하고 사설/루프백/링크로컬 대역을 차단. **Node.js 환경 전용** (Cloudflare
+    Workers 등 엣지에서는 `lookup()` 이 throw할 수 있다).
+  - `"hostname"` — hostname 문자열 검사만. `localhost`/`*.localhost`/리터럴
+    사설 IP를 차단. DNS 리졸브 없음. 엣지 런타임 호환.
+  - `false` — 검사 비활성. 신뢰된 URL만 처리하는 소비자용. **기본값을 끄지 마라**.
+- `options.allowPrivateNetwork` — (deprecated) `ssrf: false` 와 동등. `ssrf`
+  옵션이 명시되지 않은 경우에만 호환을 위해 처리된다.
 
 실패 시 `FetchError`(필드: `code`, `status`, `message`)를 throw한다.
 
-### 알려진 한계 — DNS rebinding
+### 알려진 한계 — DNS rebinding (`"strict"` 모드)
 
-SSRF 가드는 요청 **전에** `dns.lookup()`으로 hostname을 해석하지만, 실제
-`fetch()`는 연결 시점에 다시 해석한다. 공격자 제어 DNS가 첫 lookup에는
+SSRF 가드의 strict 모드는 요청 **전에** `dns.lookup()`으로 hostname을 해석하지만,
+실제 `fetch()`는 연결 시점에 다시 해석한다. 공격자 제어 DNS가 첫 lookup에는
 공개 IP를, 연결 시에는 사설 IP를 돌려주는 시나리오에 TOCTOU 틈이 있다.
 완전한 방어는 검증한 리터럴 IP로 직접 연결하면서 원 hostname을 Host 헤더
-/ SNI에 넣는 커스텀 undici Agent가 필요하고, workspace 전용 엔진 범위에는
-과한 복잡도라 현재는 도입하지 않았다. 공개 DNS가 신뢰 가능한 배포 환경을
-전제한다.
+/ SNI에 넣는 커스텀 undici Agent가 필요하고, 현재 범위에는 과한 복잡도라
+도입하지 않았다. 공개 DNS가 신뢰 가능한 배포 환경을 전제한다.
+
+`"hostname"` 모드는 DNS 리졸브를 아예 하지 않으므로, **공개 hostname이 사설
+IP로 리졸브되는 경우는 통과시킨다**. Cloudflare Workers처럼 같은 네트워크 안에
+사설 자원이 없는 엣지 런타임 한정으로 사용하라.
 
 ## 경고 코드
 

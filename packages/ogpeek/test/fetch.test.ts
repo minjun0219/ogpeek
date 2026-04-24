@@ -7,6 +7,7 @@ vi.mock("node:dns/promises", () => {
       if (hostname === "internal.test") return [{ address: "10.0.0.5", family: 4 }];
       if (hostname === "loopback6.test") return [{ address: "::1", family: 6 }];
       if (hostname === "missing.test") throw new Error("ENOTFOUND");
+      if (hostname === "edge-private.test") return [{ address: "10.0.0.5", family: 4 }];
       return [{ address: "93.184.216.34", family: 4 }];
     }),
   };
@@ -210,5 +211,41 @@ describe("fetchHtml()", () => {
     await expect(fetchHtml("https://public.test/", { timeoutMs: 10 })).rejects.toMatchObject({
       code: "TIMEOUT",
     });
+  });
+});
+
+describe("fetchHtml() — ssrf modes", () => {
+  it('"hostname" mode blocks loopback names without DNS lookup', async () => {
+    await expect(fetchHtml("http://localhost/", { ssrf: "hostname" })).rejects.toMatchObject({
+      code: "BLOCKED_PRIVATE_HOST",
+    });
+  });
+
+  it('"hostname" mode blocks literal private IPs', async () => {
+    await expect(fetchHtml("http://10.0.0.1/", { ssrf: "hostname" })).rejects.toMatchObject({
+      code: "BLOCKED_PRIVATE_IP",
+    });
+    await expect(fetchHtml("http://169.254.169.254/", { ssrf: "hostname" })).rejects.toMatchObject({
+      code: "BLOCKED_PRIVATE_IP",
+    });
+  });
+
+  it('"hostname" mode allows public hostnames whose DNS resolves to private (no lookup)', async () => {
+    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
+    const result = await fetchHtml("http://edge-private.test/", { ssrf: "hostname" });
+    expect(result.html).toContain("ok");
+  });
+
+  it("ssrf: false skips all checks (private IP literal allowed)", async () => {
+    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
+    const result = await fetchHtml("http://10.0.0.5/", { ssrf: false });
+    expect(result.html).toContain("ok");
+  });
+
+  it("explicit ssrf option takes precedence over legacy allowPrivateNetwork", async () => {
+    // ssrf: "strict" overrides allowPrivateNetwork: true
+    await expect(
+      fetchHtml("http://10.0.0.1/", { ssrf: "strict", allowPrivateNetwork: true }),
+    ).rejects.toMatchObject({ code: "BLOCKED_PRIVATE_IP" });
   });
 });

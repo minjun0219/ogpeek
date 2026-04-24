@@ -1,10 +1,24 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 
+// SSRF 가드 모드.
+// - "strict": DNS 리졸브 + 사설/루프백/링크로컬 대역 차단. node:dns/promises의
+//   lookup()을 사용하므로 Node.js 환경 전용 (Cloudflare Workers 등 엣지 런타임에선
+//   호출 시 throw). 기본값.
+// - "hostname": hostname 문자열 검사만 — localhost·.localhost·리터럴 사설 IP 차단.
+//   DNS 리졸브 없음. 엣지 런타임 호환.
+// - false: SSRF 검사 비활성화 (소비자 책임).
+export type SsrfMode = "strict" | "hostname" | false;
+
 export type FetchOptions = {
   userAgent?: string;
   timeoutMs?: number;
   maxBytes?: number;
+  ssrf?: SsrfMode;
+  /**
+   * @deprecated `ssrf: false`를 사용하라. `ssrf` 옵션이 명시되지 않은 경우에만
+   *   레거시 호환으로 처리된다 (true → ssrf: false와 동등).
+   */
   allowPrivateNetwork?: boolean;
 };
 
@@ -39,7 +53,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
   const userAgent = opts.userAgent ?? DEFAULT_USER_AGENT;
-  const allowPrivate = opts.allowPrivateNetwork ?? false;
+  const ssrf = resolveSsrfMode(opts);
 
   const target = parseUrl(rawUrl);
 
@@ -51,7 +65,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   try {
     const hop = await followRedirects(target, {
       userAgent,
-      allowPrivate,
+      ssrf,
       signal: controller.signal,
     });
     finalRes = hop.res;
@@ -111,15 +125,13 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
 // the final response — too late.
 async function followRedirects(
   start: URL,
-  opts: { userAgent: string; allowPrivate: boolean; signal: AbortSignal },
+  opts: { userAgent: string; ssrf: SsrfMode; signal: AbortSignal },
 ): Promise<{ res: Response; finalUrl: string }> {
   const visited = new Set<string>([start.toString()]);
   let current = start;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    if (!opts.allowPrivate) {
-      await assertPublicHost(current.hostname);
-    }
+    await guardHost(current.hostname, opts.ssrf);
 
     const res = await fetch(current.toString(), {
       headers: {
@@ -190,6 +202,38 @@ function parseUrl(raw: string): URL {
   return parsed;
 }
 
+function resolveSsrfMode(opts: FetchOptions): SsrfMode {
+  if (opts.ssrf !== undefined) return opts.ssrf;
+  // legacy: `allowPrivateNetwork: true` 는 가드를 끄는 것과 동등.
+  if (opts.allowPrivateNetwork === true) return false;
+  return "strict";
+}
+
+async function guardHost(hostname: string, mode: SsrfMode): Promise<void> {
+  if (mode === false) return;
+  // hostname 모드 검사는 모든 모드의 공통 1차 방어선이다 — strict도 먼저 통과해야 한다.
+  assertSafeHostname(hostname);
+  if (mode === "strict") {
+    await assertResolvesToPublic(hostname);
+  }
+}
+
+// 문자열만 보고 차단할 수 있는 케이스 — DNS 리졸브 없이 안전하게 결정.
+// 엣지 런타임에서도 동일하게 동작한다.
+function assertSafeHostname(hostname: string): void {
+  if (!hostname) {
+    throw new FetchError("BLOCKED_HOST", 400, "hostname is empty");
+  }
+  const lower = hostname.toLowerCase();
+  if (lower === "localhost" || lower.endsWith(".localhost")) {
+    throw new FetchError("BLOCKED_PRIVATE_HOST", 400, `hostname "${hostname}" is a loopback name`);
+  }
+  const literalKind = isIP(hostname);
+  if (literalKind !== 0 && isPrivateIp(hostname, literalKind)) {
+    throw new FetchError("BLOCKED_PRIVATE_IP", 400, `ip ${hostname} is in a private range`);
+  }
+}
+
 // NOTE: DNS rebinding — this check resolves the hostname with
 // dns.lookup() *before* the request, but fetch() will re-resolve it at
 // connect time. An attacker-controlled DNS that returns a public IP for the
@@ -198,22 +242,9 @@ function parseUrl(raw: string): URL {
 // and sending the original Host header (plus SNI for HTTPS) — not feasible
 // without pulling in a custom undici Agent, which would outweigh the risk
 // for a workspace-only engine. If that changes, revisit here.
-async function assertPublicHost(hostname: string): Promise<void> {
-  if (!hostname) {
-    throw new FetchError("BLOCKED_HOST", 400, "hostname is empty");
-  }
-  const lower = hostname.toLowerCase();
-  if (lower === "localhost" || lower.endsWith(".localhost")) {
-    throw new FetchError("BLOCKED_PRIVATE_HOST", 400, `hostname "${hostname}" is a loopback name`);
-  }
-
-  const literalKind = isIP(hostname);
-  if (literalKind !== 0) {
-    if (isPrivateIp(hostname, literalKind)) {
-      throw new FetchError("BLOCKED_PRIVATE_IP", 400, `ip ${hostname} is in a private range`);
-    }
-    return;
-  }
+async function assertResolvesToPublic(hostname: string): Promise<void> {
+  // 리터럴 IP는 이미 assertSafeHostname에서 사설 여부를 판정했으므로 통과시켜야 한다.
+  if (isIP(hostname) !== 0) return;
 
   let resolved;
   try {

@@ -1,5 +1,5 @@
 import { parse, type OgDebugResult } from "ogpeek";
-import { FetchError, fetchHtml } from "ogpeek/fetch";
+import { FetchError, fetchHtml, type SsrfMode } from "ogpeek/fetch";
 
 export type ServerParseSuccess = {
   ok: true;
@@ -34,7 +34,7 @@ export async function runParse(
   opts: RunParseOptions = {},
 ): Promise<ServerParseOutcome> {
   const target = rawUrl.trim();
-  const allowPrivateNetwork = process.env.OGPEEK_ALLOW_PRIVATE_NETWORK === "1";
+  const ssrf = resolveSsrfMode();
   // When OGPEEK_USER_AGENT is unset we fall back to the engine's own
   // browser-like default — single source of truth lives in ogpeek/fetch.
   const userAgent = process.env.OGPEEK_USER_AGENT;
@@ -42,7 +42,7 @@ export async function runParse(
   try {
     const fetched = await fetchHtml(target, {
       ...(userAgent ? { userAgent } : {}),
-      allowPrivateNetwork,
+      ssrf,
     });
     const result = parse(fetched.html, { url: fetched.finalUrl });
 
@@ -71,4 +71,16 @@ export async function runParse(
       error: { code: "UNKNOWN", status: 500, message },
     };
   }
+}
+
+// 우선순위: OGPEEK_SSRF_MODE 가 명시되어 있으면 그것을 사용,
+// 없으면 레거시 OGPEEK_ALLOW_PRIVATE_NETWORK=1 → 가드 끔, 그 외 strict.
+// Cloudflare Workers 등 엣지 배포에서는 OGPEEK_SSRF_MODE=hostname 권장.
+function resolveSsrfMode(): SsrfMode {
+  const explicit = process.env.OGPEEK_SSRF_MODE?.trim().toLowerCase();
+  if (explicit === "strict") return "strict";
+  if (explicit === "hostname") return "hostname";
+  if (explicit === "off" || explicit === "false") return false;
+  if (process.env.OGPEEK_ALLOW_PRIVATE_NETWORK === "1") return false;
+  return "strict";
 }
