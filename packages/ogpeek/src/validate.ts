@@ -13,6 +13,14 @@ export function validate(head: HeadScan, tree: TreeBuildResult, baseUrl: string 
       severity: "error",
       message: "og:title is required.",
     });
+  } else if (ogp.title.length > 60) {
+    warnings.push({
+      code: "OG_TITLE_TOO_LONG",
+      severity: "warn",
+      message: `og:title is ${ogp.title.length} chars — KakaoTalk truncates past 60.`,
+      property: "og:title",
+      value: ogp.title,
+    });
   }
   if (!ogp.type) {
     warnings.push({
@@ -34,6 +42,14 @@ export function validate(head: HeadScan, tree: TreeBuildResult, baseUrl: string 
       code: "OG_URL_MISSING",
       severity: "error",
       message: "og:url is required.",
+    });
+  } else if (baseUrl && !sameResource(ogp.url, baseUrl)) {
+    warnings.push({
+      code: "OG_URL_MISMATCH",
+      severity: "warn",
+      message: `og:url "${ogp.url}" differs from the requested URL "${baseUrl}".`,
+      property: "og:url",
+      value: ogp.url,
     });
   }
   if (ogp.images.length === 0) {
@@ -109,4 +125,18 @@ function isAbsoluteUrl(value: string, _base: string | undefined): boolean {
   } catch {
     return false;
   }
+}
+
+function sameResource(a: string, b: string): boolean {
+  try {
+    const ua = new URL(a);
+    const ub = new URL(b);
+    return ua.host.toLowerCase() === ub.host.toLowerCase() && stripSlash(ua.pathname) === stripSlash(ub.pathname);
+  } catch {
+    return a === b;
+  }
+}
+
+function stripSlash(p: string): string {
+  return p.length > 1 && p.endsWith("/") ? p.slice(0, -1) : p;
 }

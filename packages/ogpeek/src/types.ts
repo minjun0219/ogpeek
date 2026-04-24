@@ -45,9 +45,11 @@ export type WarningSeverity = "error" | "warn" | "info";
 
 export type WarningCode =
   | "OG_TITLE_MISSING"
+  | "OG_TITLE_TOO_LONG"
   | "OG_TYPE_MISSING"
   | "OG_IMAGE_MISSING"
   | "OG_URL_MISSING"
+  | "OG_URL_MISMATCH"
   | "OG_TYPE_UNKNOWN"
   | "URL_NOT_ABSOLUTE"
   | "DUPLICATE_SINGLETON"

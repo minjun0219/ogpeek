@@ -1,7 +1,9 @@
 node_modules/
 dist/
 coverage/
-.wrangler/
+.next/
+out/
 .turbo/
 .DS_Store
 *.log
+*.tsbuildinfo
