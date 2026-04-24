@@ -1,22 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("node:dns/promises", () => {
-  return {
-    lookup: vi.fn(async (hostname: string) => {
-      if (hostname === "public.test") return [{ address: "93.184.216.34", family: 4 }];
-      if (hostname === "internal.test") return [{ address: "10.0.0.5", family: 4 }];
-      if (hostname === "loopback6.test") return [{ address: "::1", family: 6 }];
-      if (hostname === "missing.test") throw new Error("ENOTFOUND");
-      if (hostname === "edge-private.test") return [{ address: "10.0.0.5", family: 4 }];
-      return [{ address: "93.184.216.34", family: 4 }];
-    }),
-  };
-});
-
-import * as dnsPromises from "node:dns/promises";
 import { FetchError, fetchHtml } from "../src/fetch";
-
-const mockedLookup = vi.mocked(dnsPromises.lookup);
 
 type MockResponseInit = {
   status?: number;
@@ -70,42 +53,6 @@ describe("fetchHtml()", () => {
     await expect(fetchHtml("not-a-url")).rejects.toMatchObject({ code: "INVALID_URL" });
   });
 
-  it("blocks loopback hostnames", async () => {
-    await expect(fetchHtml("http://localhost/")).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_HOST",
-    });
-    await expect(fetchHtml("http://foo.localhost/")).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_HOST",
-    });
-  });
-
-  it("blocks private ipv4 literals", async () => {
-    await expect(fetchHtml("http://127.0.0.1/")).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_IP",
-    });
-    await expect(fetchHtml("http://10.0.0.1/")).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_IP",
-    });
-    await expect(fetchHtml("http://192.168.1.1/")).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_IP",
-    });
-    await expect(fetchHtml("http://169.254.169.254/")).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_IP",
-    });
-  });
-
-  it("blocks hostnames that resolve into private ranges", async () => {
-    await expect(fetchHtml("http://internal.test/")).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_IP",
-    });
-  });
-
-  it("allows private ranges when allowPrivateNetwork is true", async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
-    const result = await fetchHtml("http://10.0.0.5/", { allowPrivateNetwork: true });
-    expect(result.html).toContain("ok");
-  });
-
   it("fetches and decodes an html body", async () => {
     globalThis.fetch = vi.fn(async () =>
       mockResponse({
@@ -147,15 +94,6 @@ describe("fetchHtml()", () => {
     await expect(fetchHtml("https://public.test/", { maxBytes: 2048 })).rejects.toMatchObject({
       code: "TOO_LARGE",
       status: 413,
-    });
-  });
-
-  it("blocks a redirect that points to a private IP", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      redirectResponse("http://10.0.0.1/admin"),
-    ) as typeof fetch;
-    await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_IP",
     });
   });
 
@@ -217,52 +155,97 @@ describe("fetchHtml()", () => {
   });
 });
 
-describe("fetchHtml() — ssrf modes", () => {
-  it('"hostname" mode blocks loopback names without DNS lookup', async () => {
-    await expect(fetchHtml("http://localhost/", { ssrf: "hostname" })).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_HOST",
-    });
-  });
-
-  it('"hostname" mode blocks literal private IPs', async () => {
-    await expect(fetchHtml("http://10.0.0.1/", { ssrf: "hostname" })).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_IP",
-    });
-    await expect(fetchHtml("http://169.254.169.254/", { ssrf: "hostname" })).rejects.toMatchObject({
-      code: "BLOCKED_PRIVATE_IP",
-    });
-  });
-
-  it('"hostname" mode allows public hostnames whose DNS resolves to private (no lookup)', async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
-    mockedLookup.mockClear();
-    const result = await fetchHtml("http://edge-private.test/", { ssrf: "hostname" });
+describe("fetchHtml() — guard hook", () => {
+  it("no guard means any url passes through untouched", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({ body: "<html>ok</html>" }),
+    ) as typeof fetch;
+    // 과거 같으면 SSRF 가드가 차단했을 loopback 리터럴도 통과해야 한다 —
+    // 이제 엔진은 정책 판단을 하지 않는다.
+    const result = await fetchHtml("http://127.0.0.1/");
     expect(result.html).toContain("ok");
-    // hostname 모드는 dns.lookup()을 절대 부르지 않는다 — 회귀 방지.
-    expect(mockedLookup).not.toHaveBeenCalled();
   });
 
-  it("ssrf: false skips all checks (private IP literal allowed) and does not call lookup", async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
-    mockedLookup.mockClear();
-    const result = await fetchHtml("http://10.0.0.5/", { ssrf: false });
+  it("guard that returns allows the request through", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({ body: "<html>ok</html>" }),
+    ) as typeof fetch;
+    const guard = vi.fn(async () => {});
+    const result = await fetchHtml("https://public.test/", { guard });
     expect(result.html).toContain("ok");
-    expect(mockedLookup).not.toHaveBeenCalled();
+    expect(guard).toHaveBeenCalledTimes(1);
+    const calledWith = guard.mock.calls[0]?.[0];
+    expect(calledWith).toBeInstanceOf(URL);
+    expect((calledWith as URL).toString()).toBe("https://public.test/");
   });
 
-  it("explicit ssrf option takes precedence over legacy allowPrivateNetwork", async () => {
-    // ssrf: "strict" overrides allowPrivateNetwork: true
-    await expect(
-      fetchHtml("http://10.0.0.1/", { ssrf: "strict", allowPrivateNetwork: true }),
-    ).rejects.toMatchObject({ code: "BLOCKED_PRIVATE_IP" });
-  });
-
-  it('strict mode reports SSRF_UNSUPPORTED when lookup throws "Not implemented"', async () => {
-    mockedLookup.mockImplementationOnce(async () => {
-      throw new Error("Not implemented");
+  it("guard throwing a FetchError propagates code and status verbatim", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({ body: "<html>ok</html>" }),
+    ) as typeof fetch;
+    const guard = () => {
+      throw new FetchError("BLOCKED", 400, "nope");
+    };
+    await expect(fetchHtml("https://public.test/", { guard })).rejects.toMatchObject({
+      code: "BLOCKED",
+      status: 400,
+      message: "nope",
     });
-    await expect(
-      fetchHtml("https://public.test/", { ssrf: "strict" }),
-    ).rejects.toMatchObject({ code: "SSRF_UNSUPPORTED" });
+  });
+
+  it("guard throwing a non-FetchError is wrapped as GUARD_FAILED", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({ body: "<html>ok</html>" }),
+    ) as typeof fetch;
+    const guard = () => {
+      throw new Error("boom");
+    };
+    await expect(fetchHtml("https://public.test/", { guard })).rejects.toMatchObject({
+      code: "GUARD_FAILED",
+      status: 500,
+    });
+  });
+
+  it("guard runs on each redirect hop (initial URL and every target)", async () => {
+    let call = 0;
+    globalThis.fetch = vi.fn(async () => {
+      call++;
+      if (call === 1) return redirectResponse("https://public.test/hop1");
+      if (call === 2) return redirectResponse("https://public.test/final");
+      return mockResponse({ body: "<html>ok</html>" });
+    }) as typeof fetch;
+
+    const seen: string[] = [];
+    const guard = async (url: URL) => {
+      seen.push(url.toString());
+    };
+
+    const result = await fetchHtml("https://public.test/start", { guard });
+    expect(result.finalUrl).toBe("https://public.test/final");
+    expect(seen).toEqual([
+      "https://public.test/start",
+      "https://public.test/hop1",
+      "https://public.test/final",
+    ]);
+  });
+
+  it("guard can block a mid-chain redirect target", async () => {
+    let call = 0;
+    globalThis.fetch = vi.fn(async () => {
+      call++;
+      if (call === 1) return redirectResponse("http://10.0.0.1/admin");
+      return mockResponse({ body: "<html>ok</html>" });
+    }) as typeof fetch;
+
+    const guard = (url: URL) => {
+      if (url.hostname === "10.0.0.1") {
+        throw new FetchError("BLOCKED_PRIVATE_IP", 400, "private");
+      }
+    };
+
+    await expect(fetchHtml("https://public.test/", { guard })).rejects.toMatchObject({
+      code: "BLOCKED_PRIVATE_IP",
+      status: 400,
+    });
   });
 });
