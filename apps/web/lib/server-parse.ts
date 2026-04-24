@@ -1,9 +1,5 @@
-import {
-  FetchError,
-  fetchHtml,
-  parse,
-  type OgDebugResult,
-} from "ogpeek-core";
+import { parse, type OgDebugResult } from "ogpeek-core";
+import { FetchError, fetchHtml } from "ogpeek-core/fetch";
 
 export type ServerParseSuccess = {
   ok: true;

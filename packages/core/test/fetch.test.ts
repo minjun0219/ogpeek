@@ -40,6 +40,13 @@ function mockResponse(init: MockResponseInit = {}): Response {
   return res;
 }
 
+function redirectResponse(location: string, status = 302): Response {
+  return new Response("", {
+    status,
+    headers: { location, "content-type": "text/html" },
+  });
+}
+
 const originalFetch = globalThis.fetch;
 
 afterEach(() => {
@@ -136,6 +143,57 @@ describe("fetchHtml()", () => {
     await expect(fetchHtml("https://public.test/", { maxBytes: 2048 })).rejects.toMatchObject({
       code: "TOO_LARGE",
       status: 413,
+    });
+  });
+
+  it("blocks a redirect that points to a private IP", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      redirectResponse("http://10.0.0.1/admin"),
+    ) as typeof fetch;
+    await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
+      code: "BLOCKED_PRIVATE_IP",
+    });
+  });
+
+  it("blocks a redirect to a non-http scheme", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      redirectResponse("file:///etc/passwd"),
+    ) as typeof fetch;
+    await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
+      code: "UNSUPPORTED_SCHEME",
+    });
+  });
+
+  it("follows a safe redirect chain", async () => {
+    let call = 0;
+    globalThis.fetch = vi.fn(async () => {
+      call++;
+      if (call === 1) return redirectResponse("https://public.test/final");
+      return mockResponse({ body: "<html>ok</html>" });
+    }) as typeof fetch;
+
+    const result = await fetchHtml("https://public.test/");
+    expect(call).toBe(2);
+    expect(result.finalUrl).toBe("https://public.test/final");
+    expect(result.html).toContain("ok");
+  });
+
+  it("rejects redirect loops", async () => {
+    globalThis.fetch = vi.fn(async () =>
+      redirectResponse("https://public.test/"),
+    ) as typeof fetch;
+    await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
+      code: "REDIRECT_LOOP",
+    });
+  });
+
+  it("caps redirect hops", async () => {
+    let call = 0;
+    globalThis.fetch = vi.fn(async () =>
+      redirectResponse(`https://public.test/next${call++}`),
+    ) as typeof fetch;
+    await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
+      code: "TOO_MANY_REDIRECTS",
     });
   });
 

@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "next": "15.5.4",
+    "next": "15.5.15",
     "ogpeek-core": "workspace:*",
     "react": "19.0.0",
     "react-dom": "19.0.0"

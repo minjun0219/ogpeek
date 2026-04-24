@@ -3,6 +3,12 @@ type Bucket = {
 };
 
 const WINDOW_MS = 60_000;
+// Cap the number of tracked IP buckets so a long-running public deployment
+// can't have its memory exhausted by a stream of unique client addresses.
+// When full, the oldest key (by insertion order) is evicted — Map iteration
+// order is insertion order in JS.
+const MAX_BUCKETS = 10_000;
+
 const buckets = new Map<string, Bucket>();
 
 export type RateLimitDecision =
@@ -23,7 +29,7 @@ export function rateLimit(key: string): RateLimitDecision {
   if (kept.length >= limit) {
     const resetAt = (kept[0] ?? now) + WINDOW_MS;
     bucket.tokens = kept;
-    buckets.set(key, bucket);
+    touch(key, bucket);
     return {
       ok: false,
       retryAfterSec: Math.max(1, Math.ceil((resetAt - now) / 1000)),
@@ -33,7 +39,7 @@ export function rateLimit(key: string): RateLimitDecision {
 
   kept.push(now);
   bucket.tokens = kept;
-  buckets.set(key, bucket);
+  touch(key, bucket);
 
   return {
     ok: true,
@@ -42,15 +48,44 @@ export function rateLimit(key: string): RateLimitDecision {
   };
 }
 
-export function clientIp(req: Request): string {
-  const xff = req.headers.get("x-forwarded-for");
+function touch(key: string, bucket: Bucket): void {
+  // Re-insert so this key moves to the tail (most-recently-used).
+  if (buckets.has(key)) buckets.delete(key);
+  buckets.set(key, bucket);
+
+  // Opportunistic eviction: drop expired buckets (empty or all tokens past
+  // the window) before resorting to LRU trim.
+  if (buckets.size > MAX_BUCKETS) {
+    const cutoff = Date.now() - WINDOW_MS;
+    for (const [k, b] of buckets) {
+      if (b.tokens.length === 0 || b.tokens[b.tokens.length - 1]! <= cutoff) {
+        buckets.delete(k);
+        if (buckets.size <= MAX_BUCKETS) return;
+      }
+    }
+  }
+
+  // Final safeguard: evict oldest entries until under cap.
+  while (buckets.size > MAX_BUCKETS) {
+    const oldest = buckets.keys().next().value;
+    if (oldest === undefined) break;
+    buckets.delete(oldest);
+  }
+}
+
+export function clientIpFromHeaders(h: Headers): string {
+  const xff = h.get("x-forwarded-for");
   if (xff) {
     const first = xff.split(",")[0]?.trim();
     if (first) return first;
   }
-  const real = req.headers.get("x-real-ip");
+  const real = h.get("x-real-ip");
   if (real) return real;
   return "unknown";
+}
+
+export function clientIp(req: Request): string {
+  return clientIpFromHeaders(req.headers);
 }
 
 export function isPublicMode(): boolean {

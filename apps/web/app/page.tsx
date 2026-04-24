@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { UrlInput } from "@/components/UrlInput";
 import { ValidationPanel } from "@/components/ValidationPanel";
 import { TagTable } from "@/components/TagTable";
@@ -12,17 +13,19 @@ import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
+import { clientIpFromHeaders, isPublicMode, rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ url?: string | string[] }>;
+type PageOutcome = ServerParseOutcome | { ok: false; target: string; error: { code: "RATE_LIMITED"; status: 429; message: string } };
 
 const MODE = (process.env.NEXT_PUBLIC_MODE ?? "public") as "public" | "internal";
 
 export default async function Page({ searchParams }: { searchParams: SearchParams }) {
   const { url } = await searchParams;
   const target = Array.isArray(url) ? url[0] : url;
-  const outcome = target ? await runParse(target) : null;
+  const outcome = target ? await runWithRateLimit(target) : null;
 
   if (MODE === "internal") {
     return <InternalLayout outcome={outcome} />;
@@ -30,7 +33,28 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   return <PublicLayout outcome={outcome} />;
 }
 
-function InternalLayout({ outcome }: { outcome: ServerParseOutcome | null }) {
+async function runWithRateLimit(target: string): Promise<PageOutcome> {
+  // Public page visits hit runParse directly (SSR), so they must share the
+  // same per-IP limiter as /api/parse — otherwise /?url=... would bypass it.
+  if (isPublicMode()) {
+    const ip = clientIpFromHeaders(await headers());
+    const decision = rateLimit(ip);
+    if (!decision.ok) {
+      return {
+        ok: false,
+        target,
+        error: {
+          code: "RATE_LIMITED",
+          status: 429,
+          message: `요청이 너무 많습니다. ${decision.retryAfterSec}초 후 다시 시도해 주세요.`,
+        },
+      };
+    }
+  }
+  return runParse(target);
+}
+
+function InternalLayout({ outcome }: { outcome: PageOutcome | null }) {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-8">
       <header className="flex items-baseline justify-between">
@@ -52,7 +76,7 @@ function InternalLayout({ outcome }: { outcome: ServerParseOutcome | null }) {
   );
 }
 
-function PublicLayout({ outcome }: { outcome: ServerParseOutcome | null }) {
+function PublicLayout({ outcome }: { outcome: PageOutcome | null }) {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-6">
       <Hero />
@@ -79,12 +103,12 @@ function EmptyState() {
   );
 }
 
-function Results({ outcome }: { outcome: ServerParseOutcome }) {
+function Results({ outcome }: { outcome: PageOutcome }) {
   if (!outcome.ok) {
     return (
       <section className="rounded-xl border border-red-500/40 bg-red-500/5 px-5 py-4">
         <h2 className="text-sm font-medium text-red-700 dark:text-red-300">
-          가져오기 실패
+          {outcome.error.code === "RATE_LIMITED" ? "잠시 후 다시 시도해 주세요" : "가져오기 실패"}
         </h2>
         <p className="mt-1 text-xs text-[color:rgb(var(--muted))]">
           <span className="font-mono">{outcome.error.code}</span> · {outcome.error.message}

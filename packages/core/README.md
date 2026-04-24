@@ -1,20 +1,25 @@
 # ogpeek-core
 
-ogpeek 웹 앱을 구동하는 OGP 엔진. 외부 URL 가져오기(`fetch`), head 스캔 기반
-파싱(`parse`), 스펙 검증(`validate`)을 한 곳에 모았다. DOM 의존성 없음 — Node,
-Bun, Cloudflare Workers, 브라우저에서 동일하게 동작한다. workspace 전용 —
-npm 배포 대상이 아니다.
+ogpeek 웹 앱을 구동하는 OGP 엔진. **workspace 전용** — npm 배포 대상이 아니다.
+
+두 개의 엔트리포인트로 구성된다.
+
+| 엔트리 | 용도 | 런타임 | 의존성 |
+| --- | --- | --- | --- |
+| `ogpeek-core` | `parse`, `validate`, 타입 | Node · Bun · Workers · 브라우저 어디서든 | `htmlparser2` |
+| `ogpeek-core/fetch` | 외부 URL 가져오기 + SSRF 가드 | Node 20+ only | `node:dns/promises`, `node:net` |
+
+파서 루트 엔트리는 순수 로직이라 `ogpeek-core/fetch`를 import 하지 않는 한
+Node 전용 모듈이 번들에 끌려오지 않는다.
 
 ## 사용
 
 ```ts
-import { fetch, parse } from "ogpeek-core";
+import { parse } from "ogpeek-core";
+import { fetchHtml } from "ogpeek-core/fetch";
 
-const { html, finalUrl } = await fetch("https://ogp.me");
+const { html, finalUrl } = await fetchHtml("https://ogp.me");
 const result = parse(html, { url: finalUrl });
-
-const html = await (await fetch("https://ogp.me")).text();
-const result = parse(html, { url: "https://ogp.me" });
 
 console.log(result.ogp.title);
 console.log(result.ogp.images);
@@ -51,6 +56,19 @@ type OgDebugResult = {
 
 각 구조 속성(`og:image:width` 등)은 가장 최근의 부모(`og:image`)에 attach
 된다. 부모 없이 먼저 등장하면 `ORPHAN_STRUCTURED_PROPERTY` 경고로 보고된다.
+
+### `fetchHtml(url: string, options?: FetchOptions): Promise<FetchResult>`
+
+외부 URL을 가져와 HTML 문자열로 반환한다. SSRF 가드, 타임아웃, 응답 크기
+상한이 기본 내장.
+
+- `options.userAgent` — 외부 요청 User-Agent. 기본값은 브라우저 유사 UA.
+- `options.timeoutMs` — 요청 타임아웃. 기본 8000.
+- `options.maxBytes` — 응답 크기 상한. 기본 5 MiB. 초과 시 스트림을 취소한다.
+- `options.allowPrivateNetwork` — `true`일 때만 사설/루프백/링크로컬 대역을
+  허용한다. 기본 `false`. 리디렉션 체인의 모든 hop을 동일 기준으로 검증한다.
+
+실패 시 `FetchError`(필드: `code`, `status`, `message`)를 throw한다.
 
 ## 경고 코드
 

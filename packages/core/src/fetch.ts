@@ -29,6 +29,7 @@ export class FetchError extends Error {
 const DEFAULT_USER_AGENT = "ogpeek/0.2 (+https://github.com/)";
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
+const MAX_REDIRECTS = 5;
 
 export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promise<FetchResult> {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
@@ -37,24 +38,22 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   const allowPrivate = opts.allowPrivateNetwork ?? false;
 
   const target = parseUrl(rawUrl);
-  if (!allowPrivate) {
-    await assertPublicHost(target.hostname);
-  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  let res: Response;
+  let finalRes: Response;
+  let finalUrl: string;
   try {
-    res = await fetch(target.toString(), {
-      headers: {
-        "user-agent": userAgent,
-        accept: "text/html,application/xhtml+xml",
-      },
-      redirect: "follow",
+    const hop = await followRedirects(target, {
+      userAgent,
+      allowPrivate,
       signal: controller.signal,
     });
+    finalRes = hop.res;
+    finalUrl = hop.finalUrl;
   } catch (err) {
+    if (err instanceof FetchError) throw err;
     if (err instanceof Error && err.name === "AbortError") {
       throw new FetchError("TIMEOUT", 504, `upstream did not respond within ${timeoutMs}ms`);
     }
@@ -64,27 +63,16 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
     clearTimeout(timer);
   }
 
-  if (!res.ok) {
-    throw new FetchError("UPSTREAM_STATUS", 502, `upstream responded ${res.status}`);
+  if (!finalRes.ok) {
+    throw new FetchError("UPSTREAM_STATUS", 502, `upstream responded ${finalRes.status}`);
   }
 
-  const contentType = res.headers.get("content-type") ?? "";
+  const contentType = finalRes.headers.get("content-type") ?? "";
   if (!/\b(?:text\/html|application\/xhtml\+xml)\b/i.test(contentType)) {
     throw new FetchError("NOT_HTML", 415, `upstream content-type "${contentType}" is not html`);
   }
 
-  if (!allowPrivate && res.url) {
-    try {
-      const finalHost = new URL(res.url).hostname;
-      if (finalHost && finalHost !== target.hostname) {
-        await assertPublicHost(finalHost);
-      }
-    } catch {
-      // ignore parse errors; fall through and rely on reader errors
-    }
-  }
-
-  const reader = res.body?.getReader();
+  const reader = finalRes.body?.getReader();
   if (!reader) {
     throw new FetchError("EMPTY_BODY", 502, "upstream body missing");
   }
@@ -110,7 +98,79 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   }
   buf += decoder.decode();
 
-  return { html: buf, finalUrl: res.url || target.toString(), status: res.status };
+  return { html: buf, finalUrl, status: finalRes.status };
+}
+
+// Manual redirect following so every hop's hostname goes through the SSRF
+// guard *before* an outbound request is made. `redirect: "follow"` would let
+// fetch() silently hit an intermediate private host that we only notice in
+// the final response — too late.
+async function followRedirects(
+  start: URL,
+  opts: { userAgent: string; allowPrivate: boolean; signal: AbortSignal },
+): Promise<{ res: Response; finalUrl: string }> {
+  const visited = new Set<string>([start.toString()]);
+  let current = start;
+
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    if (!opts.allowPrivate) {
+      await assertPublicHost(current.hostname);
+    }
+
+    const res = await fetch(current.toString(), {
+      headers: {
+        "user-agent": opts.userAgent,
+        accept: "text/html,application/xhtml+xml",
+      },
+      redirect: "manual",
+      signal: opts.signal,
+    });
+
+    if (!isRedirect(res.status) || !res.headers.has("location")) {
+      return { res, finalUrl: current.toString() };
+    }
+
+    await discard(res);
+
+    if (hop === MAX_REDIRECTS) {
+      throw new FetchError("TOO_MANY_REDIRECTS", 502, `exceeded ${MAX_REDIRECTS} redirects`);
+    }
+
+    const location = res.headers.get("location")!;
+    let next: URL;
+    try {
+      next = new URL(location, current);
+    } catch {
+      throw new FetchError("BAD_REDIRECT", 502, `invalid Location header "${location}"`);
+    }
+    if (next.protocol !== "http:" && next.protocol !== "https:") {
+      throw new FetchError(
+        "UNSUPPORTED_SCHEME",
+        400,
+        `redirect to unsupported scheme ${next.protocol}`,
+      );
+    }
+    const key = next.toString();
+    if (visited.has(key)) {
+      throw new FetchError("REDIRECT_LOOP", 502, `redirect loop detected at ${key}`);
+    }
+    visited.add(key);
+    current = next;
+  }
+
+  throw new FetchError("TOO_MANY_REDIRECTS", 502, `exceeded ${MAX_REDIRECTS} redirects`);
+}
+
+function isRedirect(status: number): boolean {
+  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
+}
+
+async function discard(res: Response): Promise<void> {
+  try {
+    await res.body?.cancel();
+  } catch {
+    // best-effort
+  }
 }
 
 function parseUrl(raw: string): URL {
