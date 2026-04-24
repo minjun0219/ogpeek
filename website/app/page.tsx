@@ -1,16 +1,12 @@
 import { headers } from "next/headers";
 import { UrlInput } from "@/components/UrlInput";
 import { ValidationPanel } from "@/components/ValidationPanel";
+import { RedirectFlow } from "@/components/RedirectFlow";
 import { TagTable } from "@/components/TagTable";
 import { RawHtmlToggle } from "@/components/RawHtmlToggle";
-import { KakaoTalk } from "@/components/previews/KakaoTalk";
-import { Slack } from "@/components/previews/Slack";
-import { Facebook } from "@/components/previews/Facebook";
-import { X } from "@/components/previews/X";
-import { LinkedIn } from "@/components/previews/LinkedIn";
+import { Preview } from "@/components/previews/Preview";
 import { derivePreviewData } from "@/components/previews/shared";
 import { Hero } from "@/components/landing/Hero";
-import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
 import { clientIpFromHeaders, isPublicMode, rateLimit } from "@/lib/rate-limit";
@@ -92,7 +88,6 @@ function PublicLayout({ outcome }: { outcome: PageOutcome | null }) {
         <EmptyState />
       )}
 
-      <Features />
       <Footer />
     </main>
   );
@@ -101,7 +96,7 @@ function PublicLayout({ outcome }: { outcome: PageOutcome | null }) {
 function EmptyState() {
   return (
     <section className="rounded-xl border border-dashed border-[color:rgb(var(--border))] px-6 py-10 text-center text-sm text-[color:rgb(var(--muted))]">
-      URL을 입력하면 OG 태그, 검증 결과, 플랫폼별 미리보기가 여기에 표시됩니다.
+      URL을 입력하면 OG 태그, 검증 결과, 미리보기가 여기에 표시됩니다.
     </section>
   );
 }
@@ -129,23 +124,21 @@ function Results({ outcome }: { outcome: PageOutcome }) {
     <div className="flex flex-col gap-6">
       <ValidationPanel warnings={outcome.result.warnings} />
 
-      <section className="flex flex-col gap-2">
-        <header className="flex items-baseline justify-between">
-          <h2 className="text-sm font-medium">플랫폼 미리보기</h2>
-          <span className="text-xs text-[color:rgb(var(--muted))]">
-            {outcome.finalUrl} · HTTP {outcome.status}
-          </span>
-        </header>
-        <div className="grid gap-4 md:grid-cols-2">
-          <KakaoTalk data={preview} />
-          <Slack data={preview} />
-          <Facebook data={preview} />
-          <X data={preview} />
-          <LinkedIn data={preview} />
-        </div>
-      </section>
+      <RedirectFlow
+        finalUrl={outcome.finalUrl}
+        status={outcome.status}
+        redirects={outcome.redirects}
+        canonical={outcome.result.meta.canonical}
+      />
 
       <TagTable result={outcome.result} />
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-medium">미리보기</h2>
+        <div className="max-w-md">
+          <Preview data={preview} />
+        </div>
+      </section>
 
       {outcome.html ? <RawHtmlToggle html={outcome.html} /> : null}
     </div>

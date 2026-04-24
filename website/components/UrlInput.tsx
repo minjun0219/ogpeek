@@ -39,10 +39,13 @@ export function UrlInput({ compact = false }: { compact?: boolean }) {
       }
     >
       <input
-        type="url"
+        type="text"
         inputMode="url"
         autoComplete="url"
-        placeholder="https://ogp.me"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        placeholder="ogp.me 또는 https://ogp.me"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         className="flex-1 rounded-lg border border-[color:rgb(var(--border))] bg-[color:rgb(var(--surface))] px-4 py-3 text-base outline-none transition focus:border-[color:rgb(var(--accent))] focus:ring-2 focus:ring-[color:rgb(var(--accent))]/30"

@@ -3,16 +3,17 @@
 > peek into any page's Open Graph tags  
 > 어느 페이지든 오픈그래프 메타태그를 바로 들여다봅니다.
 
-URL 한 줄로 카카오톡·슬랙·페이스북·X·링크드인에서 어떻게 보이는지 즉시
-확인하고, OGP 스펙 위반을 자동으로 잡아내는 OpenGraph 디버깅 도구다.
-사내 QA/기획자/개발자 공용 도구이자, 공개 배포 시 랜딩 페이지 역할도
-겸한다.
+URL 한 줄로 OG 카드가 어떻게 보이는지 즉시 확인하고, OGP 스펙 위반을
+자동으로 잡아내는 OpenGraph 디버깅 도구다. 사내 QA/기획자/개발자 공용
+도구이자, 공개 배포 시 랜딩 페이지 역할도 겸한다.
 
 ## 구성
 
-- `website` — Next.js 15 (App Router) 기반 웹사이트. UI + API + 랜딩.
 - `packages/ogpeek` — `fetch` · `parse` · `validate`를 담당하는 순수 엔진.
-  외부 의존성은 `htmlparser2` 하나. Node 20+ 기반.
+  레포의 본체. 외부 의존성은 `htmlparser2` 하나. Node 22.19+ (개발은 Node
+  24 LTS).
+- `website` — Next.js 15 (App Router) 기반 **데모 사이트**. 엔진 사용 예제이자
+  랜딩. Cloudflare Workers (OpenNext) 한 곳에만 배포한다.
 
 ## 빠른 시작
 
@@ -40,7 +41,7 @@ pnpm -F ogpeek test      # 35개 단위 테스트
 ```bash
 pnpm -r typecheck        # workspace 전체 tsc --noEmit
 pnpm -F ogpeek test      # 엔진 유닛 테스트
-pnpm -F website build    # Next.js production build (standalone)
+pnpm -F website cf:build # OpenNext + Workers 번들
 ```
 
 ## 라이선스

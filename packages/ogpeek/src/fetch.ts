@@ -1,31 +1,35 @@
-import { isIP } from "node:net";
-
-// `node:dns/promises`는 strict 모드에서만 필요하므로 모듈 최상단에서 정적
-// import 하지 않는다. dns 모듈 자체가 없거나 (Vercel Edge 등) lookup이
-// 미구현인 (Cloudflare Workers) 런타임에서도 hostname 모드/false 모드는
-// 영향 없이 로드되어야 한다. assertResolvesToPublic() 안에서 동적 import.
-
-// SSRF 가드 모드.
-// - "strict": DNS 리졸브 + 사설/루프백/링크로컬 대역 차단. node:dns/promises의
-//   lookup()을 사용하므로 Node.js 환경 전용. 엣지 런타임에서 strict로 호출하면
-//   동적 import / lookup 실패를 잡아 명시적 SSRF_UNSUPPORTED 에러로 안내한다.
-//   기본값.
-// - "hostname": hostname 문자열 검사만 — localhost·.localhost·리터럴 사설 IP 차단.
-//   DNS 리졸브 없음. node:dns 의존이 전혀 발생하지 않으므로 엣지 런타임 호환.
-// - false: SSRF 검사 비활성화 (소비자 책임).
-export type SsrfMode = "strict" | "hostname" | false;
-
 export type FetchOptions = {
   userAgent?: string;
   timeoutMs?: number;
   maxBytes?: number;
-  ssrf?: SsrfMode;
+  /**
+   * 초기 요청 + 모든 리디렉션 hop 직전에 호출된다. 차단하려면 FetchError 를
+   * throw, 통과시키려면 return. 미지정 시 아무 검사도 하지 않는다. ogpeek 은
+   * SSRF 정책을 판단하지 않는다 — 배포 환경(클라우드/온프렘/엣지)마다
+   * 적절한 가드 구현이 다르므로 호출자 책임이다.
+   */
+  guard?: (url: URL) => Promise<void> | void;
+  /**
+   * 한 hop 의 HTTP 전송만 수행하는 함수. fetchHtml 이 각 리디렉션 hop 마다
+   * 이 함수를 호출해서 단일 Response 를 받는다. 리디렉션 추적 · timeout ·
+   * maxBytes · content-type 판정 · guard 호출은 fetchHtml 이 계속 소유하므로
+   * 이 주입점은 "전송 정책만" 바꾸는 좁은 슬롯이다 (커스텀 dispatcher,
+   * DoH 리졸버, mTLS 등). 기본값은 globalThis.fetch.
+   */
+  fetch?: (url: string, init: RequestInit) => Promise<Response>;
+};
+
+export type RedirectHop = {
+  from: string;
+  to: string;
+  status: number;
 };
 
 export type FetchResult = {
   html: string;
   finalUrl: string;
   status: number;
+  redirects: RedirectHop[];
 };
 
 export class FetchError extends Error {
@@ -53,7 +57,7 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
   const userAgent = opts.userAgent ?? DEFAULT_USER_AGENT;
-  const ssrf = opts.ssrf ?? "strict";
+  const fetchImpl = opts.fetch ?? fetch;
 
   const target = parseUrl(rawUrl);
 
@@ -62,14 +66,17 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
 
   let finalRes: Response;
   let finalUrl: string;
+  let redirects: RedirectHop[];
   try {
     const hop = await followRedirects(target, {
       userAgent,
-      ssrf,
+      guard: opts.guard,
+      fetch: fetchImpl,
       signal: controller.signal,
     });
     finalRes = hop.res;
     finalUrl = hop.finalUrl;
+    redirects = hop.redirects;
   } catch (err) {
     if (err instanceof FetchError) throw err;
     if (err instanceof Error && err.name === "AbortError") {
@@ -116,24 +123,30 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   }
   buf += decoder.decode();
 
-  return { html: buf, finalUrl, status: finalRes.status };
+  return { html: buf, finalUrl, status: finalRes.status, redirects };
 }
 
-// Manual redirect following so every hop's hostname goes through the SSRF
-// guard *before* an outbound request is made. `redirect: "follow"` would let
-// fetch() silently hit an intermediate private host that we only notice in
-// the final response — too late.
+// Manual redirect following so every hop's URL goes through the caller-
+// supplied guard *before* an outbound request is made. `redirect: "follow"`
+// would let fetch() silently hit an intermediate host that we only notice in
+// the final response — too late for a guard to matter.
 async function followRedirects(
   start: URL,
-  opts: { userAgent: string; ssrf: SsrfMode; signal: AbortSignal },
-): Promise<{ res: Response; finalUrl: string }> {
+  opts: {
+    userAgent: string;
+    guard: ((url: URL) => Promise<void> | void) | undefined;
+    fetch: (url: string, init: RequestInit) => Promise<Response>;
+    signal: AbortSignal;
+  },
+): Promise<{ res: Response; finalUrl: string; redirects: RedirectHop[] }> {
   const visited = new Set<string>([start.toString()]);
+  const redirects: RedirectHop[] = [];
   let current = start;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    await guardHost(current.hostname, opts.ssrf);
+    await runGuard(opts.guard, current);
 
-    const res = await fetch(current.toString(), {
+    const res = await opts.fetch(current.toString(), {
       headers: {
         "user-agent": opts.userAgent,
         accept: "text/html,application/xhtml+xml",
@@ -143,7 +156,7 @@ async function followRedirects(
     });
 
     if (!isRedirect(res.status) || !res.headers.has("location")) {
-      return { res, finalUrl: current.toString() };
+      return { res, finalUrl: current.toString(), redirects };
     }
 
     await discard(res);
@@ -166,6 +179,7 @@ async function followRedirects(
         `redirect to unsupported scheme ${next.protocol}`,
       );
     }
+    redirects.push({ from: current.toString(), to: next.toString(), status: res.status });
     const key = next.toString();
     if (visited.has(key)) {
       throw new FetchError("REDIRECT_LOOP", 502, `redirect loop detected at ${key}`);
@@ -175,6 +189,22 @@ async function followRedirects(
   }
 
   throw new FetchError("TOO_MANY_REDIRECTS", 502, `exceeded ${MAX_REDIRECTS} redirects`);
+}
+
+async function runGuard(
+  guard: ((url: URL) => Promise<void> | void) | undefined,
+  url: URL,
+): Promise<void> {
+  if (!guard) return;
+  try {
+    await guard(url);
+  } catch (err) {
+    // FetchError 는 그대로 전파 — 호출자가 의도한 차단 코드/상태를 그대로
+    // 노출한다. 그 외 에러는 호출자 구현 버그로 보고 GUARD_FAILED 로 래핑한다.
+    if (err instanceof FetchError) throw err;
+    const message = err instanceof Error ? err.message : String(err);
+    throw new FetchError("GUARD_FAILED", 500, `guard threw: ${message}`);
+  }
 }
 
 function isRedirect(status: number): boolean {
@@ -200,115 +230,4 @@ function parseUrl(raw: string): URL {
     throw new FetchError("UNSUPPORTED_SCHEME", 400, "only http and https urls are supported");
   }
   return parsed;
-}
-
-async function guardHost(hostname: string, mode: SsrfMode): Promise<void> {
-  if (mode === false) return;
-  // hostname 모드 검사는 모든 모드의 공통 1차 방어선이다 — strict도 먼저 통과해야 한다.
-  assertSafeHostname(hostname);
-  if (mode === "strict") {
-    await assertResolvesToPublic(hostname);
-  }
-}
-
-// 문자열만 보고 차단할 수 있는 케이스 — DNS 리졸브 없이 안전하게 결정.
-// 엣지 런타임에서도 동일하게 동작한다.
-function assertSafeHostname(hostname: string): void {
-  if (!hostname) {
-    throw new FetchError("BLOCKED_HOST", 400, "hostname is empty");
-  }
-  const lower = hostname.toLowerCase();
-  if (lower === "localhost" || lower.endsWith(".localhost")) {
-    throw new FetchError("BLOCKED_PRIVATE_HOST", 400, `hostname "${hostname}" is a loopback name`);
-  }
-  const literalKind = isIP(hostname);
-  if (literalKind !== 0 && isPrivateIp(hostname, literalKind)) {
-    throw new FetchError("BLOCKED_PRIVATE_IP", 400, `ip ${hostname} is in a private range`);
-  }
-}
-
-// NOTE: DNS rebinding — this check resolves the hostname with
-// dns.lookup() *before* the request, but fetch() will re-resolve it at
-// connect time. An attacker-controlled DNS that returns a public IP for the
-// first lookup and a private IP for the connect opens a TOCTOU gap. Fully
-// mitigating this would require connecting to the literal IP we validated
-// and sending the original Host header (plus SNI for HTTPS) — not feasible
-// without pulling in a custom undici Agent, which would outweigh the risk
-// for the current scope. If that changes, revisit here.
-async function assertResolvesToPublic(hostname: string): Promise<void> {
-  // 리터럴 IP는 이미 assertSafeHostname에서 사설 여부를 판정했으므로 통과시켜야 한다.
-  if (isIP(hostname) !== 0) return;
-
-  let lookup: typeof import("node:dns/promises").lookup;
-  try {
-    ({ lookup } = await import("node:dns/promises"));
-  } catch {
-    throw new FetchError(
-      "SSRF_UNSUPPORTED",
-      500,
-      'current runtime does not support node:dns/promises; switch to ssrf: "hostname"',
-    );
-  }
-
-  let resolved;
-  try {
-    resolved = await lookup(hostname, { all: true });
-  } catch (err) {
-    // Cloudflare Workers 등에서는 lookup() 자체가 "Not implemented"로 throw 한다.
-    // 일반적인 DNS 실패와 구분해서 명시적인 안내 코드로 알린다.
-    const message = err instanceof Error ? err.message : String(err);
-    if (/not implemented/i.test(message)) {
-      throw new FetchError(
-        "SSRF_UNSUPPORTED",
-        500,
-        'current runtime does not implement dns.lookup(); switch to ssrf: "hostname"',
-      );
-    }
-    throw new FetchError("DNS_FAILED", 400, `failed to resolve "${hostname}"`);
-  }
-  for (const { address, family } of resolved) {
-    if (isPrivateIp(address, family)) {
-      throw new FetchError(
-        "BLOCKED_PRIVATE_IP",
-        400,
-        `hostname "${hostname}" resolves to private ip ${address}`,
-      );
-    }
-  }
-}
-
-function isPrivateIp(ip: string, family: number): boolean {
-  if (family === 4) return isPrivateIpv4(ip);
-  if (family === 6) return isPrivateIpv6(ip);
-  return false;
-}
-
-function isPrivateIpv4(ip: string): boolean {
-  const parts = ip.split(".").map((p) => Number.parseInt(p, 10));
-  if (parts.length !== 4 || parts.some((p) => !Number.isInteger(p) || p < 0 || p > 255)) {
-    return true; // malformed → treat as unsafe
-  }
-  const [a, b] = parts as [number, number, number, number];
-  if (a === 10) return true;
-  if (a === 127) return true;
-  if (a === 0) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64.0.0/10
-  if (a >= 224) return true; // multicast / reserved
-  return false;
-}
-
-function isPrivateIpv6(ip: string): boolean {
-  const lower = ip.toLowerCase();
-  if (lower === "::" || lower === "::1") return true;
-  if (lower.startsWith("fe80:") || lower.startsWith("fe8") || lower.startsWith("fe9")) return true;
-  if (lower.startsWith("fea") || lower.startsWith("feb")) return true;
-  if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // fc00::/7
-  if (lower.startsWith("::ffff:")) {
-    const v4 = lower.slice("::ffff:".length);
-    if (isIP(v4) === 4) return isPrivateIpv4(v4);
-  }
-  return false;
 }

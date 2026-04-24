@@ -1,11 +1,14 @@
 import { parse, type OgDebugResult } from "ogpeek";
-import { FetchError, fetchHtml, type SsrfMode } from "ogpeek/fetch";
+import { FetchError, fetchHtml, type RedirectHop } from "ogpeek/fetch";
+import { ssrfGuard } from "./ssrf-guard";
+import { normalizeUrlInput } from "./url-normalize";
 
 export type ServerParseSuccess = {
   ok: true;
   target: string;
   finalUrl: string;
   status: number;
+  redirects: RedirectHop[];
   fetchedAt: string;
   result: OgDebugResult;
   // Raw HTML is opt-in: callers must pass { includeHtml: true } to avoid
@@ -34,15 +37,15 @@ export async function runParse(
   opts: RunParseOptions = {},
 ): Promise<ServerParseOutcome> {
   const target = rawUrl.trim();
-  const ssrf = resolveSsrfMode();
+  const normalized = normalizeUrlInput(target);
   // When OGPEEK_USER_AGENT is unset we fall back to the engine's own
   // browser-like default — single source of truth lives in ogpeek/fetch.
   const userAgent = process.env.OGPEEK_USER_AGENT;
 
   try {
-    const fetched = await fetchHtml(target, {
+    const fetched = await fetchHtml(normalized, {
       ...(userAgent ? { userAgent } : {}),
-      ssrf,
+      guard: ssrfGuard,
     });
     const result = parse(fetched.html, { url: fetched.finalUrl });
 
@@ -51,6 +54,7 @@ export async function runParse(
       target,
       finalUrl: fetched.finalUrl,
       status: fetched.status,
+      redirects: fetched.redirects,
       fetchedAt: new Date().toISOString(),
       result,
     };
@@ -71,13 +75,4 @@ export async function runParse(
       error: { code: "UNKNOWN", status: 500, message },
     };
   }
-}
-
-// Cloudflare Workers 등 엣지 배포에서는 OGPEEK_SSRF_MODE=hostname 권장.
-function resolveSsrfMode(): SsrfMode {
-  const explicit = process.env.OGPEEK_SSRF_MODE?.trim().toLowerCase();
-  if (explicit === "strict") return "strict";
-  if (explicit === "hostname") return "hostname";
-  if (explicit === "off" || explicit === "false") return false;
-  return "strict";
 }
