@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
+    "dev": "pnpm --filter ogpeek run build && next dev -p 3000",
+    "build": "pnpm --filter ogpeek run build && next build",
     "start": "next start -p 3000",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "cf:build": "opennextjs-cloudflare build",
+    "typecheck": "pnpm --filter ogpeek run build && tsc --noEmit",
+    "cf:build": "pnpm --filter ogpeek run build && opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy"
   },

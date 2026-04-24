@@ -6,7 +6,7 @@ import type {
   RawMeta,
   TypedObject,
   Warning,
-} from "./types";
+} from "./types.js";
 
 type OrphanHit = { property: string; value: string };
 

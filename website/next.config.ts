@@ -10,7 +10,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
-  transpilePackages: ["ogpeek"],
   outputFileTracingRoot: path.join(__dirname, ".."),
 };
 
