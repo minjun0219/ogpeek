@@ -46,8 +46,8 @@ const agent = new Agent({ connect: { lookup: safeLookup } });
 // undici 는 URL 의 hostname 을 TLS SNI 와 HTTP Host 헤더에 그대로 쓴다 —
 // 커스텀 lookup 이 IP 를 돌려줘도 SNI/Host 는 원 hostname 이 유지되므로
 // 가상호스팅/인증서 검증이 정상 작동한다.
-export const safeFetch: typeof fetch = (url, init) =>
+export const safeFetch: typeof fetch = (url, init?) =>
   undiciFetch(
     url as Parameters<typeof undiciFetch>[0],
-    { ...(init as Parameters<typeof undiciFetch>[1]), dispatcher: agent },
+    { ...((init ?? {}) as Parameters<typeof undiciFetch>[1]), dispatcher: agent },
   ) as unknown as Promise<Response>;
