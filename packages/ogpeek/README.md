@@ -81,17 +81,10 @@ throw 한 경우).
 
 ### SSRF 는 호출자 책임
 
-이전 버전은 엔진 안에 `"strict" | "hostname" | false` 3-mode SSRF 가드를
-내장했다. 그러나 Cloudflare Workers `nodejs_compat` 의 `dns.lookup()` CNAME
-폴리필 버그 등 런타임별 edge case 가 계속 발생했고, 클라우드/온프렘/엣지마다
-차단해야 할 사설 대역 정의와 리졸버 전략이 달라서 **라이브러리가 이 정책을
-떠안는 것 자체가 잘못된 책임 경계** 라는 결론에 도달했다.
-
-현재 엔진은 `guard` 훅만 제공한다. 자기 배포 환경에 맞는 가드 구현을 호출자
-쪽에서 주입해라. 가드는 URL 을 받아 허용이면 return, 차단이면 `FetchError`
-를 throw 한다.
-
-#### 예시: 인라인 가드
+엔진은 SSRF 정책을 판단하지 않는다. 클라우드/온프렘/엣지마다 사설 대역
+정의와 리졸버 동작이 달라 라이브러리가 이 책임을 떠안는 구조는 조합
+폭발을 일으킨다. 대신 `guard` 훅 하나를 두어 호출자가 자기 배포 환경에
+맞는 가드를 주입하도록 했다.
 
 ```ts
 import { fetchHtml, FetchError } from "ogpeek/fetch";
@@ -105,49 +98,12 @@ await fetchHtml(userInput, {
 });
 ```
 
-#### 권장 라이브러리
-
-ogpeek `guard` 훅은 URL 한 번 받는 단순 hook 이라, 입맛에 맞는 IP 분류
-라이브러리와 붙여 쓰면 된다. 아래는 npm 레지스트리에서 직접 확인한 현역
-후보다 (확인일: 2026-04-24).
-
-**`ipaddr.js`** — IP 파싱/대역 분류 유틸. 가드 훅에 그대로 쓰기 좋은 저수준
-프리미티브.
-
-```ts
-import ipaddr from "ipaddr.js";
-import { resolve4, resolve6 } from "node:dns/promises";
-import { FetchError } from "ogpeek/fetch";
-
-async function guard(url: URL) {
-  const ips = [
-    ...(await resolve4(url.hostname).catch(() => [])),
-    ...(await resolve6(url.hostname).catch(() => [])),
-  ];
-  if (ips.length === 0) throw new FetchError("DNS_FAILED", 400, "no records");
-  for (const ip of ips) {
-    const range = ipaddr.parse(ip).range();
-    if (range !== "unicast") {
-      throw new FetchError("BLOCKED_PRIVATE_IP", 400, `${url.hostname} → ${ip} (${range})`);
-    }
-  }
-}
-```
-
-**`request-filtering-agent`** (azu) — http(s).Agent 구현체. Node 20+/22 지원,
-v3.x 는 2025-12 릴리즈. `node-fetch`/`axios`/`got` 처럼 `agent` 파라미터를
-받는 클라이언트에만 직접 붙는다 — `globalThis.fetch` 는 agent 를 안 받으므로
-ogpeek 과 조합하려면 guard 훅 안에서 자체 IP 검증에 `ipaddr.js` 조합으로
-쓰거나, 별도 클라이언트로 미리 확인하는 식으로 조립해야 한다.
-
-**`ssrf-agent-guard`** (swapniluneva) — 유사 프로젝트. 2026-01 릴리즈, 클라우드
-메타데이터 엔드포인트(`169.254.169.254` 등)를 명시적으로 블록하는 프리셋을
-제공한다. 역시 http.Agent 기반이라 도입 조건은 위와 동일.
-
-> native `fetch()` / undici 에는 SSRF 차단 agent 를 직접 꽂는 표준 API 가
-> 없다 (`nodejs/undici#2019` 참고). TOCTOU 가 신경 쓰이는 배포에서는 검증된
-> IP 로 직접 connect 하는 **커스텀 undici Dispatcher** 를 guard 가 아닌 별도
-> 계층에서 조립하는 게 맞다.
+실전 가드는 hostname 검사 → DNS 리졸브 → IP 대역 분류 → pinned
+connect(DNS rebinding 방어) 순으로 쌓는다. `ipaddr.js` 로 대역을 분류하고
+undici `Agent({ connect: { lookup } })` 로 검증한 IP 에 직접 connect 하는
+패턴이 표준이다. 전체 위협 모델과 구현 레퍼런스는 [OWASP SSRF Prevention
+Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)
+를 참고하라. 이 레포의 `website/lib/ssrf-guard.ts` 가 하나의 구체 예시다.
 
 ## 경고 코드
 
