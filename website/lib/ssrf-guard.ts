@@ -1,5 +1,5 @@
 import { isIP } from "node:net";
-import { resolve4, resolve6 } from "node:dns/promises";
+import { lookup, resolve4, resolve6 } from "node:dns/promises";
 import { FetchError } from "ogpeek/fetch";
 
 // ogpeek 엔진은 SSRF 정책을 판단하지 않는다 (fetchHtml FetchOptions.guard
@@ -62,9 +62,32 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
   }
 
   const addrs: Array<{ address: string; family: 4 | 6 }> = [];
+  // resolve4/6 은 명목상 IP 만 돌려주지만, c-ares 가 응답에서 A/AAAA 를 찾지
+  // 못하고 CNAME 체인만 받아온 환경에서는 CNAME target 문자열이 섞여 나오는
+  // 사례가 관찰된다(예: "www.naver.com." → "www.naver.com.nheos.com."). isIP
+  // 로 걸러내지 않으면 아래 isPrivateIp 의 "형식이 틀리면 사설" 규칙에 걸려
+  // 공개 호스트에 BLOCKED_PRIVATE_IP 가 잘못 찍힌다.
   for (const [idx, r] of results.entries()) {
-    if (r.status === "fulfilled") {
-      for (const a of r.value) addrs.push({ address: a, family: idx === 0 ? 4 : 6 });
+    if (r.status !== "fulfilled") continue;
+    const expected: 4 | 6 = idx === 0 ? 4 : 6;
+    for (const a of r.value) {
+      if (isIP(a) === expected) addrs.push({ address: a, family: expected });
+    }
+  }
+
+  // resolve4/6 이 IP 를 하나도 건지지 못했다면 (CNAME 미추적 등) OS 의
+  // getaddrinfo 로 한 번 더 시도. 어떤 경로로 얻었든 아래 사설 대역 검사를
+  // 통과해야 하므로 /etc/hosts 경유여도 SSRF 우회는 불가능.
+  if (addrs.length === 0) {
+    try {
+      const looked = await lookup(hostname, { all: true, verbatim: true });
+      for (const entry of looked) {
+        if (entry.family === 4 || entry.family === 6) {
+          addrs.push({ address: entry.address, family: entry.family });
+        }
+      }
+    } catch {
+      // 무시 — 아래 DNS_FAILED 로 떨어진다.
     }
   }
 
@@ -75,7 +98,11 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
       .filter((r): r is PromiseRejectedResult => r.status === "rejected")
       .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)))
       .join("; ");
-    throw new FetchError("DNS_FAILED", 400, `failed to resolve "${hostname}": ${reasons}`);
+    throw new FetchError(
+      "DNS_FAILED",
+      400,
+      `failed to resolve "${hostname}" to any ip${reasons ? `: ${reasons}` : ""}`,
+    );
   }
 
   for (const { address, family } of addrs) {
