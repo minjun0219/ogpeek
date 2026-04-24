@@ -70,6 +70,16 @@ type OgDebugResult = {
 
 실패 시 `FetchError`(필드: `code`, `status`, `message`)를 throw한다.
 
+### 알려진 한계 — DNS rebinding
+
+SSRF 가드는 요청 **전에** `dns.lookup()`으로 hostname을 해석하지만, 실제
+`fetch()`는 연결 시점에 다시 해석한다. 공격자 제어 DNS가 첫 lookup에는
+공개 IP를, 연결 시에는 사설 IP를 돌려주는 시나리오에 TOCTOU 틈이 있다.
+완전한 방어는 검증한 리터럴 IP로 직접 연결하면서 원 hostname을 Host 헤더
+/ SNI에 넣는 커스텀 undici Agent가 필요하고, workspace 전용 엔진 범위에는
+과한 복잡도라 현재는 도입하지 않았다. 공개 DNS가 신뢰 가능한 배포 환경을
+전제한다.
+
 ## 경고 코드
 
 | code | severity | 설명 |

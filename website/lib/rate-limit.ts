@@ -41,10 +41,14 @@ export function rateLimit(key: string): RateLimitDecision {
   bucket.tokens = kept;
   touch(key, bucket);
 
+  // resetAt reflects when the oldest token in the sliding window expires —
+  // same basis as the 429 path, so x-ratelimit-reset stays accurate whether
+  // the request was allowed or blocked.
+  const resetAt = (kept[0] ?? now) + WINDOW_MS;
   return {
     ok: true,
     remaining: limit - kept.length,
-    resetAt: now + WINDOW_MS,
+    resetAt,
   };
 }
 

@@ -51,7 +51,10 @@ async function runWithRateLimit(target: string): Promise<PageOutcome> {
       };
     }
   }
-  return runParse(target);
+  // Raw HTML is only embedded in internal-mode SSR — public deployments skip
+  // it so the rendered page doesn't balloon with arbitrary upstream content
+  // or become a de facto HTML proxy.
+  return runParse(target, { includeHtml: MODE === "internal" });
 }
 
 function InternalLayout({ outcome }: { outcome: PageOutcome | null }) {
@@ -144,7 +147,7 @@ function Results({ outcome }: { outcome: PageOutcome }) {
 
       <TagTable result={outcome.result} />
 
-      <RawHtmlToggle html={outcome.html} />
+      {outcome.html ? <RawHtmlToggle html={outcome.html} /> : null}
     </div>
   );
 }

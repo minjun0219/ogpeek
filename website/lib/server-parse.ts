@@ -8,7 +8,9 @@ export type ServerParseSuccess = {
   status: number;
   fetchedAt: string;
   result: OgDebugResult;
-  html: string;
+  // Raw HTML is opt-in: callers must pass { includeHtml: true } to avoid
+  // turning public responses into an unbounded HTML proxy.
+  html?: string;
 };
 
 export type ServerParseFailure = {
@@ -23,31 +25,37 @@ export type ServerParseFailure = {
 
 export type ServerParseOutcome = ServerParseSuccess | ServerParseFailure;
 
-// Browser-like UA so corporate sites and CDNs (Cloudflare, Akamai) don't 403
-// an obvious bot identifier. Operators can override via OGPEEK_USER_AGENT.
-const DEFAULT_USER_AGENT =
-  "Mozilla/5.0 (compatible; ogpeek/0.2; +https://github.com/) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+export type RunParseOptions = {
+  includeHtml?: boolean;
+};
 
-export async function runParse(rawUrl: string): Promise<ServerParseOutcome> {
+export async function runParse(
+  rawUrl: string,
+  opts: RunParseOptions = {},
+): Promise<ServerParseOutcome> {
   const target = rawUrl.trim();
   const allowPrivateNetwork = process.env.OGPEEK_ALLOW_PRIVATE_NETWORK === "1";
+  // When OGPEEK_USER_AGENT is unset we fall back to the engine's own
+  // browser-like default — single source of truth lives in ogpeek/fetch.
+  const userAgent = process.env.OGPEEK_USER_AGENT;
 
   try {
     const fetched = await fetchHtml(target, {
-      userAgent: process.env.OGPEEK_USER_AGENT ?? DEFAULT_USER_AGENT,
+      ...(userAgent ? { userAgent } : {}),
       allowPrivateNetwork,
     });
     const result = parse(fetched.html, { url: fetched.finalUrl });
 
-    return {
+    const outcome: ServerParseSuccess = {
       ok: true,
       target,
       finalUrl: fetched.finalUrl,
       status: fetched.status,
       fetchedAt: new Date().toISOString(),
       result,
-      html: fetched.html,
     };
+    if (opts.includeHtml) outcome.html = fetched.html;
+    return outcome;
   } catch (err) {
     if (err instanceof FetchError) {
       return {

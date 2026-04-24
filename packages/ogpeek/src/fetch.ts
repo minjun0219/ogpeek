@@ -26,7 +26,11 @@ export class FetchError extends Error {
   }
 }
 
-const DEFAULT_USER_AGENT = "ogpeek/0.2 (+https://github.com/)";
+// Browser-like UA by default so corporate sites and CDNs (Cloudflare,
+// Akamai) don't 403 an obvious bot identifier. Callers can override with
+// options.userAgent when they need a more honest fingerprint.
+const DEFAULT_USER_AGENT =
+  "Mozilla/5.0 (compatible; ogpeek/0.2; +https://github.com/) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
@@ -186,6 +190,14 @@ function parseUrl(raw: string): URL {
   return parsed;
 }
 
+// NOTE: DNS rebinding — this check resolves the hostname with
+// dns.lookup() *before* the request, but fetch() will re-resolve it at
+// connect time. An attacker-controlled DNS that returns a public IP for the
+// first lookup and a private IP for the connect opens a TOCTOU gap. Fully
+// mitigating this would require connecting to the literal IP we validated
+// and sending the original Host header (plus SNI for HTTPS) — not feasible
+// without pulling in a custom undici Agent, which would outweigh the risk
+// for a workspace-only engine. If that changes, revisit here.
 async function assertPublicHost(hostname: string): Promise<void> {
   if (!hostname) {
     throw new FetchError("BLOCKED_HOST", 400, "hostname is empty");
