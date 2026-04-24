@@ -122,7 +122,7 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
 // as112/orchid2 등은 모두 차단 대상. ipaddr.process() 는 IPv4-mapped IPv6
 // (::ffff:a.b.c.d) 를 IPv4 로 언랩하므로 ::ffff:10.0.0.1 같은 터널링 우회도
 // 내부 IPv4 기준으로 제대로 사설 판정된다.
-function isPrivateIp(ip: string): boolean {
+export function isPrivateIp(ip: string): boolean {
   let addr: ReturnType<typeof ipaddr.process>;
   try {
     addr = ipaddr.process(ip);
