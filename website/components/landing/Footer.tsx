@@ -1,7 +1,7 @@
 const FAQ = [
   {
     q: "사내 staging 도메인을 어떻게 파싱하나요?",
-    a: "환경변수 OGPEEK_SSRF_MODE=off 로 설정하면 사설 IP 대역 차단을 해제합니다. public 배포에선 기본값을 유지하세요.",
+    a: "공개 배포 인스턴스는 사설 IP/루프백 대역을 항상 차단합니다. 사내 staging 을 파싱하려면 직접 띄운 인스턴스에서 website/lib/ssrf-guard.ts 를 수정하세요.",
   },
   {
     q: "왜 ogp.me처럼 일부 사이트는 403이 나나요?",

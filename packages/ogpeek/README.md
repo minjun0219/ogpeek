@@ -7,10 +7,12 @@ ogpeek 웹사이트를 구동하는 OGP 엔진.
 | 엔트리 | 용도 | 런타임 | 의존성 |
 | --- | --- | --- | --- |
 | `ogpeek` | `parse`, `validate`, 타입 | Node · Bun · Workers · 브라우저 어디서든 | `htmlparser2` |
-| `ogpeek/fetch` | 외부 URL 가져오기 + SSRF 가드 | Node 20+ (엣지 런타임은 `ssrf: "hostname"` 필요) | `node:dns/promises`, `node:net` |
+| `ogpeek/fetch` | 외부 URL 가져오기 (타임아웃/크기상한/리디렉션 추적) | `globalThis.fetch` 가 있는 어디든 | 없음 (Node 내장 포함 X) |
 
-파서 루트 엔트리는 순수 로직이라 `ogpeek/fetch`를 import 하지 않는 한
-Node 전용 모듈이 번들에 끌려오지 않는다.
+파서 루트 엔트리는 순수 로직이라 `ogpeek/fetch`를 import 하지 않는 한 어떤
+런타임 의존성도 끌려오지 않는다. fetch 서브패스 역시 Node 내장 모듈을 쓰지
+않으므로 엣지/브라우저 런타임에서도 그대로 로드된다 — SSRF 정책 판단은 엔진
+밖으로 뺐기 때문.
 
 ## 사용
 
@@ -59,34 +61,49 @@ type OgDebugResult = {
 
 ### `fetchHtml(url: string, options?: FetchOptions): Promise<FetchResult>`
 
-외부 URL을 가져와 HTML 문자열로 반환한다. SSRF 가드, 타임아웃, 응답 크기
-상한이 기본 내장. 리디렉션은 `redirect: "manual"` 로 받아 hop 마다 가드를 다시 돌린다.
+외부 URL을 가져와 HTML 문자열로 반환한다. 타임아웃, 응답 크기 상한, 리디렉션
+추적이 기본 내장. 리디렉션은 `redirect: "manual"` 로 받아 hop 마다
+`options.guard` 를 다시 돌린다.
 
 - `options.userAgent` — 외부 요청 User-Agent. 기본값은 브라우저 유사 UA.
 - `options.timeoutMs` — 요청 타임아웃. 기본 8000.
 - `options.maxBytes` — 응답 크기 상한. 기본 5 MiB. 초과 시 스트림을 취소한다.
-- `options.ssrf` — SSRF 가드 모드. 기본 `"strict"`.
-  - `"strict"` — `node:dns/promises`의 `lookup()` 으로 hostname을 IP로
-    리졸브하고 사설/루프백/링크로컬 대역을 차단. **Node.js 환경 전용** (Cloudflare
-    Workers 등 엣지에서는 `lookup()` 이 throw할 수 있다).
-  - `"hostname"` — hostname 문자열 검사만. `localhost`/`*.localhost`/리터럴
-    사설 IP를 차단. DNS 리졸브 없음. 엣지 런타임 호환.
-  - `false` — 검사 비활성. 신뢰된 URL만 처리하는 소비자용. **기본값을 끄지 마라**.
+- `options.guard` — `(url: URL) => Promise<void> | void`. **초기 요청 + 모든
+  리디렉션 hop 직전에 호출된다.** 차단하려면 `FetchError` 를 throw, 통과
+  시키려면 그냥 return. 미지정 시 아무 검사도 하지 않는다 — ogpeek 은 SSRF
+  정책을 판단하지 않는다.
 
-실패 시 `FetchError`(필드: `code`, `status`, `message`)를 throw한다.
+실패 시 `FetchError`(필드: `code`, `status`, `message`)를 throw한다. 주요
+코드: `INVALID_URL`, `UNSUPPORTED_SCHEME`, `TIMEOUT`, `NETWORK`,
+`UPSTREAM_STATUS`, `NOT_HTML`, `TOO_LARGE`, `REDIRECT_LOOP`,
+`TOO_MANY_REDIRECTS`, `BAD_REDIRECT`, `GUARD_FAILED` (가드가 비-FetchError 를
+throw 한 경우).
 
-### 알려진 한계 — DNS rebinding (`"strict"` 모드)
+### SSRF 는 호출자 책임
 
-SSRF 가드의 strict 모드는 요청 **전에** `dns.lookup()`으로 hostname을 해석하지만,
-실제 `fetch()`는 연결 시점에 다시 해석한다. 공격자 제어 DNS가 첫 lookup에는
-공개 IP를, 연결 시에는 사설 IP를 돌려주는 시나리오에 TOCTOU 틈이 있다.
-완전한 방어는 검증한 리터럴 IP로 직접 연결하면서 원 hostname을 Host 헤더
-/ SNI에 넣는 커스텀 undici Agent가 필요하고, 현재 범위에는 과한 복잡도라
-도입하지 않았다. 공개 DNS가 신뢰 가능한 배포 환경을 전제한다.
+엔진은 SSRF 정책을 판단하지 않는다. 클라우드/온프렘/엣지마다 사설 대역
+정의와 리졸버 동작이 달라 라이브러리가 이 책임을 떠안는 구조는 조합
+폭발을 일으킨다. 대신 `guard` 훅 하나를 두어 호출자가 자기 배포 환경에
+맞는 가드를 주입하도록 했다.
 
-`"hostname"` 모드는 DNS 리졸브를 아예 하지 않으므로, **공개 hostname이 사설
-IP로 리졸브되는 경우는 통과시킨다**. Cloudflare Workers처럼 같은 네트워크 안에
-사설 자원이 없는 엣지 런타임 한정으로 사용하라.
+```ts
+import { fetchHtml, FetchError } from "ogpeek/fetch";
+
+await fetchHtml(userInput, {
+  guard(url) {
+    if (url.hostname === "169.254.169.254") {
+      throw new FetchError("BLOCKED_METADATA", 400, "cloud metadata blocked");
+    }
+  },
+});
+```
+
+실전 가드는 hostname 검사 → DNS 리졸브 → IP 대역 분류 → pinned
+connect(DNS rebinding 방어) 순으로 쌓는다. `ipaddr.js` 로 대역을 분류하고
+undici `Agent({ connect: { lookup } })` 로 검증한 IP 에 직접 connect 하는
+패턴이 표준이다. 전체 위협 모델과 구현 레퍼런스는 [OWASP SSRF Prevention
+Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)
+를 참고하라. 이 레포의 `website/lib/ssrf-guard.ts` 가 하나의 구체 예시다.
 
 ## 경고 코드
 
