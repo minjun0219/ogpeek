@@ -22,6 +22,7 @@ pnpm -F website dev      # http://localhost:3000
 pnpm -F ogpeek test      # 35개 단위 테스트
 ```
 
+<<<<<<< HEAD
 ## 배포
 
 운영 배포는 **Docker**가 정본. 패키지 소개용 무료 호스팅으로 **Cloudflare
@@ -65,6 +66,8 @@ SSRF 가드는 website 에서 항상 ON 이다 — 이전 버전에 있던 `OGPE
 파싱해야 한다면 자체 배포 인스턴스에서 `website/lib/ssrf-guard.ts` 를
 수정해라.
 
+=======
+>>>>>>> origin/main
 ## 주요 검증 규칙
 
 `packages/ogpeek/src/validate.ts`에서 관리하는 12개 규칙:
