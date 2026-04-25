@@ -2,7 +2,7 @@
 
 > peek into any page's Open Graph tags
 
-> 한국어: [README.ko.md](./README.ko.md)
+> Korean: [README.ko.md](./README.ko.md)
 
 A small engine that handles parsing, fetching, and validating OpenGraph
 tags in a single package. Single external dependency: `htmlparser2`. Runs
