@@ -2,8 +2,6 @@ export type Locale = "en" | "ko";
 
 export const LOCALES = ["en", "ko"] as const;
 export const DEFAULT_LOCALE: Locale = "en";
-export const LOCALE_COOKIE = "locale-pref";
-export const LOCALE_HEADER = "x-locale";
 
 export type Dict = {
   meta: { title: string; description: string };
