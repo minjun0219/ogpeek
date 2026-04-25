@@ -1,14 +1,15 @@
 import type { OgDebugResult } from "ogpeek";
+import { format, type Dict } from "@/lib/i18n";
 
-export function TagTable({ result }: { result: OgDebugResult }) {
-  const groups = buildGroups(result);
+export function TagTable({ result, dict }: { result: OgDebugResult; dict: Dict }) {
+  const groups = buildGroups(result, dict);
 
   return (
     <section className="overflow-hidden rounded-xl border border-[color:rgb(var(--border))]">
       <div className="flex items-center justify-between border-b border-[color:rgb(var(--border))] bg-[color:rgb(var(--surface))] px-5 py-3">
-        <h2 className="text-sm font-medium">메타 태그</h2>
+        <h2 className="text-sm font-medium">{dict.tagTable.title}</h2>
         <span className="text-xs text-[color:rgb(var(--muted))]">
-          총 {result.raw.length}개
+          {format(dict.tagTable.totalTemplate, { n: result.raw.length })}
         </span>
       </div>
       <div className="divide-y divide-[color:rgb(var(--border))]">
@@ -43,7 +44,7 @@ export function TagTable({ result }: { result: OgDebugResult }) {
 type Row = { key: string; value: string };
 type Group = { title: string; rows: Row[] };
 
-function buildGroups(result: OgDebugResult): Group[] {
+function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
   const { ogp, twitter, meta, raw } = result;
 
   const og: Row[] = [];
@@ -80,7 +81,10 @@ function buildGroups(result: OgDebugResult): Group[] {
   addIf(m, "<title>", meta.title);
   addIf(m, "canonical", meta.canonical);
   addIf(m, "charset", meta.charset);
-  m.push({ key: "html prefix", value: meta.prefixDeclared ? "선언됨" : "없음" });
+  m.push({
+    key: "html prefix",
+    value: meta.prefixDeclared ? dict.tagTable.prefixDeclared : dict.tagTable.prefixAbsent,
+  });
 
   const others: Row[] = raw
     .filter((r) => !r.property.startsWith("og:") && !r.property.startsWith("twitter:"))
@@ -89,8 +93,8 @@ function buildGroups(result: OgDebugResult): Group[] {
   return [
     { title: "Open Graph", rows: og },
     { title: "Twitter Card", rows: tw },
-    { title: "기본 메타", rows: m },
-    { title: "기타", rows: others },
+    { title: dict.tagTable.groupBasic, rows: m },
+    { title: dict.tagTable.groupOther, rows: others },
   ];
 }
 

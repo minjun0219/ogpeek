@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import type { Dict } from "@/lib/i18n";
 
-export function RawHtmlToggle({ html }: { html: string }) {
+export function RawHtmlToggle({ html, dict }: { html: string; dict: Dict }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -14,7 +15,7 @@ export function RawHtmlToggle({ html }: { html: string }) {
       >
         <span>Raw HTML</span>
         <span className="text-xs text-[color:rgb(var(--muted))]">
-          {open ? "접기" : `펼치기 (${formatSize(html.length)})`}
+          {open ? dict.rawHtml.collapse : `${dict.rawHtml.expand} (${formatSize(html.length)})`}
         </span>
       </button>
       {open ? (

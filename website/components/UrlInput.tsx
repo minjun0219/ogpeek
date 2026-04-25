@@ -1,10 +1,12 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import type { Dict } from "@/lib/i18n";
 
-export function UrlInput({ compact = false }: { compact?: boolean }) {
+export function UrlInput({ dict, compact = false }: { dict: Dict; compact?: boolean }) {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useSearchParams();
   const currentUrl = params.get("url") ?? "";
   const [value, setValue] = useState(currentUrl);
@@ -26,7 +28,8 @@ export function UrlInput({ compact = false }: { compact?: boolean }) {
     setPending(true);
     const next = new URLSearchParams();
     next.set("url", trimmed);
-    router.push(`/?${next.toString()}`);
+    // Preserve the active locale segment so submissions from /ko stay on /ko.
+    router.push(`${pathname}?${next.toString()}`);
   }
 
   return (
@@ -45,7 +48,7 @@ export function UrlInput({ compact = false }: { compact?: boolean }) {
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}
-        placeholder="ogp.me 또는 https://ogp.me"
+        placeholder={dict.urlInput.placeholder}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         className="flex-1 rounded-lg border border-[color:rgb(var(--border))] bg-[color:rgb(var(--surface))] px-4 py-3 text-base outline-none transition focus:border-[color:rgb(var(--accent))] focus:ring-2 focus:ring-[color:rgb(var(--accent))]/30"
@@ -55,7 +58,7 @@ export function UrlInput({ compact = false }: { compact?: boolean }) {
         disabled={!value.trim() || pending}
         className="rounded-lg bg-[color:rgb(var(--foreground))] px-5 py-3 text-sm font-medium text-[color:rgb(var(--background))] transition hover:opacity-90 disabled:opacity-40"
       >
-        {pending ? "불러오는 중…" : "OG 태그 보기"}
+        {pending ? dict.urlInput.loading : dict.urlInput.submit}
       </button>
     </form>
   );
