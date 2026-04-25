@@ -82,7 +82,7 @@ jobs:
           # Publisher) 로 폴백한다.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           DIST_TAG: ${{ github.event.inputs.tag || 'latest' }}
-          DRY_RUN: ${{ github.event.inputs.dry-run || 'false' }}
+          DRY_RUN: ${{ github.event.inputs['dry-run'] || 'false' }}
         run: |
           args=(--access public --provenance --no-git-checks --tag "$DIST_TAG")
           if [ "$DRY_RUN" = "true" ]; then
