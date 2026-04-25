@@ -11,9 +11,6 @@ export type ServerParseSuccess = {
   redirects: RedirectHop[];
   fetchedAt: string;
   result: OgDebugResult;
-  // Raw HTML is opt-in: callers must pass { includeHtml: true } to avoid
-  // turning public responses into an unbounded HTML proxy.
-  html?: string;
 };
 
 export type ServerParseFailure = {
@@ -28,14 +25,7 @@ export type ServerParseFailure = {
 
 export type ServerParseOutcome = ServerParseSuccess | ServerParseFailure;
 
-export type RunParseOptions = {
-  includeHtml?: boolean;
-};
-
-export async function runParse(
-  rawUrl: string,
-  opts: RunParseOptions = {},
-): Promise<ServerParseOutcome> {
+export async function runParse(rawUrl: string): Promise<ServerParseOutcome> {
   const target = rawUrl.trim();
   const normalized = normalizeUrlInput(target);
   // When OGPEEK_USER_AGENT is unset we fall back to the engine's own
@@ -49,7 +39,7 @@ export async function runParse(
     });
     const result = parse(fetched.html, { url: fetched.finalUrl });
 
-    const outcome: ServerParseSuccess = {
+    return {
       ok: true,
       target,
       finalUrl: fetched.finalUrl,
@@ -58,8 +48,6 @@ export async function runParse(
       fetchedAt: new Date().toISOString(),
       result,
     };
-    if (opts.includeHtml) outcome.html = fetched.html;
-    return outcome;
   } catch (err) {
     if (err instanceof FetchError) {
       return {

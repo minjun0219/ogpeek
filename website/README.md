@@ -49,6 +49,5 @@ instance.
 
 | variable | default | description |
 | --- | --- | --- |
-| `NEXT_PUBLIC_MODE` | `public` | `public` or `internal`. `internal` hides the landing page and lifts the rate limit |
 | `OGPEEK_USER_AGENT` | browser-like UA | User-Agent used when fetching upstream pages |
-| `OGPEEK_RATE_LIMIT_PER_MIN` | `20` | per-IP requests per minute in public mode. Zero or below means unlimited |
+| `OGPEEK_RATE_LIMIT_PER_MIN` | `20` | per-IP requests per minute. Zero or below means unlimited |

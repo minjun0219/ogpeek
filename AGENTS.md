@@ -40,10 +40,10 @@ away." Hold to that identity and the principles below when you work on it.
    the definition of "private range" differ across deployment environments
    (cloud / on-prem / edge), so the guard implementation belongs to the
    caller. The website implements its own guard in `lib/ssrf-guard.ts` and
-   injects it via `fetchHtml({ guard: ssrfGuard })`. Public-mode SSR
-   (`/?url=...`) must share the same guard + rate limiter as `/api/parse`.
-   Redirects must always be received with `redirect: "manual"` so the guard
-   runs again on every hop.
+   injects it via `fetchHtml({ guard: ssrfGuard })`. SSR page visits
+   (`/{lang}?url=...`) must share the same guard + rate limiter as
+   `/api/parse`. Redirects must always be received with `redirect: "manual"`
+   so the guard runs again on every hop.
 4. **Korean UI.** All user-facing strings are Korean. Error codes and API
    response keys are English. Developer- and agent-facing material —
    comments, READMEs, `AGENTS.md` — is in English.
@@ -82,8 +82,8 @@ pnpm -F website cf:deploy  # deploy to Workers
   ③ a covering test in `test/validate.test.ts`,
   ④ the table in `packages/ogpeek/README.md`.
   Missing any one of the four means the PR will not be accepted.
-- Public-mode SSR (`/?url=...`) must share the same per-IP rate limiter as
-  `/api/parse`. Do not build a bypass path.
+- SSR page visits (`/{lang}?url=...`) must share the same per-IP rate
+  limiter as `/api/parse`. Do not build a bypass path.
 
 ## Deployment
 

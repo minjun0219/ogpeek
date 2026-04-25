@@ -116,10 +116,6 @@ export function clientIp(req: Request): string {
   return clientIpFromHeaders(req.headers);
 }
 
-export function isPublicMode(): boolean {
-  return (process.env.NEXT_PUBLIC_MODE ?? "public") === "public";
-}
-
 function readLimit(): number {
   const raw = process.env.OGPEEK_RATE_LIMIT_PER_MIN;
   if (!raw) return 20;
