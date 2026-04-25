@@ -46,7 +46,11 @@ away." Hold to that identity and the principles below when you work on it.
    so the guard runs again on every hop.
 4. **Korean UI.** All user-facing strings are Korean. Error codes and API
    response keys are English. Developer- and agent-facing material —
-   comments, READMEs, `AGENTS.md` — is in English.
+   comments, READMEs, `AGENTS.md`, pull request titles and descriptions —
+   is in English. PR bodies end with a collapsed
+   `<details><summary>Korean</summary>…</details>` block translating the
+   summary. After opening a PR, follow up in chat with a short Korean
+   recap.
 5. **Conservative about new dependencies.** Before adding a package, check
    whether the standard library, an existing utility, or a primitive
    Tailwind style can do the job.
@@ -149,10 +153,11 @@ hand-edit `packages/ogpeek/package.json#version`.
   on squash-merge titles: `fix:` → patch, `feat:` → minor, `feat!:` or a
   `BREAKING CHANGE:` footer → major. To force a specific version, add a
   `Release-As: 1.2.3` footer to a commit on `main`.
-- `.github/workflows/publish-ogpeek.yml` is now a **manual fallback only**
-  (`workflow_dispatch`). Use it if release-please is jammed or you need to
-  attach a non-`latest` dist-tag — it publishes whatever version sits in
-  `packages/ogpeek/package.json` without touching git.
+- The same workflow also exposes a `workflow_dispatch` trigger as a manual
+  fallback. Running it from the Actions UI skips release-please and
+  publishes whatever version sits in `packages/ogpeek/package.json` (with
+  optional `tag` / `dry-run` inputs) — use it only when release-please is
+  jammed or you need to attach a non-`latest` dist-tag.
 - Authentication uses npm Trusted Publisher (OIDC), so no secrets are
   required. `packages/ogpeek/package.json` sets
   `publishConfig.access: "public"` and `publishConfig.provenance: true`,
