@@ -49,9 +49,8 @@ away." Hold to that identity and the principles below when you work on it.
    comments, READMEs, `AGENTS.md`, pull request titles and descriptions —
    is in English. PR bodies end with a collapsed
    `<details><summary>Korean</summary>…</details>` block that translates
-   the summary only — leave the test plan (and any other sections)
-   English-only. After opening a PR, follow up in chat with a short
-   Korean recap.
+   the summary only — leave the test plan English-only. After opening a
+   PR, follow up in chat with a short Korean recap.
 5. **Conservative about new dependencies.** Before adding a package, check
    whether the standard library, an existing utility, or a primitive
    Tailwind style can do the job.
