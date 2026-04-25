@@ -1,0 +1,66 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Open release PR / cut release
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs['packages/ogpeek--release_created'] }}
+      tag_name: ${{ steps.release.outputs['packages/ogpeek--tag_name'] }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
+    name: Publish packages/ogpeek to npm
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm -F ogpeek typecheck
+
+      - name: Test
+        run: pnpm -F ogpeek test
+
+      - name: Build
+        run: pnpm -F ogpeek build
+
+      - name: Publish to npm
+        working-directory: packages/ogpeek
+        env:
+          # secrets.NPM_AUTH_TOKEN 이 비어있으면 npm CLI 가 OIDC(Trusted
+          # Publisher) 로 폴백한다.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        run: pnpm publish --access public --provenance --no-git-checks --tag latest
