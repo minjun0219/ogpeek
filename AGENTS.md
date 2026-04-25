@@ -47,10 +47,11 @@ away." Hold to that identity and the principles below when you work on it.
 4. **Korean UI.** All user-facing strings are Korean. Error codes and API
    response keys are English. Developer- and agent-facing material —
    comments, READMEs, `AGENTS.md`, pull request titles and descriptions —
-   is in English. The PR Summary section ends with a collapsed
+   is in English. PR bodies are Summary-only (no "Test plan" section —
+   it just duplicates the agent's todo list) and end with a collapsed
    `<details><summary>Korean</summary>…</details>` block translating the
-   summary; other sections stay English-only. After opening a PR, follow
-   up in chat with a short Korean recap.
+   summary. After opening a PR, follow up in chat with a short Korean
+   recap.
 5. **Conservative about new dependencies.** Before adding a package, check
    whether the standard library, an existing utility, or a primitive
    Tailwind style can do the job.
