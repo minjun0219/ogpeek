@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { runParse } from "@/lib/server-parse";
 import { clientIp, isPublicMode, rateLimit } from "@/lib/rate-limit";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function rateLimitHeaders(
