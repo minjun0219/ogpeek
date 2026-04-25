@@ -115,7 +115,7 @@ been removed.
 A DNS-rebinding TOCTOU window remains open (between the IP we validated and
 the IP `fetch()` actually connects to). Workers does not let us open raw
 TCP, so connect-time IP pinning is impossible — at the demo level we
-intentionally stop at this shallow defense. This is an agreed-upon trade-off
+intentionally stop at this shallow defence. This is an agreed-upon trade-off
 given the site's positioning as an engine showcase rather than a production
 tool.
 
