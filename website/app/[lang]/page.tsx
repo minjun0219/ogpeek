@@ -12,12 +12,12 @@ import { Footer } from "@/components/landing/Footer";
 import { LocaleToggle } from "@/components/LocaleToggle";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
 import { clientIpFromHeaders, isPublicMode, rateLimit } from "@/lib/rate-limit";
-import { getDict, isLocale, format, type Dict, type Locale } from "@/lib/i18n";
+import { getDict, hasLocale, format, type Dict, type Locale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ url?: string | string[] }>;
-type Params = Promise<{ locale: string }>;
+type Params = Promise<{ lang: string }>;
 type PageOutcome =
   | ServerParseOutcome
   | { ok: false; target: string; error: { code: "RATE_LIMITED"; status: 429; message: string } };
@@ -31,9 +31,9 @@ export default async function Page({
   params: Params;
   searchParams: SearchParams;
 }) {
-  const { locale: rawLocale } = await params;
-  if (!isLocale(rawLocale)) notFound();
-  const locale: Locale = rawLocale;
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
+  const locale: Locale = lang;
   const dict = getDict(locale);
 
   const { url } = await searchParams;

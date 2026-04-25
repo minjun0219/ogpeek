@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Noto_Sans_KR } from "next/font/google";
-import { LOCALES, getDict, isLocale, type Locale } from "@/lib/i18n";
+import { LOCALES, getDict, hasLocale, type Locale } from "@/lib/i18n";
 import "../globals.css";
 
 const notoSansKr = Noto_Sans_KR({
@@ -12,16 +12,16 @@ const notoSansKr = Noto_Sans_KR({
   variable: "--font-sans-kr",
 });
 
-export function generateStaticParams(): Array<{ locale: Locale }> {
-  return LOCALES.map((locale) => ({ locale }));
+export function generateStaticParams(): Array<{ lang: Locale }> {
+  return LOCALES.map((lang) => ({ lang }));
 }
 
-type Params = Promise<{ locale: string }>;
+type Params = Promise<{ lang: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { locale } = await params;
-  if (!isLocale(locale)) return {};
-  const dict = getDict(locale);
+  const { lang } = await params;
+  if (!hasLocale(lang)) return {};
+  const dict = getDict(lang);
   return {
     title: dict.meta.title,
     description: dict.meta.description,
@@ -31,17 +31,17 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
-export default async function LocaleLayout({
+export default async function LangLayout({
   children,
   params,
 }: {
   children: ReactNode;
   params: Params;
 }) {
-  const { locale } = await params;
-  if (!isLocale(locale)) notFound();
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
   return (
-    <html lang={locale} className={notoSansKr.variable}>
+    <html lang={lang} className={notoSansKr.variable}>
       <body className="min-h-screen font-sans">{children}</body>
     </html>
   );

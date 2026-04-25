@@ -166,7 +166,7 @@ export function getDict(locale: Locale): Dict {
   return DICTIONARIES[locale];
 }
 
-export function isLocale(value: string): value is Locale {
+export function hasLocale(value: string): value is Locale {
   return value === "en" || value === "ko";
 }
 
@@ -191,7 +191,7 @@ export function pickLocaleFromAcceptLanguage(header: string | null): Locale {
     .sort((a, b) => b.quality - a.quality);
   for (const { tag } of tags) {
     const primary = tag.split("-")[0] ?? "";
-    if (isLocale(primary)) return primary;
+    if (hasLocale(primary)) return primary;
   }
   return DEFAULT_LOCALE;
 }
