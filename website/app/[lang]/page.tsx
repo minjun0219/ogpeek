@@ -1,18 +1,15 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { UrlInput } from "@/components/UrlInput";
 import { ValidationPanel } from "@/components/ValidationPanel";
 import { RedirectFlow } from "@/components/RedirectFlow";
 import { TagTable } from "@/components/TagTable";
-import { RawHtmlToggle } from "@/components/RawHtmlToggle";
 import { Preview } from "@/components/previews/Preview";
 import { derivePreviewData } from "@/components/previews/shared";
 import { Hero } from "@/components/landing/Hero";
 import { Footer } from "@/components/landing/Footer";
 import { LangToggle } from "@/components/LangToggle";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
-import { clientIpFromHeaders, isPublicMode, rateLimit } from "@/lib/rate-limit";
-import { cn } from "@/lib/cn";
+import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import { getDict, hasLang, format, type Dict, type Lang } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +19,6 @@ type Params = Promise<{ lang: string }>;
 type PageOutcome =
   | ServerParseOutcome
   | { ok: false; target: string; error: { code: "RATE_LIMITED"; status: 429; message: string } };
-
-const MODE = (process.env.NEXT_PUBLIC_MODE ?? "public") as "public" | "internal";
 
 export default async function Page({
   params,
@@ -41,80 +36,45 @@ export default async function Page({
   const target = Array.isArray(url) ? url[0] : url;
   const outcome = target ? await runWithRateLimit(target, dict) : null;
 
-  if (MODE === "internal") {
-    return <PageLayout dict={dict} outcome={outcome} internal />;
-  }
   return <PageLayout dict={dict} outcome={outcome} />;
 }
 
 async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome> {
-  // Public page visits hit runParse directly (SSR), so they must share the
-  // same per-IP limiter as /api/parse — otherwise /?url=... would bypass it.
-  if (isPublicMode()) {
-    const ip = clientIpFromHeaders(await headers());
-    const decision = rateLimit(ip);
-    if (!decision.ok) {
-      return {
-        ok: false,
-        target,
-        error: {
-          code: "RATE_LIMITED",
-          status: 429,
-          message: format(dict.page.rateLimitTemplate, { sec: decision.retryAfterSec }),
-        },
-      };
-    }
+  // SSR page visits hit runParse directly, so they share the same per-IP
+  // limiter as /api/parse — otherwise /?url=... would bypass it.
+  const ip = clientIpFromHeaders(await headers());
+  const decision = rateLimit(ip);
+  if (!decision.ok) {
+    return {
+      ok: false,
+      target,
+      error: {
+        code: "RATE_LIMITED",
+        status: 429,
+        message: format(dict.page.rateLimitTemplate, { sec: decision.retryAfterSec }),
+      },
+    };
   }
-  // Raw HTML is only embedded in internal-mode SSR — public deployments skip
-  // it so the rendered page doesn't balloon with arbitrary upstream content
-  // or become a de facto HTML proxy.
-  return runParse(target, { includeHtml: MODE === "internal" });
+  return runParse(target);
 }
 
 function PageLayout({
   dict,
   outcome,
-  internal = false,
 }: {
   dict: Dict;
   outcome: PageOutcome | null;
-  internal?: boolean;
 }) {
   return (
-    <main
-      className={cn(
-        "mx-auto flex max-w-5xl flex-col px-6",
-        internal ? "gap-6 py-8" : "gap-8 py-6",
-      )}
-    >
-      {internal ? (
-        <>
-          <header className="flex items-baseline justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">ogpeek</h1>
-              <p className="text-xs text-[color:rgb(var(--muted))]">{dict.page.internalSubtitle}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <LangToggle />
-              <span className="rounded-full bg-[color:rgb(var(--surface))] px-2.5 py-1 text-[11px] uppercase tracking-wide text-[color:rgb(var(--muted))]">
-                internal
-              </span>
-            </div>
-          </header>
-          <UrlInput compact />
-        </>
-      ) : (
-        <>
-          <div className="flex justify-end">
-            <LangToggle />
-          </div>
-          <Hero />
-        </>
-      )}
+    <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-6">
+      <div className="flex justify-end">
+        <LangToggle />
+      </div>
+      <Hero />
 
       {outcome ? <Results outcome={outcome} dict={dict} /> : <EmptyState dict={dict} />}
 
-      {internal ? null : <Footer />}
+      <Footer />
     </main>
   );
 }
@@ -166,8 +126,6 @@ function Results({ outcome, dict }: { outcome: PageOutcome; dict: Dict }) {
           <Preview data={preview} />
         </div>
       </section>
-
-      {outcome.html ? <RawHtmlToggle html={outcome.html} /> : null}
     </div>
   );
 }

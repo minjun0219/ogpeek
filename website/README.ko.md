@@ -45,6 +45,5 @@ DNS rebinding 완전 방어는 connect-time IP pinning(검증한 IP 로 직접 c
 
 | 변수 | 기본값 | 설명 |
 | --- | --- | --- |
-| `NEXT_PUBLIC_MODE` | `public` | `public` 또는 `internal`. internal은 랜딩 숨김 + rate limit 해제 |
 | `OGPEEK_USER_AGENT` | 브라우저 유사 UA | 외부 페이지 fetch 시 사용할 User-Agent |
-| `OGPEEK_RATE_LIMIT_PER_MIN` | `20` | public 모드에서 IP당 분당 요청 수. 0 이하는 무제한 |
+| `OGPEEK_RATE_LIMIT_PER_MIN` | `20` | IP당 분당 요청 수. 0 이하는 무제한 |

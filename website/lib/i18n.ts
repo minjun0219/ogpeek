@@ -7,7 +7,6 @@ export type Dict = {
   meta: { title: string; description: string };
   install: { copy: string; copied: string; ariaLabel: string };
   urlInput: { placeholder: string; submit: string; loading: string };
-  rawHtml: { collapse: string; expand: string };
   validation: {
     severity: { error: string; warn: string; info: string };
     passTitle: string;
@@ -32,7 +31,6 @@ export type Dict = {
     redirectStatusTemplate: string;
   };
   page: {
-    internalSubtitle: string;
     emptyState: string;
     preview: string;
     fetchFailed: string;
@@ -58,10 +56,6 @@ const en: Dict = {
     placeholder: "ogp.me or https://ogp.me",
     submit: "View OG tags",
     loading: "Loading…",
-  },
-  rawHtml: {
-    collapse: "Collapse",
-    expand: "Expand",
   },
   validation: {
     severity: { error: "Error", warn: "Warning", info: "Info" },
@@ -89,8 +83,6 @@ const en: Dict = {
     redirectStatusTemplate: "{status} redirect",
   },
   page: {
-    internalSubtitle:
-      "internal mode — peek into any page's Open Graph tags right away.",
     emptyState:
       "Enter a URL above to see OG tags, validation results, and a preview here.",
     preview: "Preview",
@@ -119,10 +111,6 @@ const ko: Dict = {
     submit: "OG 태그 보기",
     loading: "불러오는 중…",
   },
-  rawHtml: {
-    collapse: "접기",
-    expand: "펼치기",
-  },
   validation: {
     severity: { error: "에러", warn: "경고", info: "안내" },
     passTitle: "검증 통과 — 확인된 문제 없음",
@@ -148,8 +136,6 @@ const ko: Dict = {
     redirectStatusTemplate: "{status} 리디렉션",
   },
   page: {
-    internalSubtitle:
-      "internal mode — 어느 페이지든 오픈그래프 메타태그를 바로 들여다봅니다.",
     emptyState: "URL을 입력하면 OG 태그, 검증 결과, 미리보기가 여기에 표시됩니다.",
     preview: "미리보기",
     fetchFailed: "가져오기 실패",
