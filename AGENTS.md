@@ -149,10 +149,11 @@ hand-edit `packages/ogpeek/package.json#version`.
   on squash-merge titles: `fix:` → patch, `feat:` → minor, `feat!:` or a
   `BREAKING CHANGE:` footer → major. To force a specific version, add a
   `Release-As: 1.2.3` footer to a commit on `main`.
-- `.github/workflows/publish-ogpeek.yml` is now a **manual fallback only**
-  (`workflow_dispatch`). Use it if release-please is jammed or you need to
-  attach a non-`latest` dist-tag — it publishes whatever version sits in
-  `packages/ogpeek/package.json` without touching git.
+- The same workflow also exposes a `workflow_dispatch` trigger as a manual
+  fallback. Running it from the Actions UI skips release-please and
+  publishes whatever version sits in `packages/ogpeek/package.json` (with
+  optional `tag` / `dry-run` inputs) — use it only when release-please is
+  jammed or you need to attach a non-`latest` dist-tag.
 - Authentication uses npm Trusted Publisher (OIDC), so no secrets are
   required. `packages/ogpeek/package.json` sets
   `publishConfig.access: "public"` and `publishConfig.provenance: true`,
