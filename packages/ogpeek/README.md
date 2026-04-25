@@ -1,34 +1,37 @@
 # ogpeek
 
-> 어느 페이지든 오픈그래프 메타태그를 바로 들여다본다.
+> peek into any page's Open Graph tags
 
-OpenGraph 태그 파싱 · 페치 · 검증을 한 패키지에서 다루는 경량 엔진. 외부
-의존성은 `htmlparser2` 하나. Node 20+ · Bun · Workers · 브라우저에서 모두
-동작한다.
+> 한국어: [README.ko.md](./README.ko.md)
 
-## 설치
+A small engine that handles parsing, fetching, and validating OpenGraph
+tags in a single package. Single external dependency: `htmlparser2`. Runs
+on Node 20+, Bun, Workers, and the browser.
+
+## Install
 
 ```bash
 npm install ogpeek
-# 또는
+# or
 pnpm add ogpeek
-# 또는
+# or
 yarn add ogpeek
 ```
 
-## 두 개의 엔트리포인트
+## Two entry points
 
-| 엔트리 | 용도 | 런타임 | 의존성 |
+| entry | purpose | runtime | dependencies |
 | --- | --- | --- | --- |
-| `ogpeek` | `parse`, `validate`, 타입 | Node · Bun · Workers · 브라우저 어디서든 | `htmlparser2` |
-| `ogpeek/fetch` | 외부 URL 가져오기 (타임아웃/크기상한/리디렉션 추적) | `globalThis.fetch` 가 있는 어디든 | 없음 (Node 내장 포함 X) |
+| `ogpeek` | `parse`, `validate`, types | Node · Bun · Workers · browser | `htmlparser2` |
+| `ogpeek/fetch` | fetch a remote URL (timeout / size cap / redirect tracing) | anywhere `globalThis.fetch` exists | none (no Node built-ins) |
 
-파서 루트 엔트리는 순수 로직이라 `ogpeek/fetch`를 import 하지 않는 한 어떤
-런타임 의존성도 끌려오지 않는다. fetch 서브패스 역시 Node 내장 모듈을 쓰지
-않으므로 엣지/브라우저 런타임에서도 그대로 로드된다 — SSRF 정책 판단은 엔진
-밖으로 뺐기 때문.
+The root entry is pure logic, so as long as you do not import
+`ogpeek/fetch` no runtime dependency comes along for the ride. The fetch
+subpath also avoids Node built-ins, so it loads as-is on edge and browser
+runtimes — SSRF policy decisions have been pushed out of the engine
+specifically to make this possible.
 
-## 빠른 시작
+## Quick start
 
 ```ts
 import { parse } from "ogpeek";
@@ -48,18 +51,18 @@ for (const w of result.warnings) {
 
 ### `parse(html: string, options?: ParseOptions): OgDebugResult`
 
-- `html` — 원문 HTML 문자열.
-- `options.url` — 상대 URL을 절대 URL로 해석할 때 기준이 되는 base. 없으면
-  원문에 선언된 `og:url` 을 base로 사용한다.
+- `html` — the raw HTML string.
+- `options.url` — the base used to resolve relative URLs to absolute URLs.
+  If omitted, the `og:url` declared in the document is used as the base.
 
-반환값은 다음 형태다.
+The return shape:
 
 ```ts
 type OgDebugResult = {
-  ogp: OpenGraph;                  // 정규화된 OG 트리
+  ogp: OpenGraph;                  // normalized OG tree
   typed: TypedObject | null;       // article / book / profile / music.* / video.*
   twitter: Record<string, string>; // twitter:* passthrough
-  raw: Array<{ property: string; content: string }>; // 등장 순서
+  raw: Array<{ property: string; content: string }>; // declaration order
   warnings: Warning[];
   meta: {
     title: string | null;
@@ -70,43 +73,49 @@ type OgDebugResult = {
 };
 ```
 
-각 구조 속성(`og:image:width` 등)은 가장 최근의 부모(`og:image`)에 attach
-된다. 부모 없이 먼저 등장하면 `ORPHAN_STRUCTURED_PROPERTY` 경고로 보고된다.
+Each structured property (`og:image:width` and friends) attaches to the
+most recent parent (`og:image`). If one appears before any parent, it is
+reported as an `ORPHAN_STRUCTURED_PROPERTY` warning.
 
 ### `fetchHtml(url: string, options?: FetchOptions): Promise<FetchResult>`
 
-외부 URL을 가져와 HTML 문자열로 반환한다. 타임아웃, 응답 크기 상한, 리디렉션
-추적이 기본 내장. 리디렉션은 `redirect: "manual"` 로 받아 hop 마다
-`options.guard` 를 다시 돌린다. 결과의 `redirects: { from, to, status }[]` 에
-모든 리디렉션 hop 이 발생 순서대로 담긴다 — UI 에서 "URL 입력 → 302 → 최종"
-같은 흐름을 그대로 그릴 수 있다.
+Fetches a remote URL and returns the HTML as a string. Timeout, response
+size cap, and redirect tracing are built in. Redirects are received with
+`redirect: "manual"` so `options.guard` runs again on every hop. The result
+includes `redirects: { from, to, status }[]` containing every redirect hop
+in occurrence order — the UI can replay the "URL entered → 302 → final"
+flow exactly.
 
-- `options.userAgent` — 외부 요청 User-Agent. 기본값은 브라우저 유사 UA.
-- `options.timeoutMs` — 요청 타임아웃. 기본 8000.
-- `options.maxBytes` — 응답 크기 상한. 기본 5 MiB. 초과 시 스트림을 취소한다.
-- `options.guard` — `(url: URL) => Promise<void> | void`. **초기 요청 + 모든
-  리디렉션 hop 직전에 호출된다.** 차단하려면 `FetchError` 를 throw, 통과
-  시키려면 그냥 return. 미지정 시 아무 검사도 하지 않는다 — ogpeek 은 SSRF
-  정책을 판단하지 않는다.
+- `options.userAgent` — User-Agent for outbound requests. Default is a
+  browser-like UA.
+- `options.timeoutMs` — request timeout. Default 8000.
+- `options.maxBytes` — response size cap. Default 5 MiB. The stream is
+  cancelled when exceeded.
+- `options.guard` — `(url: URL) => Promise<void> | void`. **Called right
+  before the initial request and before every redirect hop.** Throw a
+  `FetchError` to block, just `return` to allow. If unset, no checks are
+  performed — ogpeek does not make SSRF policy decisions.
 - `options.fetch` — `(url: string, init: RequestInit) => Promise<Response>`.
-  한 hop 의 HTTP 전송만 수행하는 함수. fetchHtml 이 각 리디렉션 hop 마다
-  이 함수를 호출해서 단일 응답을 받는다. 리디렉션 추적 · timeout · maxBytes
-  · content-type 판정 · guard 호출은 fetchHtml 이 계속 소유하므로 이 주입점
-  은 "전송 정책만" 바꾸는 좁은 슬롯이다 (커스텀 dispatcher, DoH 리졸버, mTLS
-  등). 기본값은 `globalThis.fetch`.
+  A function that performs the HTTP transport for a single hop only.
+  `fetchHtml` calls this for each redirect hop and reads back one response.
+  Redirect tracing, timeout, maxBytes, content-type judgement, and guard
+  invocation stay owned by `fetchHtml`, so this injection point is a narrow
+  slot for "transport policy only" — custom dispatcher, DoH resolver, mTLS,
+  etc. Default is `globalThis.fetch`.
 
-실패 시 `FetchError`(필드: `code`, `status`, `message`)를 throw한다. 주요
-코드: `INVALID_URL`, `UNSUPPORTED_SCHEME`, `TIMEOUT`, `NETWORK`,
+On failure it throws a `FetchError` (fields: `code`, `status`, `message`).
+The main codes: `INVALID_URL`, `UNSUPPORTED_SCHEME`, `TIMEOUT`, `NETWORK`,
 `UPSTREAM_STATUS`, `NOT_HTML`, `TOO_LARGE`, `REDIRECT_LOOP`,
-`TOO_MANY_REDIRECTS`, `BAD_REDIRECT`, `GUARD_FAILED` (가드가 비-FetchError 를
-throw 한 경우).
+`TOO_MANY_REDIRECTS`, `BAD_REDIRECT`, `GUARD_FAILED` (when the guard threw
+something other than a `FetchError`).
 
-### SSRF 는 호출자 책임
+### SSRF is the caller's responsibility
 
-엔진은 SSRF 정책을 판단하지 않는다. 클라우드/온프렘/엣지마다 사설 대역
-정의와 리졸버 동작이 달라 라이브러리가 이 책임을 떠안는 구조는 조합
-폭발을 일으킨다. 대신 `guard` 훅 하나를 두어 호출자가 자기 배포 환경에
-맞는 가드를 주입하도록 했다.
+The engine does not make SSRF policy decisions. The definitions of "private
+range" and the behaviour of resolvers vary across cloud / on-prem / edge,
+so making the library own this responsibility leads to a combinatorial
+explosion. Instead a single `guard` hook lets the caller inject a guard
+appropriate to its deployment environment.
 
 ```ts
 import { fetchHtml, FetchError } from "ogpeek/fetch";
@@ -120,37 +129,39 @@ await fetchHtml(userInput, {
 });
 ```
 
-실전 가드는 hostname 검사 → DNS 리졸브 → IP 대역 분류 순으로 쌓는다.
-`ipaddr.js` 로 대역을 분류하고, Node 환경이라면 undici
-`Agent({ connect: { lookup } })` 로 검증한 IP 에 직접 connect 해 DNS rebinding
-까지 막는 게 정석. 엣지 런타임 (Cloudflare Workers 등) 은 raw TCP 를 열어주지
-않으니 DoH(`cloudflare-dns.com/dns-query`) + hostname 검사 까지가 현실적인
-범위다. 전체 위협 모델과 구현 레퍼런스는 [OWASP SSRF Prevention Cheat
-Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)
-참고. 이 레포의 `website/lib/ssrf-guard.ts` 가 Workers 호환 DoH 가드의 구체
-예시다.
+A real-world guard layers hostname check → DNS resolve → IP-range
+classification. Use `ipaddr.js` to classify ranges; on Node, the canonical
+approach is to use undici's `Agent({ connect: { lookup } })` to connect
+directly to the validated IP, which also defends against DNS rebinding.
+Edge runtimes (Cloudflare Workers and friends) do not let you open raw
+TCP, so the practical ceiling there is DoH (`cloudflare-dns.com/dns-query`)
+plus a hostname check. For the full threat model and reference
+implementations, see the [OWASP SSRF Prevention Cheat
+Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html).
+This repo's `website/lib/ssrf-guard.ts` is a concrete example of a
+Workers-compatible DoH guard.
 
-## 경고 코드
+## Warning codes
 
-| code | severity | 설명 |
+| code | severity | description |
 | --- | --- | --- |
-| `OG_TITLE_MISSING` | error | `og:title` 누락 |
-| `OG_TITLE_TOO_LONG` | warn | `og:title` 이 60자 초과 — 카카오톡에서 잘림 |
-| `OG_TYPE_MISSING` | error | `og:type` 누락 |
-| `OG_IMAGE_MISSING` | error | `og:image` 누락 |
-| `OG_URL_MISSING` | error | `og:url` 누락 |
-| `OG_URL_MISMATCH` | warn | `og:url` 이 실제 요청 URL과 host/path가 다름 |
-| `OG_TYPE_UNKNOWN` | warn | `og:type` 값이 OGP 스펙 화이트리스트에 없음 |
-| `URL_NOT_ABSOLUTE` | warn | URL 계열 속성이 절대 URL 아님 |
-| `DUPLICATE_SINGLETON` | warn | 단일값 속성이 여러 번 선언됨 |
-| `ORPHAN_STRUCTURED_PROPERTY` | warn | 구조화 속성 앞에 부모가 없음 |
-| `INVALID_DIMENSION` | warn | width/height 정수 파싱 실패 |
-| `MISSING_PREFIX_ATTR` | info | `<html prefix>` 선언 없음 |
+| `OG_TITLE_MISSING` | error | `og:title` is missing |
+| `OG_TITLE_TOO_LONG` | warn | `og:title` exceeds 60 characters — truncated by KakaoTalk |
+| `OG_TYPE_MISSING` | error | `og:type` is missing |
+| `OG_IMAGE_MISSING` | error | `og:image` is missing |
+| `OG_URL_MISSING` | error | `og:url` is missing |
+| `OG_URL_MISMATCH` | warn | `og:url` host/path disagrees with the actual request URL |
+| `OG_TYPE_UNKNOWN` | warn | `og:type` value is not in the OGP-spec whitelist |
+| `URL_NOT_ABSOLUTE` | warn | a URL-typed property is not absolute |
+| `DUPLICATE_SINGLETON` | warn | a single-valued property is declared more than once |
+| `ORPHAN_STRUCTURED_PROPERTY` | warn | a structured property appears with no parent |
+| `INVALID_DIMENSION` | warn | width/height failed integer parsing |
+| `MISSING_PREFIX_ATTR` | info | `<html prefix>` is not declared |
 
-## 관련 프로젝트
+## Related projects
 
-이 엔진으로 만든 웹 도구: <https://github.com/minjun0219/ogpeek>
+The web tool built on this engine: <https://github.com/minjun0219/ogpeek>
 
-## 라이선스
+## License
 
 MIT.

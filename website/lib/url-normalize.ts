@@ -1,7 +1,8 @@
-// 사용자 입력에 스킴이 빠져 있으면 https:// 를 붙여 엔진의 INVALID_URL /
-// UNSUPPORTED_SCHEME 차단을 피한다. 이미 http(s):// 가 있으면 그대로 둔다.
-// 잘못된 입력은 굳이 막지 않고 엔진이 INVALID_URL 로 보고하게 둔다 — 한 곳
-// 에서만 검증한다.
+// If the user's input has no scheme, prepend https:// so it does not get
+// rejected by the engine as INVALID_URL / UNSUPPORTED_SCHEME. Inputs that
+// already start with http(s):// pass through unchanged. Genuinely malformed
+// inputs are not pre-validated here — the engine reports them as
+// INVALID_URL, keeping validation in a single place.
 export function normalizeUrlInput(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return trimmed;
