@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { LANGS, type Lang } from "@/lib/i18n";
-import { useDict } from "@/lib/dict-context";
+import { useTranslate } from "@/lib/translate-context";
 
 const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
 
-export function LangToggle({ lang }: { lang: Lang }) {
-  const dict = useDict();
+export function LangToggle() {
+  const { lang, dict } = useTranslate();
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const suffix = query ? `?${query}` : "";

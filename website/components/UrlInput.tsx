@@ -2,10 +2,10 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { useDict } from "@/lib/dict-context";
+import { useTranslate } from "@/lib/translate-context";
 
 export function UrlInput({ compact = false }: { compact?: boolean }) {
-  const dict = useDict();
+  const { dict } = useTranslate();
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();

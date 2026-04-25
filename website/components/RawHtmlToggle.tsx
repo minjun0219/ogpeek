@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useDict } from "@/lib/dict-context";
+import { useTranslate } from "@/lib/translate-context";
 
 export function RawHtmlToggle({ html }: { html: string }) {
-  const dict = useDict();
+  const { dict } = useTranslate();
   const [open, setOpen] = useState(false);
 
   return (

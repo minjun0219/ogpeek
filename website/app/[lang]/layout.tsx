@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Noto_Sans_KR } from "next/font/google";
 import { LANGS, getDict, hasLang, type Lang } from "@/lib/i18n";
-import { DictProvider } from "@/lib/dict-context";
+import { TranslateProvider } from "@/lib/translate-context";
 import "../globals.css";
 
 const notoSansKr = Noto_Sans_KR({
@@ -45,7 +45,7 @@ export default async function LangLayout({
   return (
     <html lang={lang} className={notoSansKr.variable}>
       <body className="min-h-screen font-sans">
-        <DictProvider value={dict}>{children}</DictProvider>
+        <TranslateProvider value={{ lang, dict }}>{children}</TranslateProvider>
       </body>
     </html>
   );

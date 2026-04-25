@@ -41,9 +41,9 @@ export default async function Page({
   const outcome = target ? await runWithRateLimit(target, dict) : null;
 
   if (MODE === "internal") {
-    return <InternalLayout lang={lang} dict={dict} outcome={outcome} />;
+    return <InternalLayout dict={dict} outcome={outcome} />;
   }
-  return <PublicLayout lang={lang} dict={dict} outcome={outcome} />;
+  return <PublicLayout dict={dict} outcome={outcome} />;
 }
 
 async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome> {
@@ -71,11 +71,9 @@ async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome
 }
 
 function InternalLayout({
-  lang,
   dict,
   outcome,
 }: {
-  lang: Lang;
   dict: Dict;
   outcome: PageOutcome | null;
 }) {
@@ -87,7 +85,7 @@ function InternalLayout({
           <p className="text-xs text-[color:rgb(var(--muted))]">{dict.page.internalSubtitle}</p>
         </div>
         <div className="flex items-center gap-3">
-          <LangToggle lang={lang} />
+          <LangToggle />
           <span className="rounded-full bg-[color:rgb(var(--surface))] px-2.5 py-1 text-[11px] uppercase tracking-wide text-[color:rgb(var(--muted))]">
             internal
           </span>
@@ -102,18 +100,16 @@ function InternalLayout({
 }
 
 function PublicLayout({
-  lang,
   dict,
   outcome,
 }: {
-  lang: Lang;
   dict: Dict;
   outcome: PageOutcome | null;
 }) {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-6">
       <div className="flex justify-end">
-        <LangToggle lang={lang} />
+        <LangToggle />
       </div>
       <Hero />
 
