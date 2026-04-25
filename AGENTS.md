@@ -132,19 +132,30 @@ into the engine (`packages/ogpeek`).
 
 ## npm publishing
 
-The engine is published publicly to npm as `ogpeek`.
+The engine is published publicly to npm as `ogpeek`. Versioning is handled
+by [release-please](https://github.com/googleapis/release-please) — do **not**
+hand-edit `packages/ogpeek/package.json#version`.
 
-- `.github/workflows/publish-ogpeek.yml` — triggered by a GitHub Release
-  `published` event or by `workflow_dispatch` (with `tag` and `dry-run`
-  inputs). Authentication uses npm Trusted Publisher (OIDC), so no secrets
-  are required.
-- `packages/ogpeek/package.json` sets `publishConfig.access: "public"` and
-  `publishConfig.provenance: true`, so public + provenance publishing is the
-  default.
-- Only the build output (`dist/`) ships in the tarball
+- `.github/workflows/release-please.yml` runs on every push to `main`. It
+  reads commit messages since the last tag, opens (or updates) a
+  `chore: release ogpeek <version>` PR that bumps the version and updates
+  `CHANGELOG.md`. Merging that PR creates a GitHub Release + tag and
+  publishes to npm in the same workflow run.
+- `release-please-config.json` + `.release-please-manifest.json` hold the
+  release-please configuration and the current version of record. The
+  manifest is the source of truth for "what was last released"; release-please
+  rewrites both `package.json#version` and the manifest in the release PR.
+- Bump levels follow [Conventional Commits](https://www.conventionalcommits.org/)
+  on squash-merge titles: `fix:` → patch, `feat:` → minor, `feat!:` or a
+  `BREAKING CHANGE:` footer → major. To force a specific version, add a
+  `Release-As: 1.2.3` footer to a commit on `main`.
+- `.github/workflows/publish-ogpeek.yml` is now a **manual fallback only**
+  (`workflow_dispatch`). Use it if release-please is jammed or you need to
+  attach a non-`latest` dist-tag — it publishes whatever version sits in
+  `packages/ogpeek/package.json` without touching git.
+- Authentication uses npm Trusted Publisher (OIDC), so no secrets are
+  required. `packages/ogpeek/package.json` sets
+  `publishConfig.access: "public"` and `publishConfig.provenance: true`,
+  and only the build output ships
   (`files: ["dist", "README.md", "LICENSE"]`). The `prepack` hook forces a
   build right before publish.
-- To bump the version, change only the `version` field in
-  `packages/ogpeek/package.json` and create a GitHub Release with the
-  matching tag (`v<version>`). The workflow verifies that the two agree
-  before publishing.

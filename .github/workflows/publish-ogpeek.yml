@@ -1,8 +1,10 @@
-name: Publish ogpeek to npm
+name: Publish ogpeek to npm (manual)
 
+# 평소 릴리스는 release-please.yml 이 처리한다. 이 워크플로우는
+# packages/ogpeek/package.json 의 현재 버전을 그대로 publish 하는
+# 비상용 수동 트리거다 (예: release-please 가 막혔거나 dist-tag 를
+# 따로 붙이고 싶을 때).
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -49,17 +51,6 @@ jobs:
 
       - name: Build
         run: pnpm -F ogpeek build
-
-      - name: Verify package.json version matches release tag
-        if: github.event_name == 'release'
-        working-directory: packages/ogpeek
-        run: |
-          pkg_version="$(node -p "require('./package.json').version")"
-          tag_name="${GITHUB_REF_NAME#v}"
-          if [ "$pkg_version" != "$tag_name" ]; then
-            echo "::error::package.json version ($pkg_version)와 릴리스 태그 ($tag_name)가 다릅니다."
-            exit 1
-          fi
 
       - name: Publish to npm
         working-directory: packages/ogpeek
