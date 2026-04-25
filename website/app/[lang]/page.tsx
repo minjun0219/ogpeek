@@ -12,6 +12,7 @@ import { Footer } from "@/components/landing/Footer";
 import { LangToggle } from "@/components/LangToggle";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
 import { clientIpFromHeaders, isPublicMode, rateLimit } from "@/lib/rate-limit";
+import { cn } from "@/lib/cn";
 import { getDict, hasLang, format, type Dict, type Lang } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -41,9 +42,9 @@ export default async function Page({
   const outcome = target ? await runWithRateLimit(target, dict) : null;
 
   if (MODE === "internal") {
-    return <InternalLayout dict={dict} outcome={outcome} />;
+    return <PageLayout dict={dict} outcome={outcome} internal />;
   }
-  return <PublicLayout dict={dict} outcome={outcome} />;
+  return <PageLayout dict={dict} outcome={outcome} />;
 }
 
 async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome> {
@@ -70,58 +71,50 @@ async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome
   return runParse(target, { includeHtml: MODE === "internal" });
 }
 
-function InternalLayout({
+function PageLayout({
   dict,
   outcome,
+  internal = false,
 }: {
   dict: Dict;
   outcome: PageOutcome | null;
+  internal?: boolean;
 }) {
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-8">
-      <header className="flex items-baseline justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">ogpeek</h1>
-          <p className="text-xs text-[color:rgb(var(--muted))]">{dict.page.internalSubtitle}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <LangToggle />
-          <span className="rounded-full bg-[color:rgb(var(--surface))] px-2.5 py-1 text-[11px] uppercase tracking-wide text-[color:rgb(var(--muted))]">
-            internal
-          </span>
-        </div>
-      </header>
-
-      <UrlInput compact />
-
-      {outcome ? <Results outcome={outcome} dict={dict} /> : <EmptyState dict={dict} />}
-    </main>
-  );
-}
-
-function PublicLayout({
-  dict,
-  outcome,
-}: {
-  dict: Dict;
-  outcome: PageOutcome | null;
-}) {
-  return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-6">
-      <div className="flex justify-end">
-        <LangToggle />
-      </div>
-      <Hero />
-
-      {outcome ? (
-        <section className="flex flex-col gap-6">
-          <Results outcome={outcome} dict={dict} />
-        </section>
+    <main
+      className={cn(
+        "mx-auto flex max-w-5xl flex-col px-6",
+        internal ? "gap-6 py-8" : "gap-8 py-6",
+      )}
+    >
+      {internal ? (
+        <>
+          <header className="flex items-baseline justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">ogpeek</h1>
+              <p className="text-xs text-[color:rgb(var(--muted))]">{dict.page.internalSubtitle}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <LangToggle />
+              <span className="rounded-full bg-[color:rgb(var(--surface))] px-2.5 py-1 text-[11px] uppercase tracking-wide text-[color:rgb(var(--muted))]">
+                internal
+              </span>
+            </div>
+          </header>
+          <UrlInput compact />
+        </>
       ) : (
-        <EmptyState dict={dict} />
+        <>
+          <div className="flex justify-end">
+            <LangToggle />
+          </div>
+          <Hero />
+        </>
       )}
 
-      <Footer />
+      {outcome ? <Results outcome={outcome} dict={dict} /> : <EmptyState dict={dict} />}
+
+      {internal ? null : <Footer />}
     </main>
   );
 }
