@@ -1,49 +1,54 @@
 # ogpeek
 
-> peek into any page's Open Graph tags  
-> 어느 페이지든 오픈그래프 메타태그를 바로 들여다봅니다.
+> peek into any page's Open Graph tags
 
-URL 한 줄로 OG 카드가 어떻게 보이는지 즉시 확인하고, OGP 스펙 위반을
-자동으로 잡아내는 OpenGraph 디버깅 도구다. 사내 QA/기획자/개발자 공용
-도구이자, 공개 배포 시 랜딩 페이지 역할도 겸한다.
+> Korean: [README.ko.md](./README.ko.md)
 
-## 구성
+A focused OpenGraph debugging tool: paste a URL, see exactly how the page's
+OG card will render, and get OGP-spec violations called out automatically.
+Built as a shared utility for QA, product, and engineering — and as the
+landing page when published publicly.
 
-- `packages/ogpeek` — `fetch` · `parse` · `validate`를 담당하는 순수 엔진.
-  레포의 본체. 외부 의존성은 `htmlparser2` 하나. Node 22.19+ (개발은 Node
-  24 LTS).
-- `website` — Next.js 15 (App Router) 기반 **데모 사이트**. 엔진 사용 예제이자
-  랜딩. Cloudflare Workers (OpenNext) 한 곳에만 배포한다.
+## Layout
 
-## 빠른 시작
+- `packages/ogpeek` — the pure engine that handles `fetch` · `parse` ·
+  `validate`. This is the body of the repo. Single external dependency:
+  `htmlparser2`. Node 22.19+ (development is on Node 24 LTS).
+- `website` — a **demo site** built on Next.js 15 (App Router). It exists as
+  a usage example for the engine and as a landing page. Deployed only to
+  Cloudflare Workers (via OpenNext).
+
+## Quick start
 
 ```bash
 pnpm install
 pnpm -F website dev      # http://localhost:3000
-pnpm -F ogpeek test      # 엔진 단위 테스트
+pnpm -F ogpeek test      # engine unit tests
 ```
 
-## 주요 검증 규칙
+## Validation rules at a glance
 
-`packages/ogpeek/src/validate.ts`에서 관리하는 12개 규칙:
+The 12 rules maintained in `packages/ogpeek/src/validate.ts`:
 
-- `OG_TITLE_MISSING` / `OG_TITLE_TOO_LONG` (60자 초과 — 카카오톡 잘림)
+- `OG_TITLE_MISSING` / `OG_TITLE_TOO_LONG` (over 60 chars — KakaoTalk truncates)
 - `OG_TYPE_MISSING` / `OG_TYPE_UNKNOWN`
 - `OG_IMAGE_MISSING`
-- `OG_URL_MISSING` / `OG_URL_MISMATCH` (실제 요청 URL과 og:url 불일치)
-- `URL_NOT_ABSOLUTE` / `DUPLICATE_SINGLETON` / `ORPHAN_STRUCTURED_PROPERTY` / `INVALID_DIMENSION`
+- `OG_URL_MISSING` / `OG_URL_MISMATCH` (`og:url` disagrees with the actual
+  request URL)
+- `URL_NOT_ABSOLUTE` / `DUPLICATE_SINGLETON` /
+  `ORPHAN_STRUCTURED_PROPERTY` / `INVALID_DIMENSION`
 - `MISSING_PREFIX_ATTR` (info)
 
-자세한 설명은 `packages/ogpeek/README.md` 참고.
+See `packages/ogpeek/README.md` for full descriptions.
 
-## 스크립트
+## Scripts
 
 ```bash
-pnpm -r typecheck        # workspace 전체 tsc --noEmit
-pnpm -F ogpeek test      # 엔진 유닛 테스트
-pnpm -F website cf:build # OpenNext + Workers 번들
+pnpm -r typecheck        # workspace-wide tsc --noEmit
+pnpm -F ogpeek test      # engine unit tests
+pnpm -F website cf:build # OpenNext + Workers bundle
 ```
 
-## 라이선스
+## License
 
 MIT.
