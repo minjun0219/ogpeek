@@ -1,6 +1,6 @@
 # ogpeek — agent notes
 
-> 한국어 참고용 번역: [AGENTS.ko.md](./AGENTS.ko.md) (not consulted by agents)
+> Korean translation (reference only): [AGENTS.ko.md](./AGENTS.ko.md) (not consulted by agents)
 
 ogpeek has exactly one purpose: "peek into any page's Open Graph tags right
 away." Hold to that identity and the principles below when you work on it.
