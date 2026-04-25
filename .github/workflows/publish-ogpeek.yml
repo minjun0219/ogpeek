@@ -64,10 +64,11 @@ jobs:
       - name: Publish to npm
         working-directory: packages/ogpeek
         env:
-          # secrets.NPM_TOKEN 이 비어있으면 npm CLI 가 OIDC(Trusted Publisher)
-          # 로 폴백한다. 첫 발행 후 패키지 settings 에서 Trusted Publisher 를
-          # 등록하고 NPM_TOKEN 시크릿만 비우면 토큰 없이 굴러간다.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # secrets.NPM_AUTH_TOKEN 이 비어있으면 npm CLI 가 OIDC(Trusted
+          # Publisher) 로 폴백한다. 첫 발행 후 패키지 settings 에서 Trusted
+          # Publisher 를 등록하고 NPM_AUTH_TOKEN 시크릿만 비우면 토큰 없이
+          # 굴러간다.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           DIST_TAG: ${{ github.event.inputs.tag || 'latest' }}
           DRY_RUN: ${{ github.event.inputs.dry-run || 'false' }}
         run: |
