@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { LOCALES, type Dict, type Locale } from "@/lib/i18n";
+import { LANGS, type Lang } from "@/lib/i18n";
+import { useDict } from "@/lib/dict-context";
 
-const LABELS: Record<Locale, string> = { en: "EN", ko: "KO" };
+const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
 
-export function LocaleToggle({ locale, dict }: { locale: Locale; dict: Dict }) {
+export function LangToggle({ lang }: { lang: Lang }) {
+  const dict = useDict();
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const suffix = query ? `?${query}` : "";
@@ -17,8 +19,8 @@ export function LocaleToggle({ locale, dict }: { locale: Locale; dict: Dict }) {
       aria-label={dict.toggle.ariaLabel}
       className="inline-flex items-center gap-0.5 rounded-full border border-[color:rgb(var(--border))] bg-[color:rgb(var(--surface))] p-0.5 text-[11px] font-medium uppercase tracking-wide"
     >
-      {LOCALES.map((target) => {
-        const active = target === locale;
+      {LANGS.map((target) => {
+        const active = target === lang;
         return (
           <Link
             key={target}

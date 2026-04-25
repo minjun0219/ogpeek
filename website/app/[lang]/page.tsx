@@ -9,10 +9,10 @@ import { Preview } from "@/components/previews/Preview";
 import { derivePreviewData } from "@/components/previews/shared";
 import { Hero } from "@/components/landing/Hero";
 import { Footer } from "@/components/landing/Footer";
-import { LocaleToggle } from "@/components/LocaleToggle";
+import { LangToggle } from "@/components/LangToggle";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
 import { clientIpFromHeaders, isPublicMode, rateLimit } from "@/lib/rate-limit";
-import { getDict, hasLocale, format, type Dict, type Locale } from "@/lib/i18n";
+import { getDict, hasLang, format, type Dict, type Lang } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -31,19 +31,19 @@ export default async function Page({
   params: Params;
   searchParams: SearchParams;
 }) {
-  const { lang } = await params;
-  if (!hasLocale(lang)) notFound();
-  const locale: Locale = lang;
-  const dict = getDict(locale);
+  const { lang: rawLang } = await params;
+  if (!hasLang(rawLang)) notFound();
+  const lang: Lang = rawLang;
+  const dict = getDict(lang);
 
   const { url } = await searchParams;
   const target = Array.isArray(url) ? url[0] : url;
   const outcome = target ? await runWithRateLimit(target, dict) : null;
 
   if (MODE === "internal") {
-    return <InternalLayout locale={locale} dict={dict} outcome={outcome} />;
+    return <InternalLayout lang={lang} dict={dict} outcome={outcome} />;
   }
-  return <PublicLayout locale={locale} dict={dict} outcome={outcome} />;
+  return <PublicLayout lang={lang} dict={dict} outcome={outcome} />;
 }
 
 async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome> {
@@ -71,11 +71,11 @@ async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome
 }
 
 function InternalLayout({
-  locale,
+  lang,
   dict,
   outcome,
 }: {
-  locale: Locale;
+  lang: Lang;
   dict: Dict;
   outcome: PageOutcome | null;
 }) {
@@ -87,14 +87,14 @@ function InternalLayout({
           <p className="text-xs text-[color:rgb(var(--muted))]">{dict.page.internalSubtitle}</p>
         </div>
         <div className="flex items-center gap-3">
-          <LocaleToggle locale={locale} dict={dict} />
+          <LangToggle lang={lang} />
           <span className="rounded-full bg-[color:rgb(var(--surface))] px-2.5 py-1 text-[11px] uppercase tracking-wide text-[color:rgb(var(--muted))]">
             internal
           </span>
         </div>
       </header>
 
-      <UrlInput dict={dict} compact />
+      <UrlInput compact />
 
       {outcome ? <Results outcome={outcome} dict={dict} /> : <EmptyState dict={dict} />}
     </main>
@@ -102,20 +102,20 @@ function InternalLayout({
 }
 
 function PublicLayout({
-  locale,
+  lang,
   dict,
   outcome,
 }: {
-  locale: Locale;
+  lang: Lang;
   dict: Dict;
   outcome: PageOutcome | null;
 }) {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-6">
       <div className="flex justify-end">
-        <LocaleToggle locale={locale} dict={dict} />
+        <LangToggle lang={lang} />
       </div>
-      <Hero dict={dict} />
+      <Hero />
 
       {outcome ? (
         <section className="flex flex-col gap-6">
@@ -178,7 +178,7 @@ function Results({ outcome, dict }: { outcome: PageOutcome; dict: Dict }) {
         </div>
       </section>
 
-      {outcome.html ? <RawHtmlToggle html={outcome.html} dict={dict} /> : null}
+      {outcome.html ? <RawHtmlToggle html={outcome.html} /> : null}
     </div>
   );
 }

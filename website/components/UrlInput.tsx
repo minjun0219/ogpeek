@@ -2,9 +2,10 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import type { Dict } from "@/lib/i18n";
+import { useDict } from "@/lib/dict-context";
 
-export function UrlInput({ dict, compact = false }: { dict: Dict; compact?: boolean }) {
+export function UrlInput({ compact = false }: { compact?: boolean }) {
+  const dict = useDict();
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -28,7 +29,7 @@ export function UrlInput({ dict, compact = false }: { dict: Dict; compact?: bool
     setPending(true);
     const next = new URLSearchParams();
     next.set("url", trimmed);
-    // Preserve the active locale segment so submissions from /ko stay on /ko.
+    // Preserve the active language segment so submissions from /ko stay on /ko.
     router.push(`${pathname}?${next.toString()}`);
   }
 

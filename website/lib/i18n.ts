@@ -1,7 +1,7 @@
-export type Locale = "en" | "ko";
+export type Lang = "en" | "ko";
 
-export const LOCALES = ["en", "ko"] as const;
-export const DEFAULT_LOCALE: Locale = "en";
+export const LANGS = ["en", "ko"] as const;
+export const DEFAULT_LANG: Lang = "en";
 
 export type Dict = {
   meta: { title: string; description: string };
@@ -160,21 +160,21 @@ const ko: Dict = {
   toggle: { ariaLabel: "언어 전환" },
 };
 
-const DICTIONARIES: Record<Locale, Dict> = { en, ko };
+const DICTIONARIES: Record<Lang, Dict> = { en, ko };
 
-export function getDict(locale: Locale): Dict {
-  return DICTIONARIES[locale];
+export function getDict(lang: Lang): Dict {
+  return DICTIONARIES[lang];
 }
 
-export function hasLocale(value: string): value is Locale {
+export function hasLang(value: string): value is Lang {
   return value === "en" || value === "ko";
 }
 
-// Returns the first locale we support that the browser explicitly prefers.
-// Falls back to DEFAULT_LOCALE when nothing matches. Only the language
+// Returns the first language we support that the browser explicitly prefers.
+// Falls back to DEFAULT_LANG when nothing matches. Only the language
 // subtag is used (so "ko-KR" matches "ko").
-export function pickLocaleFromAcceptLanguage(header: string | null): Locale {
-  if (!header) return DEFAULT_LOCALE;
+export function pickLangFromAcceptLanguage(header: string | null): Lang {
+  if (!header) return DEFAULT_LANG;
   const tags = header
     .split(",")
     .map((entry) => {
@@ -191,9 +191,9 @@ export function pickLocaleFromAcceptLanguage(header: string | null): Locale {
     .sort((a, b) => b.quality - a.quality);
   for (const { tag } of tags) {
     const primary = tag.split("-")[0] ?? "";
-    if (hasLocale(primary)) return primary;
+    if (hasLang(primary)) return primary;
   }
-  return DEFAULT_LOCALE;
+  return DEFAULT_LANG;
 }
 
 export function format(template: string, values: Record<string, string | number>): string {

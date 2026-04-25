@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { Dict } from "@/lib/i18n";
+import { useDict } from "@/lib/dict-context";
 
-export function RawHtmlToggle({ html, dict }: { html: string; dict: Dict }) {
+export function RawHtmlToggle({ html }: { html: string }) {
+  const dict = useDict();
   const [open, setOpen] = useState(false);
 
   return (

@@ -1,17 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { pickLocaleFromAcceptLanguage } from "@/lib/i18n";
+import { pickLangFromAcceptLanguage } from "@/lib/i18n";
 
-// Locale resolution per page request:
+// Language resolution per page request:
 //   /en/*  → English passthrough.
 //   /ko/*  → Korean  passthrough.
 //   /      → pure redirector. Picks `/en` or `/ko` based on the visitor's
-//            Accept-Language (falling back to DEFAULT_LOCALE).
+//            Accept-Language (falling back to DEFAULT_LANG).
 // Because `/` always redirects and `/en` / `/ko` never do, redirect loops
 // are structurally impossible. No cookie or other persistence is needed —
 // the URL itself is the source of truth.
 export function middleware(req: NextRequest): NextResponse {
   if (req.nextUrl.pathname === "/") {
-    const target = pickLocaleFromAcceptLanguage(
+    const target = pickLangFromAcceptLanguage(
       req.headers.get("accept-language"),
     );
     const url = req.nextUrl.clone();

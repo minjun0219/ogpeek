@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { Dict } from "@/lib/i18n";
+import { useDict } from "@/lib/dict-context";
 
 const COMMAND = "npm install ogpeek";
 
-export function InstallCopy({ dict }: { dict: Dict }) {
+export function InstallCopy() {
+  const dict = useDict();
   const [copied, setCopied] = useState(false);
 
   async function copy() {

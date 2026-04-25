@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Noto_Sans_KR } from "next/font/google";
-import { LOCALES, getDict, hasLocale, type Locale } from "@/lib/i18n";
+import { LANGS, getDict, hasLang, type Lang } from "@/lib/i18n";
+import { DictProvider } from "@/lib/dict-context";
 import "../globals.css";
 
 const notoSansKr = Noto_Sans_KR({
@@ -12,15 +13,15 @@ const notoSansKr = Noto_Sans_KR({
   variable: "--font-sans-kr",
 });
 
-export function generateStaticParams(): Array<{ lang: Locale }> {
-  return LOCALES.map((lang) => ({ lang }));
+export function generateStaticParams(): Array<{ lang: Lang }> {
+  return LANGS.map((lang) => ({ lang }));
 }
 
 type Params = Promise<{ lang: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { lang } = await params;
-  if (!hasLocale(lang)) return {};
+  if (!hasLang(lang)) return {};
   const dict = getDict(lang);
   return {
     title: dict.meta.title,
@@ -39,10 +40,13 @@ export default async function LangLayout({
   params: Params;
 }) {
   const { lang } = await params;
-  if (!hasLocale(lang)) notFound();
+  if (!hasLang(lang)) notFound();
+  const dict = getDict(lang);
   return (
     <html lang={lang} className={notoSansKr.variable}>
-      <body className="min-h-screen font-sans">{children}</body>
+      <body className="min-h-screen font-sans">
+        <DictProvider value={dict}>{children}</DictProvider>
+      </body>
     </html>
   );
 }
