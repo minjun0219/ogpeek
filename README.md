@@ -2,7 +2,7 @@
 
 > peek into any page's Open Graph tags
 
-> 한국어: [README.ko.md](./README.ko.md)
+> Korean: [README.ko.md](./README.ko.md)
 
 A focused OpenGraph debugging tool: paste a URL, see exactly how the page's
 OG card will render, and get OGP-spec violations called out automatically.
