@@ -1,8 +1,22 @@
 # ogpeek
 
-ogpeek 웹사이트를 구동하는 OGP 엔진.
+> 어느 페이지든 오픈그래프 메타태그를 바로 들여다본다.
 
-두 개의 엔트리포인트로 구성된다.
+OpenGraph 태그 파싱 · 페치 · 검증을 한 패키지에서 다루는 경량 엔진. 외부
+의존성은 `htmlparser2` 하나. Node 20+ · Bun · Workers · 브라우저에서 모두
+동작한다.
+
+## 설치
+
+```bash
+npm install ogpeek
+# 또는
+pnpm add ogpeek
+# 또는
+yarn add ogpeek
+```
+
+## 두 개의 엔트리포인트
 
 | 엔트리 | 용도 | 런타임 | 의존성 |
 | --- | --- | --- | --- |
@@ -14,7 +28,7 @@ ogpeek 웹사이트를 구동하는 OGP 엔진.
 않으므로 엣지/브라우저 런타임에서도 그대로 로드된다 — SSRF 정책 판단은 엔진
 밖으로 뺐기 때문.
 
-## 사용
+## 빠른 시작
 
 ```ts
 import { parse } from "ogpeek";
@@ -132,6 +146,10 @@ Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forger
 | `ORPHAN_STRUCTURED_PROPERTY` | warn | 구조화 속성 앞에 부모가 없음 |
 | `INVALID_DIMENSION` | warn | width/height 정수 파싱 실패 |
 | `MISSING_PREFIX_ATTR` | info | `<html prefix>` 선언 없음 |
+
+## 관련 프로젝트
+
+이 엔진으로 만든 웹 도구: <https://github.com/minjun0219/ogpeek>
 
 ## 라이선스
 

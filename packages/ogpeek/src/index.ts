@@ -1,4 +1,4 @@
-export { parse } from "./parse";
+export { parse } from "./parse.js";
 export type {
   OgAudio,
   OgDebugResult,
@@ -11,4 +11,4 @@ export type {
   Warning,
   WarningCode,
   WarningSeverity,
-} from "./types";
+} from "./types.js";

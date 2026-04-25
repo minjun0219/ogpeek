@@ -1,5 +1,5 @@
 import { Parser } from "htmlparser2";
-import type { RawMeta } from "./types";
+import type { RawMeta } from "./types.js";
 
 export type HeadScan = {
   raw: RawMeta[];

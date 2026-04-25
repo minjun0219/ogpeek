@@ -1,7 +1,7 @@
-import { KNOWN_OG_TYPES, OG_URL_PROPERTIES } from "./known-types";
-import type { HeadScan } from "./meta";
-import type { TreeBuildResult } from "./tree";
-import type { Warning } from "./types";
+import { KNOWN_OG_TYPES, OG_URL_PROPERTIES } from "./known-types.js";
+import type { HeadScan } from "./meta.js";
+import type { TreeBuildResult } from "./tree.js";
+import type { Warning } from "./types.js";
 
 export function validate(head: HeadScan, tree: TreeBuildResult, baseUrl: string | undefined): Warning[] {
   const warnings: Warning[] = [];
