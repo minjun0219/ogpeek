@@ -198,8 +198,8 @@ describe("fetchHtml() — guard hook", () => {
     globalThis.fetch = vi.fn(async () =>
       mockResponse({ body: "<html>ok</html>" }),
     ) as typeof fetch;
-    // 과거 같으면 SSRF 가드가 차단했을 loopback 리터럴도 통과해야 한다 —
-    // 이제 엔진은 정책 판단을 하지 않는다.
+    // A loopback literal that the old built-in SSRF guard would have blocked
+    // should now pass through — the engine no longer makes policy decisions.
     const result = await fetchHtml("http://127.0.0.1/");
     expect(result.html).toContain("ok");
   });

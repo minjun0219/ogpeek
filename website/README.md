@@ -1,48 +1,53 @@
-# ogpeek — website (데모)
+# ogpeek — website (demo)
 
-`packages/ogpeek` 엔진의 **예제 / 소개용 데모 사이트**. Next.js 15 (App
-Router) 로 작성됐고 Cloudflare Workers 한 곳에만 배포한다. 운영용 도구가
-아니다 — 엔진을 어떻게 쓰는지 보여주는 자리.
+> Korean: [README.ko.md](./README.ko.md)
 
-## 개발
+The **example / introductory demo site** for the `packages/ogpeek` engine.
+Built on Next.js 15 (App Router) and deployed only to Cloudflare Workers.
+This is not a production tool — it is a place to show how the package is
+used.
+
+## Development
 
 ```bash
 pnpm -F website dev         # http://localhost:3000 (Node 24)
 pnpm -F website typecheck
 ```
 
-## 배포 — Cloudflare Workers 전용
+## Deployment — Cloudflare Workers only
 
-`@opennextjs/cloudflare` 어댑터로 빌드/배포한다. `wrangler.json` 은
-`nodejs_compat` 플래그를 켜둔 상태.
+Built and deployed via the `@opennextjs/cloudflare` adapter. `wrangler.json`
+keeps the `nodejs_compat` flag enabled.
 
 ```bash
-pnpm -F website cf:build    # OpenNext 빌드 → .open-next/worker.js
-pnpm -F website cf:preview  # 로컬 wrangler 미리보기
-pnpm -F website cf:deploy   # 실제 배포 (wrangler login 필요)
+pnpm -F website cf:build    # OpenNext build → .open-next/worker.js
+pnpm -F website cf:preview  # local wrangler preview
+pnpm -F website cf:deploy   # actual deploy (requires wrangler login)
 ```
 
-## SSRF 가드
+## SSRF guard
 
-`lib/ssrf-guard.ts` 는 다음 두 단계로 동작한다:
+`lib/ssrf-guard.ts` runs in two stages:
 
-1. **hostname 검사** — `localhost` / `*.localhost` / 리터럴 사설 IP 차단.
-2. **DoH(DNS-over-HTTPS) 조회** — Cloudflare 의 `cloudflare-dns.com/dns-query`
-   JSON API 로 A/AAAA 를 받아 `ipaddr.js` `range()` 가 `unicast` 가 아닌 모든
-   대역을 차단.
+1. **Hostname check** — block `localhost` / `*.localhost` / literal private
+   IPs.
+2. **DoH (DNS-over-HTTPS) lookup** — resolve A/AAAA via Cloudflare's
+   `cloudflare-dns.com/dns-query` JSON API, then block every range where
+   `ipaddr.js`'s `range()` returns anything other than `unicast`.
 
-fetch() 한 발이면 끝나므로 Node 도, Workers 도 동일하게 동작한다 — 별도의
-runtime 분기 없이 같은 코드 경로.
+Because it only uses a single `fetch()` call, it runs identically on Node
+and Workers — same code path, no runtime branch.
 
-DNS rebinding 완전 방어는 connect-time IP pinning(검증한 IP 로 직접 connect)
-이 필요하지만 Workers 는 raw TCP 를 열어주지 않는다. 데모 사이트라는 위치
-매김 상 의도적으로 얕은 방어까지만 둔 것 — 운영용 도구로 쓰려면 자체 호스팅
-인스턴스에서 undici Agent + node:dns 기반 connect-time 가드를 따로 짜라.
+Full DNS-rebinding defence requires connect-time IP pinning (connect
+directly to the IP that was validated), but Workers does not let you open
+raw TCP. As the site is positioned as a demo, the shallow defence is an
+intentional stopping point — for production usage, write a separate
+connect-time guard on top of undici's Agent + node:dns in a self-hosted
+instance.
 
-## 환경 변수
+## Environment variables
 
-| 변수 | 기본값 | 설명 |
+| variable | default | description |
 | --- | --- | --- |
-| `NEXT_PUBLIC_MODE` | `public` | `public` 또는 `internal`. internal은 랜딩 숨김 + rate limit 해제 |
-| `OGPEEK_USER_AGENT` | 브라우저 유사 UA | 외부 페이지 fetch 시 사용할 User-Agent |
-| `OGPEEK_RATE_LIMIT_PER_MIN` | `20` | public 모드에서 IP당 분당 요청 수. 0 이하는 무제한 |
+| `OGPEEK_USER_AGENT` | browser-like UA | User-Agent used when fetching upstream pages |
+| `OGPEEK_RATE_LIMIT_PER_MIN` | `20` | per-IP requests per minute. Zero or below means unlimited |

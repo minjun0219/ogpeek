@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslate } from "@/lib/translate-context";
 
 const COMMAND = "npm install ogpeek";
 
 export function InstallCopy() {
+  const { dict } = useTranslate();
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -26,10 +28,10 @@ export function InstallCopy() {
       <button
         type="button"
         onClick={copy}
-        aria-label="명령어 복사"
+        aria-label={dict.install.ariaLabel}
         className="shrink-0 rounded px-2 py-1 text-xs text-[color:rgb(var(--muted))] transition hover:bg-[color:rgb(var(--background))] hover:text-[color:rgb(var(--foreground))]"
       >
-        {copied ? "복사됨" : "복사"}
+        {copied ? dict.install.copied : dict.install.copy}
       </button>
     </div>
   );

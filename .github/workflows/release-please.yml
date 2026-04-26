@@ -1,12 +1,12 @@
-name: Publish ogpeek to npm
+name: Release Please
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       tag:
-        description: "npm dist-tag (기본값: latest)"
+        description: "npm dist-tag (수동 publish 시 사용, 기본값: latest)"
         required: false
         default: latest
       dry-run:
@@ -16,17 +16,42 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
+  release-please:
+    name: Open release PR / cut release
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs['packages/ogpeek--release_created'] }}
+      tag_name: ${{ steps.release.outputs['packages/ogpeek--tag_name'] }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
   publish:
-    name: Publish packages/ogpeek
+    name: Publish packages/ogpeek to npm
+    needs: release-please
+    # push 일 때는 release-please 가 릴리스를 잘랐을 때만,
+    # workflow_dispatch 일 때는 release-please 잡을 건너뛰고 바로 실행.
+    if: |
+      always() && (
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'push' && needs.release-please.outputs.release_created == 'true')
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name || github.ref }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -50,27 +75,14 @@ jobs:
       - name: Build
         run: pnpm -F ogpeek build
 
-      - name: Verify package.json version matches release tag
-        if: github.event_name == 'release'
-        working-directory: packages/ogpeek
-        run: |
-          pkg_version="$(node -p "require('./package.json').version")"
-          tag_name="${GITHUB_REF_NAME#v}"
-          if [ "$pkg_version" != "$tag_name" ]; then
-            echo "::error::package.json version ($pkg_version)와 릴리스 태그 ($tag_name)가 다릅니다."
-            exit 1
-          fi
-
       - name: Publish to npm
         working-directory: packages/ogpeek
         env:
           # secrets.NPM_AUTH_TOKEN 이 비어있으면 npm CLI 가 OIDC(Trusted
-          # Publisher) 로 폴백한다. 첫 발행 후 패키지 settings 에서 Trusted
-          # Publisher 를 등록하고 NPM_AUTH_TOKEN 시크릿만 비우면 토큰 없이
-          # 굴러간다.
+          # Publisher) 로 폴백한다.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           DIST_TAG: ${{ github.event.inputs.tag || 'latest' }}
-          DRY_RUN: ${{ github.event.inputs.dry-run || 'false' }}
+          DRY_RUN: ${{ github.event.inputs['dry-run'] || 'false' }}
         run: |
           args=(--access public --provenance --no-git-checks --tag "$DIST_TAG")
           if [ "$DRY_RUN" = "true" ]; then

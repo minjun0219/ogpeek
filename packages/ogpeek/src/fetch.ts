@@ -3,18 +3,20 @@ export type FetchOptions = {
   timeoutMs?: number;
   maxBytes?: number;
   /**
-   * 초기 요청 + 모든 리디렉션 hop 직전에 호출된다. 차단하려면 FetchError 를
-   * throw, 통과시키려면 return. 미지정 시 아무 검사도 하지 않는다. ogpeek 은
-   * SSRF 정책을 판단하지 않는다 — 배포 환경(클라우드/온프렘/엣지)마다
-   * 적절한 가드 구현이 다르므로 호출자 책임이다.
+   * Called right before the initial request and before every redirect hop.
+   * Throw a FetchError to block, return to allow. If unset, no checks are
+   * performed — ogpeek does not make SSRF policy decisions, because the
+   * appropriate guard differs by deployment environment (cloud / on-prem /
+   * edge), so it is the caller's responsibility.
    */
   guard?: (url: URL) => Promise<void> | void;
   /**
-   * 한 hop 의 HTTP 전송만 수행하는 함수. fetchHtml 이 각 리디렉션 hop 마다
-   * 이 함수를 호출해서 단일 Response 를 받는다. 리디렉션 추적 · timeout ·
-   * maxBytes · content-type 판정 · guard 호출은 fetchHtml 이 계속 소유하므로
-   * 이 주입점은 "전송 정책만" 바꾸는 좁은 슬롯이다 (커스텀 dispatcher,
-   * DoH 리졸버, mTLS 등). 기본값은 globalThis.fetch.
+   * A function that performs the HTTP transport for a single hop only.
+   * fetchHtml calls this for each redirect hop and reads back one Response.
+   * Redirect tracing, timeout, maxBytes, content-type judgement, and guard
+   * invocation stay owned by fetchHtml, so this injection point is a narrow
+   * slot for "transport policy only" (custom dispatcher, DoH resolver,
+   * mTLS, and so on). Defaults to globalThis.fetch.
    */
   fetch?: (url: string, init: RequestInit) => Promise<Response>;
 };
@@ -199,8 +201,9 @@ async function runGuard(
   try {
     await guard(url);
   } catch (err) {
-    // FetchError 는 그대로 전파 — 호출자가 의도한 차단 코드/상태를 그대로
-    // 노출한다. 그 외 에러는 호출자 구현 버그로 보고 GUARD_FAILED 로 래핑한다.
+    // Propagate FetchError as-is so the caller's intended block code/status
+    // surfaces unchanged. Anything else is treated as a caller bug and
+    // wrapped as GUARD_FAILED.
     if (err instanceof FetchError) throw err;
     const message = err instanceof Error ? err.message : String(err);
     throw new FetchError("GUARD_FAILED", 500, `guard threw: ${message}`);

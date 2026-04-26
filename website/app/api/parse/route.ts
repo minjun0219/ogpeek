@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { runParse } from "@/lib/server-parse";
-import { clientIp, isPublicMode, rateLimit } from "@/lib/rate-limit";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function rateLimitHeaders(
@@ -18,40 +17,20 @@ function rateLimitHeaders(
   return headers;
 }
 
-type RequestInput = {
-  target: string | null;
-  includeHtml: boolean;
-};
-
-async function readRequest(req: Request): Promise<RequestInput> {
+async function readTarget(req: Request): Promise<string | null> {
   if (req.method === "GET") {
-    const u = new URL(req.url);
-    return {
-      target: u.searchParams.get("url"),
-      includeHtml: u.searchParams.get("includeHtml") === "1",
-    };
+    return new URL(req.url).searchParams.get("url");
   }
   try {
-    const body = (await req.json()) as { url?: unknown; includeHtml?: unknown };
-    return {
-      target: typeof body.url === "string" ? body.url : null,
-      includeHtml: body.includeHtml === true || body.includeHtml === "1",
-    };
+    const body = (await req.json()) as { url?: unknown };
+    return typeof body.url === "string" ? body.url : null;
   } catch {
-    return { target: null, includeHtml: false };
+    return null;
   }
-}
-
-// In public mode the raw HTML body is suppressed unconditionally so the
-// endpoint can't be abused as a general-purpose HTML proxy — no opt-in flag
-// overrides this. Operators who need the raw body run in internal mode.
-function shouldIncludeHtml(requestedInclude: boolean): boolean {
-  if (isPublicMode()) return false;
-  return requestedInclude;
 }
 
 async function handle(req: Request): Promise<Response> {
-  const { target, includeHtml: requestedInclude } = await readRequest(req);
+  const target = await readTarget(req);
   if (!target) {
     return NextResponse.json(
       {
@@ -62,34 +41,26 @@ async function handle(req: Request): Promise<Response> {
     );
   }
 
-  const includeHtml = shouldIncludeHtml(requestedInclude);
-
-  if (isPublicMode()) {
-    const decision = rateLimit(clientIp(req));
-    if (!decision.ok) {
-      return NextResponse.json(
-        {
-          ok: false,
-          target,
-          error: {
-            code: "RATE_LIMITED",
-            status: 429,
-            message: `too many requests, retry in ${decision.retryAfterSec}s`,
-          },
+  const decision = rateLimit(clientIp(req));
+  if (!decision.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        target,
+        error: {
+          code: "RATE_LIMITED",
+          status: 429,
+          message: `too many requests, retry in ${decision.retryAfterSec}s`,
         },
-        { status: 429, headers: rateLimitHeaders(decision) },
-      );
-    }
-    const outcome = await runParse(target, { includeHtml });
-    return NextResponse.json(outcome, {
-      status: outcome.ok ? 200 : outcome.error.status,
-      headers: rateLimitHeaders(decision),
-    });
+      },
+      { status: 429, headers: rateLimitHeaders(decision) },
+    );
   }
 
-  const outcome = await runParse(target, { includeHtml });
+  const outcome = await runParse(target);
   return NextResponse.json(outcome, {
     status: outcome.ok ? 200 : outcome.error.status,
+    headers: rateLimitHeaders(decision),
   });
 }
 

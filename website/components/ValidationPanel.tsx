@@ -1,11 +1,6 @@
 import type { Warning } from "ogpeek";
 import { cn } from "@/lib/cn";
-
-const SEVERITY_LABEL: Record<Warning["severity"], string> = {
-  error: "에러",
-  warn: "경고",
-  info: "안내",
-};
+import type { Dict } from "@/lib/i18n";
 
 const SEVERITY_STYLE: Record<Warning["severity"], string> = {
   error: "bg-red-500/10 text-red-700 ring-red-500/30 dark:text-red-300",
@@ -15,7 +10,8 @@ const SEVERITY_STYLE: Record<Warning["severity"], string> = {
 
 const ORDER: Record<Warning["severity"], number> = { error: 0, warn: 1, info: 2 };
 
-export function ValidationPanel({ warnings }: { warnings: Warning[] }) {
+export function ValidationPanel({ warnings, dict }: { warnings: Warning[]; dict: Dict }) {
+  const severityLabel = dict.validation.severity;
   const sorted = [...warnings].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = warnings.reduce<Record<Warning["severity"], number>>(
     (acc, w) => {
@@ -29,10 +25,10 @@ export function ValidationPanel({ warnings }: { warnings: Warning[] }) {
     return (
       <section className="rounded-xl border border-[color:rgb(var(--border))] bg-emerald-500/5 px-5 py-4">
         <h2 className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-          검증 통과 — 확인된 문제 없음
+          {dict.validation.passTitle}
         </h2>
         <p className="mt-1 text-xs text-[color:rgb(var(--muted))]">
-          필수 OG 태그가 모두 존재하고 스펙 위반이 감지되지 않았습니다.
+          {dict.validation.passBody}
         </p>
       </section>
     );
@@ -41,7 +37,7 @@ export function ValidationPanel({ warnings }: { warnings: Warning[] }) {
   return (
     <section className="rounded-xl border border-[color:rgb(var(--border))] bg-[color:rgb(var(--surface))] px-5 py-4">
       <header className="flex items-center justify-between">
-        <h2 className="text-sm font-medium">검증 결과</h2>
+        <h2 className="text-sm font-medium">{dict.validation.resultsTitle}</h2>
         <div className="flex gap-2 text-xs">
           {(["error", "warn", "info"] as const).map((s) =>
             counts[s] ? (
@@ -52,7 +48,7 @@ export function ValidationPanel({ warnings }: { warnings: Warning[] }) {
                   SEVERITY_STYLE[s],
                 )}
               >
-                {SEVERITY_LABEL[s]} {counts[s]}
+                {severityLabel[s]} {counts[s]}
               </span>
             ) : null,
           )}
@@ -68,7 +64,7 @@ export function ValidationPanel({ warnings }: { warnings: Warning[] }) {
             )}
           >
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide">
-              <span>{SEVERITY_LABEL[w.severity]}</span>
+              <span>{severityLabel[w.severity]}</span>
               <span className="opacity-60">{w.code}</span>
             </div>
             <div className="mt-1">{w.message}</div>
