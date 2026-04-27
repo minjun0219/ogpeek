@@ -121,6 +121,21 @@ describe("@ogpeek/react render", () => {
     expect(html).toContain("페이지가 선언한 캐노니컬");
   });
 
+  it("RedirectFlow treats a relative canonical as same resource", () => {
+    // ogpeek exposes the raw canonical href, which may be relative —
+    // resolving it against finalUrl should suppress the "differs" note.
+    const html = render(
+      <RedirectFlow
+        finalUrl="https://example.com/"
+        status={200}
+        redirects={[]}
+        canonical="/"
+      />,
+    );
+    expect(html).not.toContain("표준 URL");
+    expect(html).not.toContain("페이지가 선언한 캐노니컬");
+  });
+
   it("RedirectFlow lists redirect hops", () => {
     const html = render(
       <RedirectFlow

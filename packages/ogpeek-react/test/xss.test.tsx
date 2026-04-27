@@ -46,6 +46,16 @@ describe("XSS escaping", () => {
     expect(html).toContain("ogpeek-preview-image-empty");
   });
 
+  it("blocks mailto: URLs in preview image", () => {
+    const result = makeResult();
+    result.ogp.images = [{ url: "mailto:attacker@example.com" }];
+    const html = render(
+      <Preview data={derivePreviewData(result, "https://example.com/")} />,
+    );
+    expect(html).not.toContain("mailto:");
+    expect(html).toContain("ogpeek-preview-image-empty");
+  });
+
   it("escapes hostile values in tag table", () => {
     const result = makeResult();
     result.ogp.title = PAYLOAD;

@@ -96,7 +96,12 @@ export function RedirectFlow({
 
 function sameResource(a: string, b: string): boolean {
   try {
-    const ua = new URL(a);
+    // Pass `b` as base so a relative canonical (e.g. "/" or "/page")
+    // resolves against the absolute fetched URL before comparison —
+    // ogpeek's parser exposes the raw canonical href, which can be
+    // relative. Without the base argument `new URL("/")` throws and the
+    // catch path mistakenly reports the resources as different.
+    const ua = new URL(a, b);
     const ub = new URL(b);
     return (
       ua.protocol === ub.protocol &&
