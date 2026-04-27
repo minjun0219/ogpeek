@@ -1,5 +1,6 @@
 import type { PreviewData } from "./derivePreviewData.js";
 import { safeImageSrc } from "./derivePreviewData.js";
+import { cls } from "./cls.js";
 
 export type PreviewProps = {
   data: PreviewData;
@@ -8,12 +9,9 @@ export type PreviewProps = {
 
 export function Preview({ data, className }: PreviewProps) {
   const safeImage = data.image ? safeImageSrc(data.image) : "";
-  const rootClass = className
-    ? `ogpeek-root ogpeek-preview ${className}`
-    : "ogpeek-root ogpeek-preview";
 
   return (
-    <figure className={rootClass}>
+    <figure className={cls("ogpeek-root ogpeek-preview", className)}>
       {safeImage ? (
         <img className="ogpeek-preview-image" src={safeImage} alt="" />
       ) : (

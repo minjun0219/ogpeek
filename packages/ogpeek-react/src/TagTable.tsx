@@ -7,6 +7,7 @@ import {
   type Dict,
   type Lang,
 } from "./dict.js";
+import { cls } from "./cls.js";
 
 export type TagTableProps = {
   result: OgDebugResult;
@@ -27,12 +28,8 @@ export function TagTable({
   const dict = resolveDict(lang, dictOverride);
   const groups = buildGroups(result, dict).filter((g) => g.rows.length > 0);
 
-  const rootClass = className
-    ? `ogpeek-root ogpeek-section--flat ${className}`
-    : "ogpeek-root ogpeek-section--flat";
-
   return (
-    <section className={rootClass}>
+    <section className={cls("ogpeek-root ogpeek-section--flat", className)}>
       <div className="ogpeek-table-header">
         <h2 className="ogpeek-h2">{dict.tagTable.title}</h2>
         <span className="ogpeek-text-xs ogpeek-muted">

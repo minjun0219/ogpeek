@@ -12,6 +12,7 @@ import { Preview } from "./Preview.js";
 import { ValidationPanel } from "./ValidationPanel.js";
 import { TagTable } from "./TagTable.js";
 import { RedirectFlow } from "./RedirectFlow.js";
+import { cls } from "./cls.js";
 
 export type ResultProps = {
   result: OgDebugResult;
@@ -43,12 +44,9 @@ export function Result({
 }: ResultProps) {
   const dict = resolveDict(lang, dictOverride);
   const preview = derivePreviewData(result, finalUrl);
-  const rootClass = className
-    ? `ogpeek-root ogpeek-stack ${className}`
-    : "ogpeek-root ogpeek-stack";
 
   return (
-    <div className={rootClass}>
+    <div className={cls("ogpeek-root ogpeek-stack", className)}>
       <ValidationPanel
         warnings={result.warnings}
         lang={lang}

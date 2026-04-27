@@ -7,6 +7,7 @@ import {
   type Dict,
   type Lang,
 } from "./dict.js";
+import { cls } from "./cls.js";
 
 export type RedirectFlowProps = {
   finalUrl: string;
@@ -32,12 +33,8 @@ export function RedirectFlow({
     canonical != null && !sameResource(canonical, finalUrl);
   const initialUrl = redirects[0]?.from ?? finalUrl;
 
-  const rootClass = className
-    ? `ogpeek-root ogpeek-section ${className}`
-    : "ogpeek-root ogpeek-section";
-
   return (
-    <section className={rootClass}>
+    <section className={cls("ogpeek-root ogpeek-section", className)}>
       <header className="ogpeek-section-header">
         <h2 className="ogpeek-h2">{dict.redirectFlow.title}</h2>
         <span className="ogpeek-text-xs ogpeek-muted">HTTP {status}</span>

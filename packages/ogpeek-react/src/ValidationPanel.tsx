@@ -6,6 +6,7 @@ import {
   type Dict,
   type Lang,
 } from "./dict.js";
+import { cls } from "./cls.js";
 
 export type ValidationPanelProps = {
   warnings: Warning[];
@@ -30,11 +31,8 @@ export function ValidationPanel({
   const severityLabel = dict.validation.severity;
 
   if (warnings.length === 0) {
-    const rootClass = className
-      ? `ogpeek-root ogpeek-section--pass ${className}`
-      : "ogpeek-root ogpeek-section--pass";
     return (
-      <section className={rootClass}>
+      <section className={cls("ogpeek-root ogpeek-section--pass", className)}>
         <h2 className="ogpeek-pass-title">{dict.validation.passTitle}</h2>
         <p className="ogpeek-pass-body">{dict.validation.passBody}</p>
       </section>
@@ -52,12 +50,8 @@ export function ValidationPanel({
     { error: 0, warn: 0, info: 0 },
   );
 
-  const rootClass = className
-    ? `ogpeek-root ogpeek-section ${className}`
-    : "ogpeek-root ogpeek-section";
-
   return (
-    <section className={rootClass}>
+    <section className={cls("ogpeek-root ogpeek-section", className)}>
       <header className="ogpeek-section-header">
         <h2 className="ogpeek-h2">{dict.validation.resultsTitle}</h2>
         <div className="ogpeek-pill-row">
