@@ -1,9 +1,11 @@
 /*
- * @ogpeek/react styles. Scope is established by `.ogpeek-root` on the
- * outermost component element (set automatically by every component).
- * Every selector that touches a token or layout rule is gated behind
- * `.ogpeek-root` so the stylesheet can be dropped into any host page
- * without leaking declarations or colliding with global CSS.
+ * @ogpeek/react styles. `.ogpeek-root` is applied to the outermost
+ * element of every component and is the only selector that declares
+ * the theme token variables and base typography. The remaining rules
+ * use `ogpeek-`-prefixed class names to keep the risk of colliding
+ * with host-page CSS low; they aren't all gated behind a `.ogpeek-root`
+ * ancestor, but in practice every `ogpeek-` class is rendered inside
+ * one because the components always set it on their root.
  */
 
 .ogpeek-root {
@@ -24,6 +26,16 @@
   --ogpeek-pass-fg: 4 120 87;
   --ogpeek-pass-bg: 209 250 229;
 
+  /* Preview card has its own palette so it visually echoes how social
+     platforms render the OG card on a white surface — the rest of the
+     panels use the page tokens above. Tokenized so dark mode can swap. */
+  --ogpeek-preview-card-bg: 255 255 255;
+  --ogpeek-preview-body-bg: 240 242 245;
+  --ogpeek-preview-image-empty: 241 245 249;
+  --ogpeek-preview-title-fg: 15 23 42;
+  --ogpeek-preview-description-fg: 71 85 105;
+  --ogpeek-preview-domain-fg: 100 116 139;
+
   display: block;
   color: rgb(var(--ogpeek-fg));
   font: 14px / 1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -36,10 +48,32 @@
     --ogpeek-muted: 148 163 184;
     --ogpeek-surface: 24 28 35;
     --ogpeek-border: 44 50 60;
+
+    /* Without these the pale red/amber/blue/green light-mode bgs
+       blended against the dark page surface and looked washed out
+       ("물빠진 색"). Use deeper hues with the same alpha so the pills
+       and warning rows still read as colored at a glance. */
     --ogpeek-error-fg: 252 165 165;
+    --ogpeek-error-bg: 127 29 29;
+    --ogpeek-error-ring: 153 27 27;
     --ogpeek-warn-fg: 252 211 77;
+    --ogpeek-warn-bg: 113 63 18;
+    --ogpeek-warn-ring: 146 64 14;
     --ogpeek-info-fg: 147 197 253;
+    --ogpeek-info-bg: 30 58 138;
+    --ogpeek-info-ring: 30 64 175;
     --ogpeek-pass-fg: 110 231 183;
+    --ogpeek-pass-bg: 6 78 59;
+
+    /* Dark-mode preview palette mirrors how Slack / Telegram / Discord
+       render the same card on a dark surface — slightly elevated body
+       with light text, rather than a clinical white card on a dark page. */
+    --ogpeek-preview-card-bg: 30 36 46;
+    --ogpeek-preview-body-bg: 36 42 53;
+    --ogpeek-preview-image-empty: 30 36 46;
+    --ogpeek-preview-title-fg: 226 232 240;
+    --ogpeek-preview-description-fg: 148 163 184;
+    --ogpeek-preview-domain-fg: 148 163 184;
   }
 }
 
@@ -317,7 +351,7 @@
   margin: 0;
   border-radius: 16px;
   border: 1px solid rgb(var(--ogpeek-border));
-  background: #ffffff;
+  background: rgb(var(--ogpeek-preview-card-bg));
   overflow: hidden;
   max-width: 480px;
 }
@@ -326,24 +360,24 @@
   width: 100%;
   aspect-ratio: 1.91 / 1;
   object-fit: cover;
-  background: #f1f5f9;
+  background: rgb(var(--ogpeek-preview-image-empty));
 }
 .ogpeek-preview-image-empty {
   display: block;
   width: 100%;
   aspect-ratio: 1.91 / 1;
-  background: #f1f5f9;
+  background: rgb(var(--ogpeek-preview-image-empty));
 }
 .ogpeek-preview-body {
-  background: #f0f2f5;
-  color: #0f172a;
+  background: rgb(var(--ogpeek-preview-body-bg));
+  color: rgb(var(--ogpeek-preview-title-fg));
   padding: 12px 16px;
 }
 .ogpeek-preview-domain {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
+  color: rgb(var(--ogpeek-preview-domain-fg));
 }
 .ogpeek-preview-title {
   margin-top: 2px;
@@ -358,9 +392,9 @@
 .ogpeek-preview-description {
   margin-top: 2px;
   font-size: 12px;
-  color: #475569;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: rgb(var(--ogpeek-preview-description-fg));
+  /* Show the full description; truncation in this tool isn't useful —
+     consumers want to see what the social platform will display verbatim. */
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }

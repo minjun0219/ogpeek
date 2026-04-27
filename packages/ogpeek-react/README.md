@@ -16,11 +16,12 @@ pnpm add ogpeek @ogpeek/react
 ```tsx
 import { Result } from "@ogpeek/react";
 import "@ogpeek/react/styles.css";
-import { fetchHtml, parse, validate } from "ogpeek/fetch";
+import { parse } from "ogpeek";
+import { fetchHtml } from "ogpeek/fetch";
 
 export async function OgInspector({ url }: { url: string }) {
   const fetched = await fetchHtml(url);
-  const result = validate(parse(fetched.html, { url: fetched.finalUrl }));
+  const result = parse(fetched.html, { url: fetched.finalUrl });
 
   return (
     <Result

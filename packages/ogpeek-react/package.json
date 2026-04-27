@@ -25,7 +25,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc -p . && cp src/styles.css dist/styles.css",
+    "build": "rimraf dist && tsc -p . && node -e \"require('node:fs').copyFileSync('src/styles.css', 'dist/styles.css')\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
