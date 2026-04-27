@@ -1,32 +1,33 @@
-# ogpeek-ui
+# @ogpeek/ui
 
 Drop-in OG-tag inspector UI for [`ogpeek`](../ogpeek), shipped as
-framework-agnostic Web Components plus a parallel HTML-string render API.
-Works in any frontend (React, Vue, Svelte, plain HTML) and renders
-server-side without JavaScript via [Declarative Shadow DOM][dsd].
+framework-agnostic Web Components plus a parallel HTML-string render API
+and an opt-in React wrapper. Renders server-side without JavaScript via
+[Declarative Shadow DOM][dsd] and works in any frontend (React, Vue,
+Svelte, plain HTML).
 
 > **Status:** v0.1, workspace-only. Not yet published to npm.
 
 ## What's in the box
 
-Five components, both as render functions and as custom elements:
+Five components, available three ways:
 
-| Render function | Custom element |
-|---|---|
-| `renderResult({...})` | `<og-peek-result>` |
-| `renderPreview({...})` | `<og-peek-preview>` |
-| `renderValidationPanel({...})` | `<og-peek-validation-panel>` |
-| `renderTagTable({...})` | `<og-peek-tag-table>` |
-| `renderRedirectFlow({...})` | `<og-peek-redirect-flow>` |
+| HTML-string render | Custom element | React wrapper |
+|---|---|---|
+| `renderResult({...})` | `<og-peek-result>` | `<OgPeekResult ... />` |
+| `renderPreview({...})` | `<og-peek-preview>` | `<OgPeekPreview ... />` |
+| `renderValidationPanel({...})` | `<og-peek-validation-panel>` | `<OgPeekValidationPanel ... />` |
+| `renderTagTable({...})` | `<og-peek-tag-table>` | `<OgPeekTagTable ... />` |
+| `renderRedirectFlow({...})` | `<og-peek-redirect-flow>` | `<OgPeekRedirectFlow ... />` |
 
 All accept the engine's `OgDebugResult` (and friends) directly. Backend —
 fetching, SSRF, rate-limiting — stays your responsibility, exactly as
 `ogpeek` already requires.
 
-## Server-side rendering
+## Server-side rendering (any backend)
 
 ```ts
-import { renderResult } from "ogpeek-ui";
+import { renderResult } from "@ogpeek/ui";
 import { fetchHtml, parse, validate } from "ogpeek/fetch";
 
 const fetched = await fetchHtml(url, { guard });
@@ -40,7 +41,7 @@ const html = renderResult({
   canonical: result.meta.canonical,
   lang: "ko",
 });
-// html is a complete `<og-peek-result>...<template shadowrootmode="open">...</template></og-peek-result>` block
+// html is a complete `<og-peek-result>...<template shadowrootmode="open">...</template></og-peek-result>` block.
 // Inject directly into your server-rendered HTML.
 ```
 
@@ -48,13 +49,37 @@ Modern browsers (Chrome 90+, Safari 16.4+, Firefox 123+) materialize the
 declarative shadow root immediately on parse, so the result is visible
 before any client JS loads.
 
+## React (Next.js, etc.)
+
+```tsx
+import { OgPeekResult } from "@ogpeek/ui/react";
+
+export default function ResultPage({ result, finalUrl, status, redirects }) {
+  return (
+    <OgPeekResult
+      result={result}
+      finalUrl={finalUrl}
+      status={status}
+      redirects={redirects}
+      canonical={result.meta.canonical}
+      lang="ko"
+    />
+  );
+}
+```
+
+Wrappers are server-component safe — they simply call the matching
+`render*` function and inject the DSD string via
+`dangerouslySetInnerHTML`. No hooks, no client APIs, no `"use client"`
+boundary.
+
 ## Client-side custom elements
 
 ```html
 <og-peek-result lang="ko"></og-peek-result>
 
 <script type="module">
-  import { register } from "ogpeek-ui";
+  import { register } from "@ogpeek/ui";
   register();
 
   const el = document.querySelector("og-peek-result");
@@ -67,15 +92,15 @@ before any client JS loads.
 ```
 
 `register()` is idempotent and guarded — calling it twice or from two
-co-loaded bundles will not throw. Custom elements use Shadow DOM so styles
-do not leak in or out; consumers do not need to import any CSS file or
-configure Tailwind.
+co-loaded bundles will not throw. Custom elements use Shadow DOM so
+styles do not leak in or out; consumers do not need to import any CSS
+file or configure Tailwind.
 
 ## i18n
 
 - Built-in `ko` (default) and `en` dictionaries cover all rendered strings.
 - Pick a language via the `lang="ko" | "en"` attribute on any element, or
-  the `lang` option on any render function.
+  the `lang` option on any render function / React wrapper prop.
 - For deeper customization, pass a `dict` override (selective deep-merge)
   on either API.
 

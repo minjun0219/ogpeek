@@ -1,10 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { ValidationPanel } from "@/components/ValidationPanel";
-import { RedirectFlow } from "@/components/RedirectFlow";
-import { TagTable } from "@/components/TagTable";
-import { Preview } from "@/components/previews/Preview";
-import { derivePreviewData } from "@/components/previews/shared";
+import { OgPeekResult } from "@ogpeek/ui/react";
 import { Hero } from "@/components/landing/Hero";
 import { Footer } from "@/components/landing/Footer";
 import { LangToggle } from "@/components/LangToggle";
@@ -36,7 +32,7 @@ export default async function Page({
   const target = Array.isArray(url) ? url[0] : url;
   const outcome = target ? await runWithRateLimit(target, dict) : null;
 
-  return <PageLayout dict={dict} outcome={outcome} />;
+  return <PageLayout dict={dict} outcome={outcome} lang={lang} />;
 }
 
 async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome> {
@@ -61,9 +57,11 @@ async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome
 function PageLayout({
   dict,
   outcome,
+  lang,
 }: {
   dict: Dict;
   outcome: PageOutcome | null;
+  lang: Lang;
 }) {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-6">
@@ -72,7 +70,7 @@ function PageLayout({
       </div>
       <Hero />
 
-      {outcome ? <Results outcome={outcome} dict={dict} /> : <EmptyState dict={dict} />}
+      {outcome ? <Results outcome={outcome} dict={dict} lang={lang} /> : <EmptyState dict={dict} />}
 
       <Footer />
     </main>
@@ -87,7 +85,15 @@ function EmptyState({ dict }: { dict: Dict }) {
   );
 }
 
-function Results({ outcome, dict }: { outcome: PageOutcome; dict: Dict }) {
+function Results({
+  outcome,
+  dict,
+  lang,
+}: {
+  outcome: PageOutcome;
+  dict: Dict;
+  lang: Lang;
+}) {
   if (!outcome.ok) {
     return (
       <section className="rounded-xl border border-red-500/40 bg-red-500/5 px-5 py-4">
@@ -104,28 +110,14 @@ function Results({ outcome, dict }: { outcome: PageOutcome; dict: Dict }) {
     );
   }
 
-  const preview = derivePreviewData(outcome.result, outcome.finalUrl);
-
   return (
-    <div className="flex flex-col gap-6">
-      <ValidationPanel warnings={outcome.result.warnings} dict={dict} />
-
-      <RedirectFlow
-        finalUrl={outcome.finalUrl}
-        status={outcome.status}
-        redirects={outcome.redirects}
-        canonical={outcome.result.meta.canonical}
-        dict={dict}
-      />
-
-      <TagTable result={outcome.result} dict={dict} />
-
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium">{dict.page.preview}</h2>
-        <div className="max-w-md">
-          <Preview data={preview} />
-        </div>
-      </section>
-    </div>
+    <OgPeekResult
+      result={outcome.result}
+      finalUrl={outcome.finalUrl}
+      status={outcome.status}
+      redirects={outcome.redirects}
+      canonical={outcome.result.meta.canonical}
+      lang={lang}
+    />
   );
 }
