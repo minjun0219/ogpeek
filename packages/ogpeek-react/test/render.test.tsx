@@ -221,4 +221,67 @@ describe("@ogpeek/react render", () => {
     expect(html).toContain(">Card preview<");
     expect(html).not.toContain(">Preview<");
   });
+
+  it("Result keeps a single ogpeek-root scope (children skip their own)", () => {
+    const html = render(
+      <Result
+        result={makeResult()}
+        finalUrl={FINAL_URL}
+        status={STATUS}
+        redirects={REDIRECTS}
+        canonical={FINAL_URL}
+        lang="en"
+      />,
+    );
+    const matches = html.match(/ogpeek-root/g) ?? [];
+    expect(matches.length).toBe(1);
+  });
+
+  it("Result propagates lang via context (children render en copy)", () => {
+    const html = render(
+      <Result
+        result={makeResult()}
+        finalUrl={FINAL_URL}
+        status={STATUS}
+        redirects={REDIRECTS}
+        canonical={FINAL_URL}
+        lang="en"
+      />,
+    );
+    // ValidationPanel pass state + RedirectFlow + TagTable header all
+    // render English copy without any explicit lang prop on the children.
+    expect(html).toContain("Validation passed");
+    expect(html).toContain("Fetched URL");
+    expect(html).toContain("Meta tags");
+    expect(html).not.toContain("검증 통과");
+    expect(html).not.toContain("가져온 URL");
+  });
+
+  it("Result propagates dict override via context", () => {
+    const html = render(
+      <Result
+        result={makeResult()}
+        finalUrl={FINAL_URL}
+        status={STATUS}
+        redirects={REDIRECTS}
+        canonical={FINAL_URL}
+        lang="en"
+        dict={{ redirectFlow: { fetchedUrl: "Resolved URL" } }}
+      />,
+    );
+    expect(html).toContain("Resolved URL");
+    expect(html).not.toContain("Fetched URL");
+  });
+
+  it("Standalone components still emit their own ogpeek-root", () => {
+    // Sanity check that the context-based scoping is opt-in: rendering a
+    // panel directly (no Result wrapper, no provider) keeps the existing
+    // ogpeek-root scope so the component is self-contained.
+    const previewHtml = render(
+      <Preview data={derivePreviewData(makeResult(), FINAL_URL)} />,
+    );
+    const validationHtml = render(<ValidationPanel warnings={[]} />);
+    expect(previewHtml).toContain("ogpeek-root");
+    expect(validationHtml).toContain("ogpeek-root");
+  });
 });

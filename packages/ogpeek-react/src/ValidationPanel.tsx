@@ -7,6 +7,7 @@ import {
   type Lang,
 } from "./dict.js";
 import { cls } from "./cls.js";
+import { useOgPeekContext } from "./context.js";
 
 export type ValidationPanelProps = {
   warnings: Warning[];
@@ -23,16 +24,20 @@ const ORDER: Record<Warning["severity"], number> = {
 
 export function ValidationPanel({
   warnings,
-  lang = DEFAULT_LANG,
-  dict: dictOverride,
+  lang: langProp,
+  dict: dictProp,
   className,
 }: ValidationPanelProps) {
+  const ctx = useOgPeekContext();
+  const lang = langProp ?? ctx?.lang ?? DEFAULT_LANG;
+  const dictOverride = dictProp ?? ctx?.dictOverride;
   const dict = resolveDict(lang, dictOverride);
   const severityLabel = dict.validation.severity;
+  const rootClass = ctx?.composed ? null : "ogpeek-root";
 
   if (warnings.length === 0) {
     return (
-      <section className={cls("ogpeek-root ogpeek-section--pass", className)}>
+      <section className={cls(rootClass, "ogpeek-section--pass", className)}>
         <h2 className="ogpeek-pass-title">{dict.validation.passTitle}</h2>
         <p className="ogpeek-pass-body">{dict.validation.passBody}</p>
       </section>
@@ -51,7 +56,7 @@ export function ValidationPanel({
   );
 
   return (
-    <section className={cls("ogpeek-root ogpeek-section", className)}>
+    <section className={cls(rootClass, "ogpeek-section", className)}>
       <header className="ogpeek-section-header">
         <h2 className="ogpeek-h2">{dict.validation.resultsTitle}</h2>
         <div className="ogpeek-pill-row">

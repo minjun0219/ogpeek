@@ -8,6 +8,7 @@ import {
   type Lang,
 } from "./dict.js";
 import { cls } from "./cls.js";
+import { useOgPeekContext } from "./context.js";
 
 export type RedirectFlowProps = {
   finalUrl: string;
@@ -24,17 +25,26 @@ export function RedirectFlow({
   status,
   redirects,
   canonical,
-  lang = DEFAULT_LANG,
-  dict: dictOverride,
+  lang: langProp,
+  dict: dictProp,
   className,
 }: RedirectFlowProps) {
+  const ctx = useOgPeekContext();
+  const lang = langProp ?? ctx?.lang ?? DEFAULT_LANG;
+  const dictOverride = dictProp ?? ctx?.dictOverride;
   const dict = resolveDict(lang, dictOverride);
   const canonicalDiffers =
     canonical != null && !sameResource(canonical, finalUrl);
   const initialUrl = redirects[0]?.from ?? finalUrl;
 
   return (
-    <section className={cls("ogpeek-root ogpeek-section", className)}>
+    <section
+      className={cls(
+        ctx?.composed ? null : "ogpeek-root",
+        "ogpeek-section",
+        className,
+      )}
+    >
       <header className="ogpeek-section-header">
         <h2 className="ogpeek-h2">{dict.redirectFlow.title}</h2>
         <span className="ogpeek-text-xs ogpeek-muted">HTTP {status}</span>

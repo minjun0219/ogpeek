@@ -8,6 +8,7 @@ import {
   type Lang,
 } from "./dict.js";
 import { cls } from "./cls.js";
+import { useOgPeekContext } from "./context.js";
 
 export type TagTableProps = {
   result: OgDebugResult;
@@ -21,15 +22,24 @@ type Group = { title: string; rows: Row[] };
 
 export function TagTable({
   result,
-  lang = DEFAULT_LANG,
-  dict: dictOverride,
+  lang: langProp,
+  dict: dictProp,
   className,
 }: TagTableProps) {
+  const ctx = useOgPeekContext();
+  const lang = langProp ?? ctx?.lang ?? DEFAULT_LANG;
+  const dictOverride = dictProp ?? ctx?.dictOverride;
   const dict = resolveDict(lang, dictOverride);
   const groups = buildGroups(result, dict).filter((g) => g.rows.length > 0);
 
   return (
-    <section className={cls("ogpeek-root ogpeek-section--flat", className)}>
+    <section
+      className={cls(
+        ctx?.composed ? null : "ogpeek-root",
+        "ogpeek-section--flat",
+        className,
+      )}
+    >
       <div className="ogpeek-table-header">
         <h2 className="ogpeek-h2">{dict.tagTable.title}</h2>
         <span className="ogpeek-text-xs ogpeek-muted">

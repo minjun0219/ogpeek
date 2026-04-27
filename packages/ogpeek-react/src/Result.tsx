@@ -13,6 +13,7 @@ import { ValidationPanel } from "./ValidationPanel.js";
 import { TagTable } from "./TagTable.js";
 import { RedirectFlow } from "./RedirectFlow.js";
 import { cls } from "./cls.js";
+import { OgPeekProvider } from "./context.js";
 
 export type ResultProps = {
   result: OgDebugResult;
@@ -26,12 +27,13 @@ export type ResultProps = {
 };
 
 // Composite layout that mirrors the demo site's section order:
-// validation → redirect flow → tag table → preview. Each child handles
-// its own ogpeek-root scoping; the wrapping div provides the vertical
-// stack and an ogpeek-root token scope so any tokens not covered by a
-// child resolve here. The Preview is wrapped in a small section with a
-// heading because the bare card looks abrupt without one (Preview itself
-// stays headless so it can also be rendered standalone).
+// validation → redirect flow → tag table → preview. The wrapping div is
+// the only `.ogpeek-root` in the subtree — children read `composed: true`
+// from context and skip their own root class so token overrides on the
+// outer element (e.g. inline `style={{ "--ogpeek-fg": ... }}`) cascade
+// into every panel instead of being clobbered by nested re-declarations.
+// Preview gets a small section wrapper with a heading because the bare
+// card looks abrupt without one; standalone <Preview /> stays headless.
 export function Result({
   result,
   finalUrl,
@@ -46,25 +48,21 @@ export function Result({
   const preview = derivePreviewData(result, finalUrl);
 
   return (
-    <div className={cls("ogpeek-root ogpeek-stack", className)}>
-      <ValidationPanel
-        warnings={result.warnings}
-        lang={lang}
-        dict={dict}
-      />
-      <RedirectFlow
-        finalUrl={finalUrl}
-        status={status}
-        redirects={redirects}
-        canonical={canonical}
-        lang={lang}
-        dict={dict}
-      />
-      <TagTable result={result} lang={lang} dict={dict} />
-      <section className="ogpeek-preview-section">
-        <h2 className="ogpeek-h2">{dict.preview.heading}</h2>
-        <Preview data={preview} />
-      </section>
-    </div>
+    <OgPeekProvider lang={lang} dict={dictOverride} composed={true}>
+      <div className={cls("ogpeek-root ogpeek-stack", className)}>
+        <ValidationPanel warnings={result.warnings} />
+        <RedirectFlow
+          finalUrl={finalUrl}
+          status={status}
+          redirects={redirects}
+          canonical={canonical}
+        />
+        <TagTable result={result} />
+        <section className="ogpeek-preview-section">
+          <h2 className="ogpeek-h2">{dict.preview.heading}</h2>
+          <Preview data={preview} />
+        </section>
+      </div>
+    </OgPeekProvider>
   );
 }
