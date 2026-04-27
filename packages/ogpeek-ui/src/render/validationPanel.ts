@@ -56,9 +56,9 @@ export function validationPanelBody(
           </div>
           <div class="og-warning-message">${w.message}</div>
           ${w.value
-            ? html`<div class="og-warning-value">${w.property
+            ? raw(html`<div class="og-warning-value">${w.property
                 ? `${w.property}: `
-                : ""}${w.value}</div>`
+                : ""}${w.value}</div>`)
             : ""}
         </li>
       `,

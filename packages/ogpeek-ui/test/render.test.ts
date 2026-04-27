@@ -22,6 +22,43 @@ describe("render functions", () => {
     expect(html).toContain("</template></og-peek-preview>");
   });
 
+  it("renderPreview emits image and description as real elements", () => {
+    const result = makeResult();
+    const html = renderPreview({
+      data: derivePreviewData(result, FINAL_URL),
+    });
+    expect(html).toContain('<img class="og-preview-image"');
+    expect(html).toContain('<div class="og-preview-description">');
+    expect(html).not.toContain("&lt;img");
+    expect(html).not.toContain("&lt;div class=&quot;og-preview-description");
+  });
+
+  it("renderPreview emits empty-image element when no image", () => {
+    const result = makeResult();
+    result.ogp.images = [];
+    const html = renderPreview({
+      data: derivePreviewData(result, FINAL_URL),
+    });
+    expect(html).toContain('<div class="og-preview-image-empty">');
+    expect(html).not.toContain("&lt;div class=&quot;og-preview-image-empty");
+  });
+
+  it("renderValidationPanel emits warning value as real element", () => {
+    const html = renderValidationPanel({
+      warnings: [
+        {
+          code: "OG_URL_MISMATCH",
+          severity: "warn",
+          message: "mismatch",
+          property: "og:url",
+          value: "https://example.com/canonical",
+        },
+      ],
+    });
+    expect(html).toContain('<div class="og-warning-value">');
+    expect(html).not.toContain("&lt;div class=&quot;og-warning-value");
+  });
+
   it("renderValidationPanel pass state when no warnings", () => {
     const html = renderValidationPanel({ warnings: [] });
     expect(html).toContain("og-pass-title");

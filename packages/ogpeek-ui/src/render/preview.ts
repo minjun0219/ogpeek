@@ -12,16 +12,20 @@ export function previewBody(props: PreviewRenderProps): HtmlSafe {
   const { data } = props;
   const safeImage = data.image ? safeImageSrc(data.image) : "";
 
+  // Nested html`` calls return plain strings; without raw() the outer
+  // template re-escapes them and the markup leaks as text.
   return raw(html`
     <figure class="og-preview">
-      ${safeImage
-        ? html`<img class="og-preview-image" src="${safeImage}" alt="" />`
-        : html`<div class="og-preview-image-empty"></div>`}
+      ${raw(
+        safeImage
+          ? html`<img class="og-preview-image" src="${safeImage}" alt="" />`
+          : html`<div class="og-preview-image-empty"></div>`,
+      )}
       <div class="og-preview-body">
         <div class="og-preview-domain">${data.domain}</div>
         <div class="og-preview-title">${data.title || data.domain}</div>
         ${data.description
-          ? html`<div class="og-preview-description">${data.description}</div>`
+          ? raw(html`<div class="og-preview-description">${data.description}</div>`)
           : ""}
       </div>
     </figure>
