@@ -156,7 +156,7 @@ describe("@ogpeek/react render", () => {
     expect(html).toContain("https://t.co/x");
   });
 
-  it("Result composes all four sections in display order", () => {
+  it("Result composes sections in display order: validation → flow → table → preview", () => {
     const result = makeResult();
     const html = render(
       <Result
@@ -168,13 +168,57 @@ describe("@ogpeek/react render", () => {
         lang="en"
       />,
     );
-    const flow = html.indexOf("ogpeek-flow-grid");
     const validation = html.indexOf("ogpeek-pass-title");
-    const preview = html.indexOf("ogpeek-preview-domain");
+    const flow = html.indexOf("ogpeek-flow-grid");
     const table = html.indexOf("ogpeek-table-header");
-    expect(flow).toBeGreaterThan(-1);
-    expect(validation).toBeGreaterThan(flow);
-    expect(preview).toBeGreaterThan(validation);
-    expect(table).toBeGreaterThan(preview);
+    const preview = html.indexOf("ogpeek-preview-domain");
+    expect(validation).toBeGreaterThan(-1);
+    expect(flow).toBeGreaterThan(validation);
+    expect(table).toBeGreaterThan(flow);
+    expect(preview).toBeGreaterThan(table);
+  });
+
+  it("Result renders the preview heading from dict (en)", () => {
+    const html = render(
+      <Result
+        result={makeResult()}
+        finalUrl={FINAL_URL}
+        status={STATUS}
+        redirects={REDIRECTS}
+        canonical={FINAL_URL}
+        lang="en"
+      />,
+    );
+    expect(html).toContain("ogpeek-preview-section");
+    expect(html).toContain(">Preview<");
+  });
+
+  it("Result renders the preview heading from dict (ko default)", () => {
+    const html = render(
+      <Result
+        result={makeResult()}
+        finalUrl={FINAL_URL}
+        status={STATUS}
+        redirects={REDIRECTS}
+        canonical={FINAL_URL}
+      />,
+    );
+    expect(html).toContain("미리보기");
+  });
+
+  it("Result accepts a dict override for the preview heading", () => {
+    const html = render(
+      <Result
+        result={makeResult()}
+        finalUrl={FINAL_URL}
+        status={STATUS}
+        redirects={REDIRECTS}
+        canonical={FINAL_URL}
+        lang="en"
+        dict={{ preview: { heading: "Card preview" } }}
+      />,
+    );
+    expect(html).toContain(">Card preview<");
+    expect(html).not.toContain(">Preview<");
   });
 });

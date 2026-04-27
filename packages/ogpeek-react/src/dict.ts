@@ -27,6 +27,9 @@ export type Dict = {
     input: string;
     redirectStatusTemplate: string;
   };
+  preview: {
+    heading: string;
+  };
 };
 
 const ko: Dict = {
@@ -53,6 +56,9 @@ const ko: Dict = {
     redirectPath: "리디렉션 경로",
     input: "URL 입력",
     redirectStatusTemplate: "{status} 리디렉션",
+  },
+  preview: {
+    heading: "미리보기",
   },
 };
 
@@ -81,6 +87,9 @@ const en: Dict = {
     redirectPath: "Redirect path",
     input: "URL input",
     redirectStatusTemplate: "{status} redirect",
+  },
+  preview: {
+    heading: "Preview",
   },
 };
 
@@ -126,5 +135,6 @@ export function resolveDict(
     },
     tagTable: { ...base.tagTable, ...override.tagTable },
     redirectFlow: { ...base.redirectFlow, ...override.redirectFlow },
+    preview: { ...base.preview, ...override.preview },
   };
 }

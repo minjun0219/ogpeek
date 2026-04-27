@@ -24,11 +24,13 @@ export type ResultProps = {
   className?: string;
 };
 
-// Composite layout that mirrors the order rendered by the demo site:
-// redirect flow → validation → preview → tag table. Each child handles
+// Composite layout that mirrors the demo site's section order:
+// validation → redirect flow → tag table → preview. Each child handles
 // its own ogpeek-root scoping; the wrapping div provides the vertical
-// stack and ogpeek-root token scope so any tokens not already covered
-// by children resolve here.
+// stack and an ogpeek-root token scope so any tokens not covered by a
+// child resolve here. The Preview is wrapped in a small section with a
+// heading because the bare card looks abrupt without one (Preview itself
+// stays headless so it can also be rendered standalone).
 export function Result({
   result,
   finalUrl,
@@ -47,6 +49,11 @@ export function Result({
 
   return (
     <div className={rootClass}>
+      <ValidationPanel
+        warnings={result.warnings}
+        lang={lang}
+        dict={dict}
+      />
       <RedirectFlow
         finalUrl={finalUrl}
         status={status}
@@ -55,13 +62,11 @@ export function Result({
         lang={lang}
         dict={dict}
       />
-      <ValidationPanel
-        warnings={result.warnings}
-        lang={lang}
-        dict={dict}
-      />
-      <Preview data={preview} />
       <TagTable result={result} lang={lang} dict={dict} />
+      <section className="ogpeek-preview-section">
+        <h2 className="ogpeek-h2">{dict.preview.heading}</h2>
+        <Preview data={preview} />
+      </section>
     </div>
   );
 }
