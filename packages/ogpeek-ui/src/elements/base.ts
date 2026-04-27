@@ -1,6 +1,21 @@
 import { hasLang, DEFAULT_LANG, type Lang } from "../dict.js";
 
-export abstract class OgPeekElement extends HTMLElement {
+// Importing this module evaluates the class declaration below — which
+// references HTMLElement. In non-DOM runtimes (Node SSR without globals,
+// Workers' isolate without DOM, etc.) HTMLElement is undefined and the
+// declaration would throw ReferenceError before any consumer code runs.
+// Falling back to an empty class lets the SSR-only render functions and
+// types be imported safely; element registration is a no-op there
+// because `register()` already early-returns when `customElements` is
+// missing.
+const HTMLElementBase: typeof HTMLElement =
+  typeof globalThis !== "undefined" &&
+  typeof (globalThis as { HTMLElement?: typeof HTMLElement }).HTMLElement !==
+    "undefined"
+    ? (globalThis as { HTMLElement: typeof HTMLElement }).HTMLElement
+    : (class {} as unknown as typeof HTMLElement);
+
+export abstract class OgPeekElement extends HTMLElementBase {
   static observedAttributes = ["lang"];
 
   protected propsDirty = false;
