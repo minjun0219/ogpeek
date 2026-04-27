@@ -34,3 +34,15 @@ export function derivePreviewData(
     domain,
   };
 }
+
+// Returns a value safe to drop into <img src=""> — empty string blocks
+// non-allowlisted schemes (javascript:, data:, vbscript:, etc.).
+export function safeImageSrc(url: string | null | undefined): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/^(https?:|mailto:)/i.test(trimmed)) return trimmed;
+  if (/^[/?#]/.test(trimmed)) return trimmed;
+  if (/^[a-z][a-z0-9+\-.]*:/i.test(trimmed)) return "";
+  return trimmed;
+}
