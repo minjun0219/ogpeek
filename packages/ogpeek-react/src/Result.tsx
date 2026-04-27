@@ -1,3 +1,5 @@
+"use client";
+
 import type { OgDebugResult } from "ogpeek";
 import type { RedirectHop } from "ogpeek/fetch";
 import {
@@ -8,11 +10,11 @@ import {
   type Lang,
 } from "./dict.js";
 import { derivePreviewData } from "./derivePreviewData.js";
+import { cls } from "./cls.js";
 import { Preview } from "./Preview.js";
 import { ValidationPanel } from "./ValidationPanel.js";
 import { TagTable } from "./TagTable.js";
 import { RedirectFlow } from "./RedirectFlow.js";
-import { cls } from "./cls.js";
 import { OgPeekProvider } from "./context.js";
 
 export type ResultProps = {
@@ -26,14 +28,14 @@ export type ResultProps = {
   className?: string;
 };
 
-// Composite layout that mirrors the demo site's section order:
-// validation → redirect flow → tag table → preview. The wrapping div is
-// the only `.ogpeek-root` in the subtree — children read `composed: true`
-// from context and skip their own root class so token overrides on the
-// outer element (e.g. inline `style={{ "--ogpeek-fg": ... }}`) cascade
-// into every panel instead of being clobbered by nested re-declarations.
-// Preview gets a small section wrapper with a heading because the bare
-// card looks abrupt without one; standalone <Preview /> stays headless.
+// Client composite: wraps the panels in <OgPeekProvider> so children
+// pick up `lang` / `dict` / `composed: true` via Context. The wrapping
+// div is the only `.ogpeek-root` in the subtree (children read
+// composed=true and skip their own root class) so inline token
+// overrides on the wrapper cascade into every panel.
+//
+// For server components / RSC consumers, import from
+// `@ogpeek/react/server` — same layout, no Context, no client JS.
 export function Result({
   result,
   finalUrl,

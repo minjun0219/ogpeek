@@ -11,10 +11,22 @@ plain stylesheet so consumers don't need Tailwind.
 pnpm add ogpeek @ogpeek/react
 ```
 
-## Usage
+## Two subpaths
+
+Pick by where you'll render the components:
+
+| Subpath | Components | When to use |
+|---|---|---|
+| `@ogpeek/react` | `"use client"` panels backed by an `OgPeekProvider` Context. | Rendering inside a client component, or anywhere you want lang/dict cascade without prop drilling. |
+| `@ogpeek/react/server` | Plain server components — no Context, no client JS. `<Result />` drills `lang` / `dict` to every child internally. | React Server Components, Next.js App Router server pages, Cloudflare Workers / Node SSR. |
+
+Both subpaths expose the same component names (`Result`, `Preview`,
+`ValidationPanel`, `RedirectFlow`, `TagTable`) and the same `styles.css`.
+
+## Usage (server components)
 
 ```tsx
-import { Result } from "@ogpeek/react";
+import { Result } from "@ogpeek/react/server";
 import "@ogpeek/react/styles.css";
 import { parse } from "ogpeek";
 import { fetchHtml } from "ogpeek/fetch";
@@ -36,8 +48,23 @@ export async function OgInspector({ url }: { url: string }) {
 }
 ```
 
+## Usage (client components)
+
+```tsx
+"use client";
+import { Result } from "@ogpeek/react";
+import "@ogpeek/react/styles.css";
+
+export function OgInspector(props) {
+  return <Result {...props} lang="en" />;
+}
+```
+
 Need only one panel? Each piece is also exported individually:
-`Preview`, `ValidationPanel`, `RedirectFlow`, `TagTable`.
+`Preview`, `ValidationPanel`, `RedirectFlow`, `TagTable`. On the
+client subpath you can wrap them in `<OgPeekProvider>` to share
+`lang` / `dict` across the tree without prop drilling; on `/server`
+just pass the props directly.
 
 ## Theming
 

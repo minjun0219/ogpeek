@@ -1,8 +1,7 @@
 "use client";
 
 import type { PreviewData } from "./derivePreviewData.js";
-import { safeImageSrc } from "./derivePreviewData.js";
-import { cls } from "./cls.js";
+import { Preview as PreviewCore } from "./core/Preview.js";
 import { useOgPeekContext } from "./context.js";
 
 export type PreviewProps = {
@@ -10,32 +9,16 @@ export type PreviewProps = {
   className?: string;
 };
 
+// Client wrapper: reads `composed` from Context (set by <Result />) and
+// hands everything off to the core. Preview itself doesn't render any
+// localized strings, so there's nothing else to read from context.
 export function Preview({ data, className }: PreviewProps) {
   const ctx = useOgPeekContext();
-  const safeImage = data.image ? safeImageSrc(data.image) : "";
-
   return (
-    <figure
-      className={cls(
-        ctx?.composed ? null : "ogpeek-root",
-        "ogpeek-preview",
-        className,
-      )}
-    >
-      {safeImage ? (
-        <img className="ogpeek-preview-image" src={safeImage} alt="" />
-      ) : (
-        <div className="ogpeek-preview-image-empty" />
-      )}
-      <div className="ogpeek-preview-body">
-        <div className="ogpeek-preview-domain">{data.domain}</div>
-        <div className="ogpeek-preview-title">
-          {data.title || data.domain}
-        </div>
-        {data.description ? (
-          <div className="ogpeek-preview-description">{data.description}</div>
-        ) : null}
-      </div>
-    </figure>
+    <PreviewCore
+      data={data}
+      composed={!!ctx?.composed}
+      className={className}
+    />
   );
 }
