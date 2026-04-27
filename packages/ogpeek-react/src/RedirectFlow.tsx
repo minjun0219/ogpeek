@@ -1,3 +1,5 @@
+"use client";
+
 import type { RedirectHop } from "ogpeek/fetch";
 import {
   DEFAULT_LANG,

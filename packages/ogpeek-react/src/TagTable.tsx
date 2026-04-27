@@ -1,3 +1,5 @@
+"use client";
+
 import type { OgDebugResult } from "ogpeek";
 import {
   DEFAULT_LANG,

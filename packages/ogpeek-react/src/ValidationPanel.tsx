@@ -1,3 +1,5 @@
+"use client";
+
 import type { Warning } from "ogpeek";
 import {
   DEFAULT_LANG,

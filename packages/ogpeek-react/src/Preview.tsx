@@ -1,3 +1,5 @@
+"use client";
+
 import type { PreviewData } from "./derivePreviewData.js";
 import { safeImageSrc } from "./derivePreviewData.js";
 import { cls } from "./cls.js";
