@@ -1,11 +1,16 @@
 /*
- * @ogpeek/react styles. `.ogpeek-root` is applied to the outermost
- * element of every component and is the only selector that declares
- * the theme token variables and base typography. The remaining rules
- * use `ogpeek-`-prefixed class names to keep the risk of colliding
- * with host-page CSS low; they aren't all gated behind a `.ogpeek-root`
- * ancestor, but in practice every `ogpeek-` class is rendered inside
- * one because the components always set it on their root.
+ * @ogpeek/react styles. `.ogpeek-root` is the selector that declares
+ * the theme token variables and base typography. Standalone components
+ * apply it to their outermost element. When composed inside <Result />,
+ * children opt out via the `composed` prop and rely on the wrapper's
+ * `.ogpeek-root` instead — that keeps the subtree to a single token
+ * scope so inline overrides on the wrapper cascade into every panel.
+ *
+ * The remaining rules use `ogpeek-`-prefixed class names to keep the
+ * risk of colliding with host-page CSS low; they aren't all gated
+ * behind a `.ogpeek-root` ancestor, but every `ogpeek-` class is
+ * rendered inside one (either on the component's own root or on a
+ * composed ancestor).
  */
 
 .ogpeek-root {

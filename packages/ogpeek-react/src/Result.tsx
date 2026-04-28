@@ -2,7 +2,7 @@ import type { OgDebugResult } from "ogpeek";
 import type { RedirectHop } from "ogpeek/fetch";
 import {
   DEFAULT_LANG,
-  resolveDict,
+  getDict,
   type DeepPartial,
   type Dict,
   type Lang,
@@ -26,12 +26,15 @@ export type ResultProps = {
 };
 
 // Composite layout that mirrors the demo site: validation → redirect
-// flow → tag table → preview. Resolves `dict` once and drills `lang` /
-// `dict` / `composed=true` to every child explicitly. The wrapping div
-// is the only `.ogpeek-root` in the subtree — children skip their own
-// root class so token overrides on the wrapper still cascade. Preview
-// gets a small section wrapper with a heading because the bare card
-// looks abrupt without one (standalone <Preview /> stays headless).
+// flow → tag table → preview. Drills `lang` / `dict` (the user's
+// partial override) plus `composed=true` to every child; each child
+// resolves its own slice from the bundled dict so we don't materialize
+// a fully-resolved Dict here just to throw most of it away. The
+// wrapping div is the only `.ogpeek-root` in the subtree — children
+// skip their own root class so token overrides on the wrapper still
+// cascade. Preview gets a small section wrapper with a heading because
+// the bare card looks abrupt without one (standalone <Preview /> stays
+// headless).
 export function Result({
   result,
   finalUrl,
@@ -42,8 +45,12 @@ export function Result({
   dict: dictOverride,
   className,
 }: ResultProps) {
-  const dict = resolveDict(lang, dictOverride);
   const preview = derivePreviewData(result, finalUrl);
+  // Result renders exactly one localized string itself (the preview
+  // heading). Resolve only that one slice instead of paying for a full
+  // Dict resolution — the children already do their own resolution.
+  const previewHeading =
+    dictOverride?.preview?.heading ?? getDict(lang).preview.heading;
 
   return (
     <div className={cls("ogpeek-root ogpeek-stack", className)}>
@@ -69,7 +76,7 @@ export function Result({
         composed
       />
       <section className="ogpeek-preview-section">
-        <h2 className="ogpeek-h2">{dict.preview.heading}</h2>
+        <h2 className="ogpeek-h2">{previewHeading}</h2>
         <Preview data={preview} composed />
       </section>
     </div>
