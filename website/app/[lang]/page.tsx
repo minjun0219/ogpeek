@@ -33,7 +33,7 @@ export default async function Page({ params }: { params: Params }) {
 
       <PackageDetail
         name="ogpeek"
-        command="npm install ogpeek"
+        pkg="ogpeek"
         tagline={dict.packages.engine.tagline}
         quickStartTitle={dict.packages.quickStartTitle}
         quickStartCode={ENGINE_QUICK_START}
@@ -58,9 +58,6 @@ export default async function Page({ params }: { params: Params }) {
       />
 
       <aside className="flex flex-col gap-3 rounded-2xl border border-dashed border-[color:rgb(var(--border))] px-6 py-5">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-[color:rgb(var(--muted))]">
-          {dict.packages.alsoLabel}
-        </span>
         <div className="flex flex-col gap-1">
           <h2 className="font-mono text-base font-medium tracking-tight">
             @ogpeek/react
@@ -69,13 +66,13 @@ export default async function Page({ params }: { params: Params }) {
             {dict.packages.react.tagline}
           </p>
         </div>
-        <InstallCopy command="npm install @ogpeek/react" />
+        <InstallCopy pkg="@ogpeek/react" />
         <div className="flex flex-wrap gap-3 text-xs text-[color:rgb(var(--muted))]">
           <a
             className="hover:text-[color:rgb(var(--foreground))] hover:underline"
             href="https://www.npmjs.com/package/@ogpeek/react"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
             {dict.packages.npmLink}
           </a>
@@ -84,7 +81,7 @@ export default async function Page({ params }: { params: Params }) {
             className="hover:text-[color:rgb(var(--foreground))] hover:underline"
             href="https://github.com/minjun0219/ogpeek/tree/main/packages/ogpeek-react#readme"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
             {dict.packages.readmeLink}
           </a>

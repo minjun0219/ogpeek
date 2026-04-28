@@ -2,7 +2,7 @@ import { InstallCopy } from "@/components/landing/InstallCopy";
 
 type Props = {
   name: string;
-  command: string;
+  pkg: string;
   tagline: string;
   npmHref: string;
   readmeHref: string;
@@ -22,17 +22,24 @@ export function PackageDetail(props: Props) {
         </h2>
         <div className="flex flex-wrap gap-2">
           {props.badges.map((badge) => (
-            // shields.io serves SVG badges that are tiny and meant for direct embed.
-            // biome-ignore lint/performance/noImgElement: external SVG badge from shields.io
-            <img
+            <a
               key={badge.src}
-              src={badge.src}
-              alt={badge.alt}
-              height={20}
-              loading="lazy"
-              decoding="async"
-              className="h-5"
-            />
+              href={props.npmHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex"
+            >
+              {/* shields.io serves SVG badges that are tiny and meant for direct embed. */}
+              {/* biome-ignore lint/performance/noImgElement: external SVG badge from shields.io */}
+              <img
+                src={badge.src}
+                alt={badge.alt}
+                height={20}
+                loading="lazy"
+                decoding="async"
+                className="h-5"
+              />
+            </a>
           ))}
         </div>
         <p className="text-sm leading-relaxed text-[color:rgb(var(--muted))]">
@@ -40,7 +47,7 @@ export function PackageDetail(props: Props) {
         </p>
       </header>
 
-      <InstallCopy command={props.command} />
+      <InstallCopy pkg={props.pkg} />
 
       <div className="flex flex-col gap-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-[color:rgb(var(--muted))]">
@@ -56,7 +63,7 @@ export function PackageDetail(props: Props) {
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
           href={props.npmHref}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
         >
           {props.npmLinkLabel}
         </a>
@@ -65,7 +72,7 @@ export function PackageDetail(props: Props) {
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
           href={props.readmeHref}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
         >
           {props.readmeLinkLabel}
         </a>

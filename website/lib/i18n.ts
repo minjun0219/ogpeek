@@ -40,7 +40,6 @@ export type Dict = {
   };
   packages: {
     quickStartTitle: string;
-    alsoLabel: string;
     engine: { tagline: string };
     react: { tagline: string };
     npmLink: string;
@@ -101,10 +100,9 @@ const en: Dict = {
   },
   packages: {
     quickStartTitle: "Quick start",
-    alsoLabel: "Also available",
     engine: {
       tagline:
-        "ogpeek parses, fetches, and validates OpenGraph tags from any URL. The fetcher ships with built-in SSRF guards for safe server-side use, the parser is tolerant of real-world markup, and the validator catches common OGP spec violations. One external dependency, runs on Node and edge runtimes alike — see the README for the full API.",
+        "ogpeek parses, fetches, and validates OpenGraph tags from any URL. The fetcher traces redirects with timeout and size caps, the parser is tolerant of real-world markup, and the validator catches common OGP spec violations. One external dependency, runs on Node and edge runtimes alike.",
     },
     react: {
       tagline:
@@ -167,10 +165,9 @@ const ko: Dict = {
   },
   packages: {
     quickStartTitle: "Quick start",
-    alsoLabel: "추가로 사용 가능",
     engine: {
       tagline:
-        "ogpeek은 임의의 URL에서 OpenGraph 메타태그를 파싱·페치·검증합니다. 페처에는 SSRF 가드가 내장되어 서버에서 안전하게 쓸 수 있고, 파서는 실제 웹의 어수선한 마크업을 잘 허용하며, 검증기는 흔한 OGP 스펙 위반을 잡아냅니다. 외부 의존성은 하나뿐이며 Node와 엣지 런타임에서 동일하게 동작합니다 — 전체 API는 README를 참고하세요.",
+        "ogpeek은 임의의 URL에서 OpenGraph 메타태그를 파싱·페치·검증합니다. 페처는 타임아웃과 응답 크기 한도 안에서 리디렉션을 추적하고, 파서는 실제 웹의 어수선한 마크업을 잘 허용하며, 검증기는 흔한 OGP 스펙 위반을 잡아냅니다. 외부 의존성은 하나뿐이며 Node와 엣지 런타임에서 동일하게 동작합니다.",
     },
     react: {
       tagline:

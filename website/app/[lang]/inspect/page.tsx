@@ -8,6 +8,7 @@ import { Hero } from "@/components/landing/Hero";
 import { type Dict, format, getDict, hasLang, type Lang } from "@/lib/i18n";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
+import { normalizeUrlInput } from "@/lib/url-normalize";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,10 @@ function pickTarget(value: string | string[] | undefined): string | undefined {
 }
 
 function safeHost(value: string): string | null {
+  // Mirror runParse's normalization so scheme-less inputs (e.g. "ogp.me")
+  // produce the same host that the inspector will actually fetch.
   try {
-    return new URL(value).host;
+    return new URL(normalizeUrlInput(value)).host;
   } catch {
     return null;
   }
