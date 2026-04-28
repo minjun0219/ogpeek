@@ -17,7 +17,7 @@ export type TagTableProps = {
   className?: string;
 };
 
-type Row = { key: string; value: string };
+type Row = { key: string; value: string; pre?: boolean };
 type Group = { title: string; rows: Row[] };
 
 export function TagTable({
@@ -54,7 +54,11 @@ export function TagTable({
                   <th>{row.key}</th>
                   <td>
                     {row.value ? (
-                      row.value
+                      row.pre ? (
+                        <pre className="ogpeek-table-pre">{row.value}</pre>
+                      ) : (
+                        row.value
+                      )
                     ) : (
                       <span className="ogpeek-table-empty">—</span>
                     )}
@@ -129,19 +133,24 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
 
   const jl: Row[] = [];
   jsonld.forEach((block, i) => {
-    const label = jsonld.length > 1 ? `JSON-LD[${i}]` : "JSON-LD";
+    const indexLabel = jsonld.length > 1 ? `[${i}]` : "";
     if (block.error) {
+      // Show the parser message and the original payload so the user can see
+      // exactly which character broke the block.
       jl.push({
-        key: `${label} ${dict.tagTable.jsonldError}`,
-        value: block.error,
+        key: `${dict.tagTable.jsonldError}${indexLabel}`,
+        value: `${block.error}\n\n${block.raw}`,
+        pre: true,
       });
       return;
     }
+    const typeLabel = block.types.length
+      ? block.types.join(", ")
+      : dict.tagTable.jsonldNoType;
     jl.push({
-      key: `${label} @type`,
-      value: block.types.length
-        ? block.types.join(", ")
-        : dict.tagTable.jsonldNoType,
+      key: `${typeLabel}${indexLabel}`,
+      value: prettyJson(block.parsed),
+      pre: true,
     });
   });
 
@@ -183,6 +192,17 @@ function formatIcon(icon: Icon): string {
   if (icon.type) parts.push(`type: ${icon.type}`);
   if (icon.color) parts.push(`color: ${icon.color}`);
   return parts.join(" · ");
+}
+
+function prettyJson(parsed: unknown): string {
+  try {
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    // JSON.stringify can throw on circular refs, which we shouldn't see from
+    // a fresh JSON.parse — but stay defensive so a weird block can't crash
+    // the whole table.
+    return String(parsed);
+  }
 }
 
 // Re-export the JsonLd type so callers picking up the auxiliary section

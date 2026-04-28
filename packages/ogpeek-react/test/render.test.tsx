@@ -113,12 +113,12 @@ describe("@ogpeek/react render", () => {
     expect(html).toContain("/apple-icon.png");
   });
 
-  it("TagTable renders a JSON-LD group with @type and parse-error rows", () => {
+  it("TagTable renders a JSON-LD group with pretty JSON and parse-error payloads", () => {
     const result = makeResult({
       jsonld: [
         {
-          raw: "{...}",
-          parsed: { "@type": "WebSite" },
+          raw: '{"@type":"WebSite","name":"Example"}',
+          parsed: { "@type": "WebSite", name: "Example" },
           types: ["WebSite"],
         },
         {
@@ -131,9 +131,15 @@ describe("@ogpeek/react render", () => {
     });
     const html = render(<TagTable result={result} />);
     expect(html).toContain(">JSON-LD<");
-    expect(html).toContain("WebSite");
+    // Successful block: pretty-printed JSON inside a <pre> element with
+    // both @type and the inner field surfaced verbatim.
+    expect(html).toContain("ogpeek-table-pre");
+    expect(html).toContain("&quot;@type&quot;: &quot;WebSite&quot;");
+    expect(html).toContain("&quot;name&quot;: &quot;Example&quot;");
+    // Error block: parser message and the original payload both visible.
     expect(html).toContain("(파싱 오류)");
     expect(html).toContain("Unexpected token b");
+    expect(html).toContain("{ broken");
   });
 
   it("TagTable surfaces auxiliary meta-name tags in the basic-meta group", () => {

@@ -298,6 +298,16 @@
 .ogpeek-table-empty {
   opacity: 0.4;
 }
+.ogpeek-table-pre {
+  /* JSON-LD payload rows. Preserve indentation, but allow long string
+     values to wrap so a single huge URL doesn't blow out the table. */
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+}
 
 .ogpeek-flow-grid {
   display: grid;
