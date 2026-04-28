@@ -11,22 +11,10 @@ plain stylesheet so consumers don't need Tailwind.
 pnpm add ogpeek @ogpeek/react
 ```
 
-## Two subpaths
-
-Pick by where you'll render the components:
-
-| Subpath | Components | When to use |
-|---|---|---|
-| `@ogpeek/react` | `"use client"` panels backed by an `OgPeekProvider` Context. | Rendering inside a client component, or anywhere you want lang/dict cascade without prop drilling. |
-| `@ogpeek/react/server` | Plain server components — no Context, no client JS. `<Result />` drills `lang` / `dict` to every child internally. | React Server Components, Next.js App Router server pages, Cloudflare Workers / Node SSR. |
-
-Both subpaths expose the same component names (`Result`, `Preview`,
-`ValidationPanel`, `RedirectFlow`, `TagTable`) and the same `styles.css`.
-
-## Usage (server components)
+## Usage
 
 ```tsx
-import { Result } from "@ogpeek/react/server";
+import { Result } from "@ogpeek/react";
 import "@ogpeek/react/styles.css";
 import { parse } from "ogpeek";
 import { fetchHtml } from "ogpeek/fetch";
@@ -48,23 +36,19 @@ export async function OgInspector({ url }: { url: string }) {
 }
 ```
 
-## Usage (client components)
-
-```tsx
-"use client";
-import { Result } from "@ogpeek/react";
-import "@ogpeek/react/styles.css";
-
-export function OgInspector(props) {
-  return <Result {...props} lang="en" />;
-}
-```
+Every component is a plain React component — no hooks, no Context, no
+`"use client"`. They run anywhere React 18+ runs (Node SSR, Cloudflare
+Workers, React Server Components, the browser). `<Result />` resolves
+the dictionary once and drills `lang` / `dict` / `composed` to every
+child, so you don't need a Provider in the tree.
 
 Need only one panel? Each piece is also exported individually:
-`Preview`, `ValidationPanel`, `RedirectFlow`, `TagTable`. On the
-client subpath you can wrap them in `<OgPeekProvider>` to share
-`lang` / `dict` across the tree without prop drilling; on `/server`
-just pass the props directly.
+`Preview`, `ValidationPanel`, `RedirectFlow`, `TagTable`. Standalone
+panels accept `lang` and `dict` directly:
+
+```tsx
+<ValidationPanel warnings={result.warnings} lang="en" />
+```
 
 ## Theming
 

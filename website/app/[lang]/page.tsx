@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { Result } from "@ogpeek/react/server";
+import { Result } from "@ogpeek/react";
 import { Hero } from "@/components/landing/Hero";
 import { Footer } from "@/components/landing/Footer";
 import { LangToggle } from "@/components/LangToggle";

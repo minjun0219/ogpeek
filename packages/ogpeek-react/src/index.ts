@@ -1,8 +1,9 @@
-// Default subpath: client surface. Panels are `"use client"` and consume
-// `lang` / `dict` / `composed` from `<OgPeekProvider>` so consumers can
-// drop them in standalone or inside `<Result />` without prop drilling.
-// Server-component consumers should import from `@ogpeek/react/server`
-// instead — same layout, no Context, no client JS.
+// All components are plain React — no hooks, no Context, no
+// `"use client"`. They run anywhere React 18+ runs (Node SSR,
+// Cloudflare Workers, React Server Components, browser). The composite
+// `<Result />` resolves the dictionary once and drills `lang` / `dict` /
+// `composed=true` to every child internally; standalone consumers pass
+// `lang` / `dict` directly to whichever panel they need.
 
 export { Preview, type PreviewProps } from "./Preview.js";
 export {
@@ -12,8 +13,6 @@ export {
 export { RedirectFlow, type RedirectFlowProps } from "./RedirectFlow.js";
 export { TagTable, type TagTableProps } from "./TagTable.js";
 export { Result, type ResultProps } from "./Result.js";
-
-export { OgPeekProvider, useOgPeekContext } from "./context.js";
 
 export {
   derivePreviewData,
