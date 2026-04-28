@@ -18,6 +18,7 @@ export { Result, type ResultProps } from "./Result.js";
 export {
   derivePreviewData,
   safeImageSrc,
+  safeLinkHref,
   type PreviewData,
 } from "./derivePreviewData.js";
 

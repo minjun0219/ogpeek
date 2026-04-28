@@ -71,6 +71,7 @@ export function Result({
       />
       <TagTable
         result={result}
+        baseUrl={finalUrl}
         lang={lang}
         dict={dictOverride}
         composed

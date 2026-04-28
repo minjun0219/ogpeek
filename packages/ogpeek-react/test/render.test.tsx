@@ -94,23 +94,56 @@ describe("@ogpeek/react render", () => {
     expect(html).toContain("총 3개");
   });
 
-  it("TagTable renders an Icons group when icons are present", () => {
+  it("TagTable renders icons as clickable links resolved against baseUrl", () => {
     const result = makeResult({
       icons: [
         { rel: "icon", href: "/favicon.ico", sizes: "any" },
         {
           rel: "apple-touch-icon",
-          href: "/apple-icon.png",
+          href: "https://cdn.example.com/apple-icon.png",
           sizes: "180x180",
+          type: "image/png",
         },
       ],
     });
-    const html = render(<TagTable result={result} />);
+    const html = render(
+      <TagTable result={result} baseUrl="https://example.com/page" />,
+    );
     expect(html).toContain(">아이콘<");
-    expect(html).toContain("/favicon.ico");
+    // Relative href is absolutized against baseUrl.
+    expect(html).toContain('href="https://example.com/favicon.ico"');
+    // Already-absolute href is preserved.
+    expect(html).toContain('href="https://cdn.example.com/apple-icon.png"');
+    // target/rel are attached.
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer"');
+    // Sizes/type metadata is shown as muted suffix, not part of the link.
     expect(html).toContain("sizes: any");
-    expect(html).toContain("apple-touch-icon");
-    expect(html).toContain("/apple-icon.png");
+    expect(html).toContain("sizes: 180x180");
+    expect(html).toContain("type: image/png");
+  });
+
+  it("TagTable falls back to plain text when an icon href has no safe URL", () => {
+    const result = makeResult({
+      icons: [{ rel: "icon", href: "javascript:alert(1)" }],
+    });
+    const html = render(
+      <TagTable result={result} baseUrl="https://example.com/" />,
+    );
+    // The URL is shown as text but never wrapped in an anchor — the
+    // sanitizer rejects non-http(s) schemes so a malicious href can never
+    // become a clickable link.
+    expect(html).not.toContain('href="javascript:');
+    expect(html).toContain("<td>javascript:alert(1)</td>");
+  });
+
+  it("TagTable renders og:image and og:url as clickable links", () => {
+    const result = makeResult();
+    const html = render(
+      <TagTable result={result} baseUrl="https://example.com/" />,
+    );
+    expect(html).toContain('href="https://example.com/img.png"');
+    expect(html).toContain('href="https://example.com/"');
   });
 
   it("TagTable renders a JSON-LD group with pretty JSON and parse-error payloads", () => {

@@ -308,6 +308,21 @@
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   font-size: 12px;
 }
+.ogpeek-table-link {
+  /* URL-bearing rows render as anchors that open in a new tab. We don't
+     pull a colored "link" token because the rest of the table is
+     monochrome — a hover underline is enough affordance. */
+  color: inherit;
+  text-decoration: none;
+}
+.ogpeek-table-link:hover,
+.ogpeek-table-link:focus-visible {
+  text-decoration: underline;
+}
+.ogpeek-table-meta {
+  /* Muted suffix shown after icon URLs ("sizes: 32x32 · type: image/png"). */
+  color: rgb(var(--ogpeek-muted));
+}
 
 .ogpeek-flow-grid {
   display: grid;
