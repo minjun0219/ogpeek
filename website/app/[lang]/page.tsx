@@ -1,12 +1,12 @@
+import { Result } from "@ogpeek/react";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { Result } from "@ogpeek/react";
-import { Hero } from "@/components/landing/Hero";
-import { Footer } from "@/components/landing/Footer";
 import { LangToggle } from "@/components/LangToggle";
-import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
+import { Footer } from "@/components/landing/Footer";
+import { Hero } from "@/components/landing/Hero";
+import { type Dict, format, getDict, hasLang, type Lang } from "@/lib/i18n";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
-import { getDict, hasLang, format, type Dict, type Lang } from "@/lib/i18n";
+import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,11 @@ type SearchParams = Promise<{ url?: string | string[] }>;
 type Params = Promise<{ lang: string }>;
 type PageOutcome =
   | ServerParseOutcome
-  | { ok: false; target: string; error: { code: "RATE_LIMITED"; status: 429; message: string } };
+  | {
+      ok: false;
+      target: string;
+      error: { code: "RATE_LIMITED"; status: 429; message: string };
+    };
 
 export default async function Page({
   params,
@@ -24,7 +28,9 @@ export default async function Page({
   searchParams: SearchParams;
 }) {
   const { lang: rawLang } = await params;
-  if (!hasLang(rawLang)) notFound();
+  if (!hasLang(rawLang)) {
+    notFound();
+  }
   const lang: Lang = rawLang;
   const dict = getDict(lang);
 
@@ -35,7 +41,10 @@ export default async function Page({
   return <PageLayout dict={dict} outcome={outcome} lang={lang} />;
 }
 
-async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome> {
+async function runWithRateLimit(
+  target: string,
+  dict: Dict,
+): Promise<PageOutcome> {
   // SSR page visits hit runParse directly, so they share the same per-IP
   // limiter as /api/parse — otherwise /?url=... would bypass it.
   const ip = clientIpFromHeaders(await headers());
@@ -47,7 +56,9 @@ async function runWithRateLimit(target: string, dict: Dict): Promise<PageOutcome
       error: {
         code: "RATE_LIMITED",
         status: 429,
-        message: format(dict.page.rateLimitTemplate, { sec: decision.retryAfterSec }),
+        message: format(dict.page.rateLimitTemplate, {
+          sec: decision.retryAfterSec,
+        }),
       },
     };
   }
@@ -102,10 +113,13 @@ function Results({
     return (
       <section className="rounded-xl border border-red-500/40 bg-red-500/5 px-5 py-4">
         <h2 className="text-sm font-medium text-red-700 dark:text-red-300">
-          {outcome.error.code === "RATE_LIMITED" ? dict.page.retryLater : dict.page.fetchFailed}
+          {outcome.error.code === "RATE_LIMITED"
+            ? dict.page.retryLater
+            : dict.page.fetchFailed}
         </h2>
         <p className="mt-1 text-xs text-[color:rgb(var(--muted))]">
-          <span className="font-mono">{outcome.error.code}</span> · {outcome.error.message}
+          <span className="font-mono">{outcome.error.code}</span> ·{" "}
+          {outcome.error.message}
         </p>
         <p className="mt-1 text-xs text-[color:rgb(var(--muted))]">
           {dict.page.target}: {outcome.target}

@@ -1,15 +1,21 @@
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/index";
 
-const fixturesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
-const load = (name: string) => readFileSync(path.join(fixturesDir, name), "utf8");
+const fixturesDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "fixtures",
+);
+const load = (name: string) =>
+  readFileSync(path.join(fixturesDir, name), "utf8");
 
 describe("parse()", () => {
   it("parses the full fixture into a complete OGP tree", () => {
-    const result = parse(load("full.html"), { url: "https://www.imdb.com/title/tt0117500/" });
+    const result = parse(load("full.html"), {
+      url: "https://www.imdb.com/title/tt0117500/",
+    });
 
     expect(result.ogp.title).toBe("The Rock");
     expect(result.ogp.type).toBe("article");
@@ -43,8 +49,10 @@ describe("parse()", () => {
 
     expect(result.typed).not.toBeNull();
     expect(result.typed?.kind).toBe("article");
-    expect(result.typed?.properties["published_time"]).toBe("1996-06-07T00:00:00Z");
-    expect(result.typed?.properties["tag"]).toEqual(["Alcatraz", "San Francisco"]);
+    expect(result.typed?.properties.published_time).toBe(
+      "1996-06-07T00:00:00Z",
+    );
+    expect(result.typed?.properties.tag).toEqual(["Alcatraz", "San Francisco"]);
 
     expect(result.twitter).toEqual({
       "twitter:card": "summary_large_image",
@@ -67,7 +75,11 @@ describe("parse()", () => {
     expect(result.icons).toEqual([
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
       { rel: "icon", href: "/icon-32.png", sizes: "32x32", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/apple-icon-180.png", sizes: "180x180" },
+      {
+        rel: "apple-touch-icon",
+        href: "/apple-icon-180.png",
+        sizes: "180x180",
+      },
       { rel: "mask-icon", href: "/safari-pinned.svg", color: "#0a84ff" },
     ]);
 

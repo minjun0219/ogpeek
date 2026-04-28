@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { pickLangFromAcceptLanguage } from "@/lib/i18n";
 
 // Language resolution per page request:

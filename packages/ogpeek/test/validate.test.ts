@@ -1,14 +1,19 @@
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/index";
 import type { WarningCode } from "../src/types";
 
-const fixturesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
-const load = (name: string) => readFileSync(path.join(fixturesDir, name), "utf8");
+const fixturesDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "fixtures",
+);
+const load = (name: string) =>
+  readFileSync(path.join(fixturesDir, name), "utf8");
 
-const codes = (warnings: { code: WarningCode }[]) => warnings.map((w) => w.code);
+const codes = (warnings: { code: WarningCode }[]) =>
+  warnings.map((w) => w.code);
 
 describe("validate()", () => {
   it("reports required-field errors on the invalid fixture", () => {
@@ -60,7 +65,9 @@ describe("validate()", () => {
   it("treats MISSING_PREFIX_ATTR as info-only", () => {
     const html = `<html><head><title>T</title><meta property="og:title" content="T"><meta property="og:type" content="website"><meta property="og:url" content="https://a.com"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
     const result = parse(html);
-    const prefix = result.warnings.find((w) => w.code === "MISSING_PREFIX_ATTR");
+    const prefix = result.warnings.find(
+      (w) => w.code === "MISSING_PREFIX_ATTR",
+    );
     expect(prefix?.severity).toBe("info");
   });
 
@@ -82,7 +89,9 @@ describe("validate()", () => {
 
   it("flags mismatched og:url vs requested URL", () => {
     const html = `<html><head><title>T</title><meta property="og:title" content="T"><meta property="og:type" content="website"><meta property="og:url" content="https://canonical.example/"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
-    const got = codes(parse(html, { url: "https://staging.example/path" }).warnings);
+    const got = codes(
+      parse(html, { url: "https://staging.example/path" }).warnings,
+    );
     expect(got).toContain("OG_URL_MISMATCH");
   });
 

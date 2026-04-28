@@ -1,6 +1,6 @@
+import { cls } from "./cls.js";
 import type { PreviewData } from "./derivePreviewData.js";
 import { safeImageSrc } from "./derivePreviewData.js";
-import { cls } from "./cls.js";
 
 export type PreviewProps = {
   data: PreviewData;
@@ -30,9 +30,7 @@ export function Preview({ data, composed = false, className }: PreviewProps) {
       )}
       <div className="ogpeek-preview-body">
         <div className="ogpeek-preview-domain">{data.domain}</div>
-        <div className="ogpeek-preview-title">
-          {data.title || data.domain}
-        </div>
+        <div className="ogpeek-preview-title">{data.title || data.domain}</div>
         {data.description ? (
           <div className="ogpeek-preview-description">{data.description}</div>
         ) : null}

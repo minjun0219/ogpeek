@@ -1,13 +1,13 @@
 import type { RedirectHop } from "ogpeek/fetch";
+import { cls } from "./cls.js";
 import {
   DEFAULT_LANG,
-  format,
-  resolveDict,
   type DeepPartial,
   type Dict,
+  format,
   type Lang,
+  resolveDict,
 } from "./dict.js";
-import { cls } from "./cls.js";
 
 export type RedirectFlowProps = {
   finalUrl: string;

@@ -130,12 +130,11 @@ export type DeepPartial<T> = {
 
 // Selective override: any field not present in `override` falls back to the
 // base dict for the given language.
-export function resolveDict(
-  lang: Lang,
-  override?: DeepPartial<Dict>,
-): Dict {
+export function resolveDict(lang: Lang, override?: DeepPartial<Dict>): Dict {
   const base = getDict(lang);
-  if (!override) return base;
+  if (!override) {
+    return base;
+  }
   return {
     validation: {
       ...base.validation,

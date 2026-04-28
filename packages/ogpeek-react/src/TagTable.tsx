@@ -1,14 +1,14 @@
 import type { Icon, JsonLd, OgDebugResult } from "ogpeek";
-import {
-  DEFAULT_LANG,
-  format,
-  resolveDict,
-  type DeepPartial,
-  type Dict,
-  type Lang,
-} from "./dict.js";
 import { cls } from "./cls.js";
 import { safeLinkHref } from "./derivePreviewData.js";
+import {
+  DEFAULT_LANG,
+  type DeepPartial,
+  type Dict,
+  format,
+  type Lang,
+  resolveDict,
+} from "./dict.js";
 
 export type TagTableProps = {
   result: OgDebugResult;
@@ -82,8 +82,12 @@ export function TagTable({
 }
 
 function renderValue(row: Row, baseUrl: string | undefined) {
-  if (!row.value) return <span className="ogpeek-table-empty">—</span>;
-  if (row.pre) return <pre className="ogpeek-table-pre">{row.value}</pre>;
+  if (!row.value) {
+    return <span className="ogpeek-table-empty">—</span>;
+  }
+  if (row.pre) {
+    return <pre className="ogpeek-table-pre">{row.value}</pre>;
+  }
 
   const href = row.link ? safeLinkHref(row.value, baseUrl) : null;
   const body = href ? (
@@ -99,7 +103,9 @@ function renderValue(row: Row, baseUrl: string | undefined) {
     row.value
   );
 
-  if (!row.meta) return body;
+  if (!row.meta) {
+    return body;
+  }
   return (
     <>
       {body}
@@ -129,10 +135,12 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
     addLink(og, label, img.url);
     addLink(og, `${label}:secure_url`, img.secure_url);
     addIf(og, `${label}:type`, img.type);
-    if (img.width !== undefined)
+    if (img.width !== undefined) {
       og.push({ key: `${label}:width`, value: String(img.width) });
-    if (img.height !== undefined)
+    }
+    if (img.height !== undefined) {
       og.push({ key: `${label}:height`, value: String(img.height) });
+    }
     addIf(og, `${label}:alt`, img.alt);
   });
   ogp.videos.forEach((v, i) => {
@@ -218,17 +226,27 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
 }
 
 function addIf(rows: Row[], key: string, value: string | undefined | null) {
-  if (value) rows.push({ key, value });
+  if (value) {
+    rows.push({ key, value });
+  }
 }
 function addLink(rows: Row[], key: string, value: string | undefined | null) {
-  if (value) rows.push({ key, value, link: true });
+  if (value) {
+    rows.push({ key, value, link: true });
+  }
 }
 
 function iconMeta(icon: Icon): string {
   const parts: string[] = [];
-  if (icon.sizes) parts.push(`sizes: ${icon.sizes}`);
-  if (icon.type) parts.push(`type: ${icon.type}`);
-  if (icon.color) parts.push(`color: ${icon.color}`);
+  if (icon.sizes) {
+    parts.push(`sizes: ${icon.sizes}`);
+  }
+  if (icon.type) {
+    parts.push(`type: ${icon.type}`);
+  }
+  if (icon.color) {
+    parts.push(`color: ${icon.color}`);
+  }
   return parts.join(" · ");
 }
 

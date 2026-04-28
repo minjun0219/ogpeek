@@ -1,5 +1,5 @@
-import { UrlInput } from "@/components/UrlInput";
 import { InstallCopy } from "@/components/landing/InstallCopy";
+import { UrlInput } from "@/components/UrlInput";
 
 export function Hero() {
   return (

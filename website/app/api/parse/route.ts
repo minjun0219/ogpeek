@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { runParse } from "@/lib/server-parse";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { runParse } from "@/lib/server-parse";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,11 @@ async function handle(req: Request): Promise<Response> {
     return NextResponse.json(
       {
         ok: false,
-        error: { code: "MISSING_URL", status: 400, message: "url parameter is required" },
+        error: {
+          code: "MISSING_URL",
+          status: 400,
+          message: "url parameter is required",
+        },
       },
       { status: 400 },
     );

@@ -6,8 +6,14 @@ export class TitleExtractor implements HeadExtractor {
   private inTitle = false;
   private buf = "";
 
-  onOpenTag(name: string, _attrs: Record<string, string>, state: ScanState): void {
-    if (!state.inHead) return;
+  onOpenTag(
+    name: string,
+    _attrs: Record<string, string>,
+    state: ScanState,
+  ): void {
+    if (!state.inHead) {
+      return;
+    }
     if (name === "title" && this.title === null) {
       this.inTitle = true;
       this.buf = "";
@@ -15,7 +21,9 @@ export class TitleExtractor implements HeadExtractor {
   }
 
   onText(text: string, _state: ScanState): void {
-    if (this.inTitle) this.buf += text;
+    if (this.inTitle) {
+      this.buf += text;
+    }
   }
 
   onCloseTag(name: string, _state: ScanState): void {

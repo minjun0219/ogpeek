@@ -13,6 +13,27 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    name: biome (format + lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Biome check
+        run: pnpm exec biome ci
+
   ogpeek:
     name: ogpeek (typecheck + test + build)
     runs-on: ubuntu-latest

@@ -12,7 +12,11 @@ export type ScanState = {
 };
 
 export interface HeadExtractor {
-  onOpenTag?(name: string, attrs: Record<string, string>, state: ScanState): void;
+  onOpenTag?(
+    name: string,
+    attrs: Record<string, string>,
+    state: ScanState,
+  ): void;
   onText?(text: string, state: ScanState): void;
   onCloseTag?(name: string, state: ScanState): void;
 }

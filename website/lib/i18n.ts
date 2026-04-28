@@ -89,8 +89,7 @@ const en: Dict = {
     fetchFailed: "Fetch failed",
     retryLater: "Please try again shortly",
     target: "Target",
-    rateLimitTemplate:
-      "Too many requests. Please try again in {sec} seconds.",
+    rateLimitTemplate: "Too many requests. Please try again in {sec} seconds.",
   },
   toggle: { ariaLabel: "Switch language" },
 };
@@ -136,7 +135,8 @@ const ko: Dict = {
     redirectStatusTemplate: "{status} 리디렉션",
   },
   page: {
-    emptyState: "URL을 입력하면 OG 태그, 검증 결과, 미리보기가 여기에 표시됩니다.",
+    emptyState:
+      "URL을 입력하면 OG 태그, 검증 결과, 미리보기가 여기에 표시됩니다.",
     preview: "미리보기",
     fetchFailed: "가져오기 실패",
     retryLater: "잠시 후 다시 시도해 주세요",
@@ -160,7 +160,9 @@ export function hasLang(value: string): value is Lang {
 // Falls back to DEFAULT_LANG when nothing matches. Only the language
 // subtag is used (so "ko-KR" matches "ko").
 export function pickLangFromAcceptLanguage(header: string | null): Lang {
-  if (!header) return DEFAULT_LANG;
+  if (!header) {
+    return DEFAULT_LANG;
+  }
   const tags = header
     .split(",")
     .map((entry) => {
@@ -177,12 +179,17 @@ export function pickLangFromAcceptLanguage(header: string | null): Lang {
     .sort((a, b) => b.quality - a.quality);
   for (const { tag } of tags) {
     const primary = tag.split("-")[0] ?? "";
-    if (hasLang(primary)) return primary;
+    if (hasLang(primary)) {
+      return primary;
+    }
   }
   return DEFAULT_LANG;
 }
 
-export function format(template: string, values: Record<string, string | number>): string {
+export function format(
+  template: string,
+  values: Record<string, string | number>,
+): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) =>
     key in values ? String(values[key]) : `{${key}}`,
   );

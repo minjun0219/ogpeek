@@ -40,12 +40,22 @@ export function derivePreviewData(
 // vbscript:, mailto:, etc. all get rejected (mailto: makes no sense in an
 // <img> and the rest can carry script).
 export function safeImageSrc(url: string | null | undefined): string {
-  if (!url) return "";
+  if (!url) {
+    return "";
+  }
   const trimmed = url.trim();
-  if (!trimmed) return "";
-  if (/^https?:/i.test(trimmed)) return trimmed;
-  if (/^[/?#]/.test(trimmed)) return trimmed;
-  if (/^[a-z][a-z0-9+\-.]*:/i.test(trimmed)) return "";
+  if (!trimmed) {
+    return "";
+  }
+  if (/^https?:/i.test(trimmed)) {
+    return trimmed;
+  }
+  if (/^[/?#]/.test(trimmed)) {
+    return trimmed;
+  }
+  if (/^[a-z][a-z0-9+\-.]*:/i.test(trimmed)) {
+    return "";
+  }
   return trimmed;
 }
 
@@ -60,9 +70,13 @@ export function safeLinkHref(
   value: string | null | undefined,
   baseUrl?: string,
 ): string | null {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
   const trimmed = value.trim();
-  if (!trimmed) return null;
+  if (!trimmed) {
+    return null;
+  }
   try {
     const url = baseUrl ? new URL(trimmed, baseUrl) : new URL(trimmed);
     if (url.protocol === "http:" || url.protocol === "https:") {

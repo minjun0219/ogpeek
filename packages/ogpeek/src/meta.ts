@@ -1,11 +1,11 @@
 import { Parser } from "htmlparser2";
-import type { Icon, JsonLd, RawMeta } from "./types.js";
 import { HtmlPrefixExtractor } from "./extractors/html-prefix.js";
-import { TitleExtractor } from "./extractors/title.js";
-import { MetaTagExtractor } from "./extractors/meta-tag.js";
-import { LinkExtractor } from "./extractors/link.js";
 import { JsonLdExtractor } from "./extractors/jsonld.js";
+import { LinkExtractor } from "./extractors/link.js";
+import { MetaTagExtractor } from "./extractors/meta-tag.js";
+import { TitleExtractor } from "./extractors/title.js";
 import type { HeadExtractor, ScanState } from "./extractors/types.js";
+import type { Icon, JsonLd, RawMeta } from "./types.js";
 
 export type HeadScan = {
   raw: RawMeta[];
@@ -44,22 +44,42 @@ export function scanHead(html: string, options: ScanOptions = {}): HeadScan {
   const link = new LinkExtractor();
   const jsonld = new JsonLdExtractor(jsonldScope);
 
-  const extractors: HeadExtractor[] = [htmlPrefix, title, metaTag, link, jsonld];
+  const extractors: HeadExtractor[] = [
+    htmlPrefix,
+    title,
+    metaTag,
+    link,
+    jsonld,
+  ];
 
   const parser = new Parser(
     {
       onopentag(name, attrs) {
-        if (state.done) return;
-        if (name === "head") state.inHead = true;
-        for (const ex of extractors) ex.onOpenTag?.(name, attrs, state);
+        if (state.done) {
+          return;
+        }
+        if (name === "head") {
+          state.inHead = true;
+        }
+        for (const ex of extractors) {
+          ex.onOpenTag?.(name, attrs, state);
+        }
       },
       ontext(text) {
-        if (state.done) return;
-        for (const ex of extractors) ex.onText?.(text, state);
+        if (state.done) {
+          return;
+        }
+        for (const ex of extractors) {
+          ex.onText?.(text, state);
+        }
       },
       onclosetag(name) {
-        if (state.done) return;
-        for (const ex of extractors) ex.onCloseTag?.(name, state);
+        if (state.done) {
+          return;
+        }
+        for (const ex of extractors) {
+          ex.onCloseTag?.(name, state);
+        }
         if (name === "head") {
           state.inHead = false;
           if (stopAtHeadClose) {
@@ -69,7 +89,11 @@ export function scanHead(html: string, options: ScanOptions = {}): HeadScan {
         }
       },
     },
-    { decodeEntities: true, lowerCaseTags: true, lowerCaseAttributeNames: true },
+    {
+      decodeEntities: true,
+      lowerCaseTags: true,
+      lowerCaseAttributeNames: true,
+    },
   );
 
   parser.write(html);

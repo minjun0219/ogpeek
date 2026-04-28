@@ -11,9 +11,14 @@
     "build": "pnpm -F website build",
     "test": "pnpm -r --filter './packages/*' test",
     "typecheck": "pnpm -r typecheck",
-    "dev": "pnpm -F website dev"
+    "dev": "pnpm -F website dev",
+    "format": "biome format --write",
+    "lint": "biome lint",
+    "check": "biome check",
+    "check:fix": "biome check --write"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
     "typescript": "5.9.2"
   }
 }

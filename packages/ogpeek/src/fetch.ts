@@ -55,7 +55,10 @@ const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
 
-export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promise<FetchResult> {
+export async function fetchHtml(
+  rawUrl: string,
+  opts: FetchOptions = {},
+): Promise<FetchResult> {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
   const userAgent = opts.userAgent ?? DEFAULT_USER_AGENT;
@@ -80,9 +83,15 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
     finalUrl = hop.finalUrl;
     redirects = hop.redirects;
   } catch (err) {
-    if (err instanceof FetchError) throw err;
+    if (err instanceof FetchError) {
+      throw err;
+    }
     if (err instanceof Error && err.name === "AbortError") {
-      throw new FetchError("TIMEOUT", 504, `upstream did not respond within ${timeoutMs}ms`);
+      throw new FetchError(
+        "TIMEOUT",
+        504,
+        `upstream did not respond within ${timeoutMs}ms`,
+      );
     }
     const message = err instanceof Error ? err.message : String(err);
     throw new FetchError("NETWORK", 502, `upstream network error: ${message}`);
@@ -91,12 +100,20 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   }
 
   if (!finalRes.ok) {
-    throw new FetchError("UPSTREAM_STATUS", 502, `upstream responded ${finalRes.status}`);
+    throw new FetchError(
+      "UPSTREAM_STATUS",
+      502,
+      `upstream responded ${finalRes.status}`,
+    );
   }
 
   const contentType = finalRes.headers.get("content-type") ?? "";
   if (!/\b(?:text\/html|application\/xhtml\+xml)\b/i.test(contentType)) {
-    throw new FetchError("NOT_HTML", 415, `upstream content-type "${contentType}" is not html`);
+    throw new FetchError(
+      "NOT_HTML",
+      415,
+      `upstream content-type "${contentType}" is not html`,
+    );
   }
 
   const reader = finalRes.body?.getReader();
@@ -110,18 +127,30 @@ export async function fetchHtml(rawUrl: string, opts: FetchOptions = {}): Promis
   try {
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
       received += value.byteLength;
       if (received > maxBytes) {
         await reader.cancel();
-        throw new FetchError("TOO_LARGE", 413, `upstream exceeded ${maxBytes} bytes`);
+        throw new FetchError(
+          "TOO_LARGE",
+          413,
+          `upstream exceeded ${maxBytes} bytes`,
+        );
       }
       buf += decoder.decode(value, { stream: true });
     }
   } catch (err) {
-    if (err instanceof FetchError) throw err;
+    if (err instanceof FetchError) {
+      throw err;
+    }
     const message = err instanceof Error ? err.message : String(err);
-    throw new FetchError("READ_ERROR", 502, `failed reading upstream body: ${message}`);
+    throw new FetchError(
+      "READ_ERROR",
+      502,
+      `failed reading upstream body: ${message}`,
+    );
   }
   buf += decoder.decode();
 
@@ -164,7 +193,11 @@ async function followRedirects(
     await discard(res);
 
     if (hop === MAX_REDIRECTS) {
-      throw new FetchError("TOO_MANY_REDIRECTS", 502, `exceeded ${MAX_REDIRECTS} redirects`);
+      throw new FetchError(
+        "TOO_MANY_REDIRECTS",
+        502,
+        `exceeded ${MAX_REDIRECTS} redirects`,
+      );
     }
 
     const location = res.headers.get("location")!;
@@ -172,7 +205,11 @@ async function followRedirects(
     try {
       next = new URL(location, current);
     } catch {
-      throw new FetchError("BAD_REDIRECT", 502, `invalid Location header "${location}"`);
+      throw new FetchError(
+        "BAD_REDIRECT",
+        502,
+        `invalid Location header "${location}"`,
+      );
     }
     if (next.protocol !== "http:" && next.protocol !== "https:") {
       throw new FetchError(
@@ -181,37 +218,59 @@ async function followRedirects(
         `redirect to unsupported scheme ${next.protocol}`,
       );
     }
-    redirects.push({ from: current.toString(), to: next.toString(), status: res.status });
+    redirects.push({
+      from: current.toString(),
+      to: next.toString(),
+      status: res.status,
+    });
     const key = next.toString();
     if (visited.has(key)) {
-      throw new FetchError("REDIRECT_LOOP", 502, `redirect loop detected at ${key}`);
+      throw new FetchError(
+        "REDIRECT_LOOP",
+        502,
+        `redirect loop detected at ${key}`,
+      );
     }
     visited.add(key);
     current = next;
   }
 
-  throw new FetchError("TOO_MANY_REDIRECTS", 502, `exceeded ${MAX_REDIRECTS} redirects`);
+  throw new FetchError(
+    "TOO_MANY_REDIRECTS",
+    502,
+    `exceeded ${MAX_REDIRECTS} redirects`,
+  );
 }
 
 async function runGuard(
   guard: ((url: URL) => Promise<void> | void) | undefined,
   url: URL,
 ): Promise<void> {
-  if (!guard) return;
+  if (!guard) {
+    return;
+  }
   try {
     await guard(url);
   } catch (err) {
     // Propagate FetchError as-is so the caller's intended block code/status
     // surfaces unchanged. Anything else is treated as a caller bug and
     // wrapped as GUARD_FAILED.
-    if (err instanceof FetchError) throw err;
+    if (err instanceof FetchError) {
+      throw err;
+    }
     const message = err instanceof Error ? err.message : String(err);
     throw new FetchError("GUARD_FAILED", 500, `guard threw: ${message}`);
   }
 }
 
 function isRedirect(status: number): boolean {
-  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
+  return (
+    status === 301 ||
+    status === 302 ||
+    status === 303 ||
+    status === 307 ||
+    status === 308
+  );
 }
 
 async function discard(res: Response): Promise<void> {
@@ -230,7 +289,11 @@ function parseUrl(raw: string): URL {
     throw new FetchError("INVALID_URL", 400, "url is malformed");
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new FetchError("UNSUPPORTED_SCHEME", 400, "only http and https urls are supported");
+    throw new FetchError(
+      "UNSUPPORTED_SCHEME",
+      400,
+      "only http and https urls are supported",
+    );
   }
   return parsed;
 }

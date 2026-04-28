@@ -12,8 +12,14 @@ export class MetaTagExtractor implements HeadExtractor {
   msTileColor: string | null = null;
   themeColor: string | null = null;
 
-  onOpenTag(name: string, attrs: Record<string, string>, state: ScanState): void {
-    if (!state.inHead || name !== "meta") return;
+  onOpenTag(
+    name: string,
+    attrs: Record<string, string>,
+    state: ScanState,
+  ): void {
+    if (!state.inHead || name !== "meta") {
+      return;
+    }
 
     const property = attrs.property ?? attrs.name;
     const content = attrs.content;
@@ -31,17 +37,29 @@ export class MetaTagExtractor implements HeadExtractor {
       typeof attrs.content === "string"
     ) {
       const match = /charset=([^;]+)/i.exec(attrs.content);
-      if (match && match[1]) this.charset = match[1].trim();
+      if (match?.[1]) {
+        this.charset = match[1].trim();
+      }
     }
 
-    const nameAttr = typeof attrs.name === "string" ? attrs.name.trim().toLowerCase() : "";
-    const contentStr = typeof attrs.content === "string" ? attrs.content.trim() : "";
-    if (!nameAttr || !contentStr) return;
+    const nameAttr =
+      typeof attrs.name === "string" ? attrs.name.trim().toLowerCase() : "";
+    const contentStr =
+      typeof attrs.content === "string" ? attrs.content.trim() : "";
+    if (!nameAttr || !contentStr) {
+      return;
+    }
     if (nameAttr === "application-name" && this.applicationName === null) {
       this.applicationName = contentStr;
-    } else if (nameAttr === "msapplication-tileimage" && this.msTileImage === null) {
+    } else if (
+      nameAttr === "msapplication-tileimage" &&
+      this.msTileImage === null
+    ) {
       this.msTileImage = contentStr;
-    } else if (nameAttr === "msapplication-tilecolor" && this.msTileColor === null) {
+    } else if (
+      nameAttr === "msapplication-tilecolor" &&
+      this.msTileColor === null
+    ) {
       this.msTileColor = contentStr;
     } else if (nameAttr === "theme-color" && this.themeColor === null) {
       this.themeColor = contentStr;

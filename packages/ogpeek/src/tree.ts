@@ -98,15 +98,39 @@ export function buildTree(raw: RawMeta[]): TreeBuildResult {
     // Structured image/video/audio first (so og:image:width doesn't collide
     // with og:image as a singleton).
     if (property in IMAGE_SUBPROPS) {
-      applySub(ogp.images, IMAGE_SUBPROPS[property]!, property, content, orphans, invalidDimensions, property === "og:image");
+      applySub(
+        ogp.images,
+        IMAGE_SUBPROPS[property]!,
+        property,
+        content,
+        orphans,
+        invalidDimensions,
+        property === "og:image",
+      );
       continue;
     }
     if (property in VIDEO_SUBPROPS) {
-      applySub(ogp.videos, VIDEO_SUBPROPS[property]!, property, content, orphans, invalidDimensions, property === "og:video");
+      applySub(
+        ogp.videos,
+        VIDEO_SUBPROPS[property]!,
+        property,
+        content,
+        orphans,
+        invalidDimensions,
+        property === "og:video",
+      );
       continue;
     }
     if (property in AUDIO_SUBPROPS) {
-      applySub(ogp.audios, AUDIO_SUBPROPS[property]!, property, content, orphans, invalidDimensions, property === "og:audio");
+      applySub(
+        ogp.audios,
+        AUDIO_SUBPROPS[property]!,
+        property,
+        content,
+        orphans,
+        invalidDimensions,
+        property === "og:audio",
+      );
       continue;
     }
 
@@ -128,18 +152,24 @@ export function buildTree(raw: RawMeta[]): TreeBuildResult {
     // Typed-object properties: article:author, music:duration, video:tag, etc.
     const ns = property.split(":")[0] ?? "";
     if (TYPED_NAMESPACES.has(ns) && property.includes(":")) {
-      if (typedKind === null && ogp.type) typedKind = ogp.type;
+      if (typedKind === null && ogp.type) {
+        typedKind = ogp.type;
+      }
       const key = property.slice(ns.length + 1);
       const existing = typedProps[key];
-      if (Array.isArray(existing)) existing.push(content);
-      else if (typeof existing === "string") typedProps[key] = [existing, content];
-      else typedProps[key] = content;
-      continue;
+      if (Array.isArray(existing)) {
+        existing.push(content);
+      } else if (typeof existing === "string") {
+        typedProps[key] = [existing, content];
+      } else {
+        typedProps[key] = content;
+      }
     }
   }
 
+  const typeNs = ogp.type?.split(".")[0];
   const typed: TypedObject | null =
-    ogp.type && ogp.type.split(".")[0] && TYPED_NAMESPACES.has(ogp.type.split(".")[0]!)
+    ogp.type && typeNs && TYPED_NAMESPACES.has(typeNs)
       ? { kind: ogp.type, properties: typedProps }
       : null;
 

@@ -1,15 +1,15 @@
 import type { ReactElement } from "react";
-import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
 import {
+  derivePreviewData,
   Preview,
   RedirectFlow,
   Result,
   TagTable,
   ValidationPanel,
-  derivePreviewData,
 } from "../src/index.js";
-import { FINAL_URL, REDIRECTS, STATUS, makeResult } from "./fixtures.js";
+import { FINAL_URL, makeResult, REDIRECTS, STATUS } from "./fixtures.js";
 
 const render = (node: ReactElement) => renderToStaticMarkup(node);
 

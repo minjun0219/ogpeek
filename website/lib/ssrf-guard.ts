@@ -42,14 +42,25 @@ function assertSafeHostname(hostname: string): void {
   }
   const lower = hostname.toLowerCase();
   if (lower === "localhost" || lower.endsWith(".localhost")) {
-    throw new FetchError("BLOCKED_PRIVATE_HOST", 400, `hostname "${hostname}" is a loopback name`);
+    throw new FetchError(
+      "BLOCKED_PRIVATE_HOST",
+      400,
+      `hostname "${hostname}" is a loopback name`,
+    );
   }
   if (ipaddr.isValid(hostname) && isPrivateIp(hostname)) {
-    throw new FetchError("BLOCKED_PRIVATE_IP", 400, `ip ${hostname} is in a private range`);
+    throw new FetchError(
+      "BLOCKED_PRIVATE_IP",
+      400,
+      `ip ${hostname} is in a private range`,
+    );
   }
 }
 
-async function dohResolve(hostname: string, type: "A" | "AAAA"): Promise<string[]> {
+async function dohResolve(
+  hostname: string,
+  type: "A" | "AAAA",
+): Promise<string[]> {
   const target = `${DOH_ENDPOINT}?name=${encodeURIComponent(hostname)}&type=${type}`;
   const res = await fetch(target, {
     headers: { accept: "application/dns-json" },
@@ -74,7 +85,9 @@ async function dohResolve(hostname: string, type: "A" | "AAAA"): Promise<string[
 
 async function assertResolvesToPublic(hostname: string): Promise<void> {
   // Literal IPs were already adjudicated in assertSafeHostname.
-  if (ipaddr.isValid(hostname)) return;
+  if (ipaddr.isValid(hostname)) {
+    return;
+  }
 
   const [v4, v6] = await Promise.all([
     dohResolve(hostname, "A").catch((err: unknown) => err as Error),
@@ -94,8 +107,12 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
   }
 
   const addrs: string[] = [];
-  if (v4Ok) addrs.push(...(v4 as string[]));
-  if (v6Ok) addrs.push(...(v6 as string[]));
+  if (v4Ok) {
+    addrs.push(...(v4 as string[]));
+  }
+  if (v6Ok) {
+    addrs.push(...(v6 as string[]));
+  }
 
   if (addrs.length === 0) {
     throw new FetchError(

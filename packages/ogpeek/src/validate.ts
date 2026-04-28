@@ -3,7 +3,11 @@ import type { HeadScan } from "./meta.js";
 import type { TreeBuildResult } from "./tree.js";
 import type { Warning } from "./types.js";
 
-export function validate(head: HeadScan, tree: TreeBuildResult, baseUrl: string | undefined): Warning[] {
+export function validate(
+  head: HeadScan,
+  tree: TreeBuildResult,
+  baseUrl: string | undefined,
+): Warning[] {
   const warnings: Warning[] = [];
   const { ogp, orphans, invalidDimensions, duplicateSingletons } = tree;
 
@@ -62,7 +66,9 @@ export function validate(head: HeadScan, tree: TreeBuildResult, baseUrl: string 
 
   const base = baseUrl ?? ogp.url;
   for (const raw of tree.ogRaw) {
-    if (!OG_URL_PROPERTIES.has(raw.property)) continue;
+    if (!OG_URL_PROPERTIES.has(raw.property)) {
+      continue;
+    }
     if (!isAbsoluteUrl(raw.content, base)) {
       warnings.push({
         code: "URL_NOT_ABSOLUTE",
@@ -108,7 +114,8 @@ export function validate(head: HeadScan, tree: TreeBuildResult, baseUrl: string 
     warnings.push({
       code: "MISSING_PREFIX_ATTR",
       severity: "info",
-      message: '<html prefix="og: https://ogp.me/ns#"> is recommended by the OGP spec.',
+      message:
+        '<html prefix="og: https://ogp.me/ns#"> is recommended by the OGP spec.',
     });
   }
 
@@ -141,7 +148,10 @@ function sameResource(a: string, b: string): boolean {
   try {
     const ua = new URL(a);
     const ub = new URL(b);
-    return ua.host.toLowerCase() === ub.host.toLowerCase() && stripSlash(ua.pathname) === stripSlash(ub.pathname);
+    return (
+      ua.host.toLowerCase() === ub.host.toLowerCase() &&
+      stripSlash(ua.pathname) === stripSlash(ub.pathname)
+    );
   } catch {
     return a === b;
   }

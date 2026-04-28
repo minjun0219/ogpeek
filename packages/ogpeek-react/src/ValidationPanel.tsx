@@ -1,12 +1,12 @@
 import type { Warning } from "ogpeek";
+import { cls } from "./cls.js";
 import {
   DEFAULT_LANG,
-  resolveDict,
   type DeepPartial,
   type Dict,
   type Lang,
+  resolveDict,
 } from "./dict.js";
-import { cls } from "./cls.js";
 
 export type ValidationPanelProps = {
   warnings: Warning[];
@@ -61,10 +61,7 @@ export function ValidationPanel({
           {(["error", "warn", "info"] as const)
             .filter((s) => counts[s])
             .map((s) => (
-              <span
-                key={s}
-                className={`ogpeek-pill ogpeek-pill--${s}`}
-              >
+              <span key={s} className={`ogpeek-pill ogpeek-pill--${s}`}>
                 {severityLabel[s]} {counts[s]}
               </span>
             ))}

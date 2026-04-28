@@ -8,7 +8,9 @@ export function cls(
 ): string {
   let out = "";
   for (const part of parts) {
-    if (!part) continue;
+    if (!part) {
+      continue;
+    }
     out = out ? `${out} ${part}` : part;
   }
   return out;

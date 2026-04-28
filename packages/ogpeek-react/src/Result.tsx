@@ -1,18 +1,18 @@
 import type { OgDebugResult } from "ogpeek";
 import type { RedirectHop } from "ogpeek/fetch";
+import { cls } from "./cls.js";
+import { derivePreviewData } from "./derivePreviewData.js";
 import {
   DEFAULT_LANG,
-  getDict,
   type DeepPartial,
   type Dict,
+  getDict,
   type Lang,
 } from "./dict.js";
-import { derivePreviewData } from "./derivePreviewData.js";
-import { cls } from "./cls.js";
 import { Preview } from "./Preview.js";
-import { ValidationPanel } from "./ValidationPanel.js";
 import { RedirectFlow } from "./RedirectFlow.js";
 import { TagTable } from "./TagTable.js";
+import { ValidationPanel } from "./ValidationPanel.js";
 
 export type ResultProps = {
   result: OgDebugResult;

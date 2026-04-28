@@ -43,7 +43,12 @@
 
   display: block;
   color: rgb(var(--ogpeek-fg));
-  font: 14px / 1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font:
+    14px / 1.5 system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {

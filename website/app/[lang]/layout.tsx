@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import { notFound } from "next/navigation";
 import { Noto_Sans_KR } from "next/font/google";
-import { LANGS, getDict, hasLang, type Lang } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
+import { getDict, hasLang, LANGS, type Lang } from "@/lib/i18n";
 import { TranslateProvider } from "@/lib/translate-context";
 import "../globals.css";
 import "@ogpeek/react/styles.css";
@@ -20,9 +20,15 @@ export function generateStaticParams(): Array<{ lang: Lang }> {
 
 type Params = Promise<{ lang: string }>;
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Params;
+}): Promise<Metadata> {
   const { lang } = await params;
-  if (!hasLang(lang)) return {};
+  if (!hasLang(lang)) {
+    return {};
+  }
   const dict = getDict(lang);
   return {
     title: dict.meta.title,
@@ -41,7 +47,9 @@ export default async function LangLayout({
   params: Params;
 }) {
   const { lang } = await params;
-  if (!hasLang(lang)) notFound();
+  if (!hasLang(lang)) {
+    notFound();
+  }
   const dict = getDict(lang);
   return (
     <html lang={lang} className={notoSansKr.variable}>
