@@ -1,6 +1,6 @@
 {
   "name": "@ogpeek/react",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "Drop-in OG-tag inspector React components for ogpeek.",
   "keywords": [
     "open-graph",

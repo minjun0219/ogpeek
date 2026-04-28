@@ -151,31 +151,31 @@ into the engine (`packages/ogpeek`).
 
 ## npm publishing
 
-The engine is published publicly to npm as `ogpeek`. Versioning is handled
-by [release-please](https://github.com/googleapis/release-please) — do **not**
-hand-edit `packages/ogpeek/package.json#version`.
+Two packages publish publicly to npm: the engine as `ogpeek`, and the
+React component layer as `@ogpeek/react`. Versioning is handled by
+[release-please](https://github.com/googleapis/release-please) — do **not**
+hand-edit either `package.json#version`.
 
 - `.github/workflows/release-please.yml` runs on every push to `main`. It
-  reads commit messages since the last tag, opens (or updates) a
-  `chore: release ogpeek <version>` PR that bumps the version and updates
-  `CHANGELOG.md`. Merging that PR creates a GitHub Release + tag and
-  publishes to npm in the same workflow run.
+  reads commit messages since the last tag and opens (or updates) a
+  `chore: release main` PR that bumps each affected package's version and
+  updates `CHANGELOG.md`. Merging that PR creates a GitHub Release + tag
+  per package and publishes to npm in the same workflow run via separate
+  `publish-ogpeek` / `publish-ogpeek-react` jobs.
 - `release-please-config.json` + `.release-please-manifest.json` hold the
   release-please configuration and the current version of record. The
   manifest is the source of truth for "what was last released"; release-please
   rewrites both `package.json#version` and the manifest in the release PR.
+  `ogpeek-react` carries `include-component-in-tag: true` so its tags
+  (`ogpeek-react-vX.Y.Z`) don't collide with `ogpeek`'s `vX.Y.Z` namespace.
 - Bump levels follow [Conventional Commits](https://www.conventionalcommits.org/)
   on squash-merge titles: `fix:` → patch, `feat:` → minor, `feat!:` or a
   `BREAKING CHANGE:` footer → major. To force a specific version, add a
-  `Release-As: 1.2.3` footer to a commit on `main`.
-- The same workflow also exposes a `workflow_dispatch` trigger as a manual
-  fallback. Running it from the Actions UI skips release-please and
-  publishes whatever version sits in `packages/ogpeek/package.json` (with
-  optional `tag` / `dry-run` inputs) — use it only when release-please is
-  jammed or you need to attach a non-`latest` dist-tag.
+  `Release-As: 1.2.3` footer to a commit on `main`. There is intentionally
+  no `workflow_dispatch` manual fallback — if release-please ever jams
+  enough to need one, weigh the trade-offs first and add it back then.
 - Authentication uses npm Trusted Publisher (OIDC), so no secrets are
-  required. `packages/ogpeek/package.json` sets
-  `publishConfig.access: "public"` and `publishConfig.provenance: true`,
-  and only the build output ships
-  (`files: ["dist", "README.md", "LICENSE"]`). The `prepack` hook forces a
-  build right before publish.
+  required. Both packages set `publishConfig.access: "public"` and
+  `publishConfig.provenance: true`, and only the build output ships
+  (`files: ["dist", "README.md", "LICENSE"]`). The `prepack` hook forces
+  a build right before publish.

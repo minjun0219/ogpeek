@@ -3,25 +3,6 @@ name: Release Please
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      package:
-        description: "publish 대상 패키지"
-        required: true
-        type: choice
-        options:
-          - ogpeek
-          - "@ogpeek/react"
-        default: ogpeek
-      tag:
-        description: "npm dist-tag (수동 publish 시 사용, 기본값: latest)"
-        required: false
-        default: latest
-      dry-run:
-        description: "실제 publish 없이 리허설만 수행"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -30,7 +11,6 @@ permissions:
 jobs:
   release-please:
     name: Open release PR / cut release
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       ogpeek_release_created: ${{ steps.release.outputs['packages/ogpeek--release_created'] }}
@@ -47,13 +27,7 @@ jobs:
   publish-ogpeek:
     name: Publish ogpeek to npm
     needs: release-please
-    # push 일 때는 release-please 가 ogpeek 릴리스를 잘랐을 때만,
-    # workflow_dispatch 일 때는 입력된 package 가 ogpeek 일 때만 실행.
-    if: |
-      always() && (
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.package == 'ogpeek') ||
-        (github.event_name == 'push' && needs.release-please.outputs.ogpeek_release_created == 'true')
-      )
+    if: needs.release-please.outputs.ogpeek_release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -61,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.ogpeek_tag_name || github.ref }}
+          ref: ${{ needs.release-please.outputs.ogpeek_tag_name }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -91,25 +65,12 @@ jobs:
           # secrets.NPM_AUTH_TOKEN 이 비어있으면 npm CLI 가 OIDC(Trusted
           # Publisher) 로 폴백한다.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-          DIST_TAG: ${{ github.event.inputs.tag || 'latest' }}
-          DRY_RUN: ${{ github.event.inputs['dry-run'] || 'false' }}
-        run: |
-          args=(--access public --provenance --no-git-checks --tag "$DIST_TAG")
-          if [ "$DRY_RUN" = "true" ]; then
-            args+=(--dry-run)
-          fi
-          pnpm publish "${args[@]}"
+        run: pnpm publish --access public --provenance --no-git-checks
 
   publish-ogpeek-react:
     name: Publish @ogpeek/react to npm
     needs: release-please
-    # push 일 때는 release-please 가 @ogpeek/react 릴리스를 잘랐을 때만,
-    # workflow_dispatch 일 때는 입력된 package 가 @ogpeek/react 일 때만 실행.
-    if: |
-      always() && (
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.package == '@ogpeek/react') ||
-        (github.event_name == 'push' && needs.release-please.outputs.react_release_created == 'true')
-      )
+    if: needs.release-please.outputs.react_release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -117,7 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.react_tag_name || github.ref }}
+          ref: ${{ needs.release-please.outputs.react_tag_name }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -149,11 +110,4 @@ jobs:
         working-directory: packages/ogpeek-react
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-          DIST_TAG: ${{ github.event.inputs.tag || 'latest' }}
-          DRY_RUN: ${{ github.event.inputs['dry-run'] || 'false' }}
-        run: |
-          args=(--access public --provenance --no-git-checks --tag "$DIST_TAG")
-          if [ "$DRY_RUN" = "true" ]; then
-            args+=(--dry-run)
-          fi
-          pnpm publish "${args[@]}"
+        run: pnpm publish --access public --provenance --no-git-checks
