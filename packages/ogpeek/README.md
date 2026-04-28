@@ -101,9 +101,16 @@ checking, no manifest.json fetching).
 
 ```ts
 type Icon = {
-  rel: string;     // "icon" | "shortcut icon" | "apple-touch-icon"
+  rel: string;     // matched icon token, normalized to one of:
+                   // "icon" | "apple-touch-icon"
                    // | "apple-touch-icon-precomposed" | "mask-icon"
                    // | "fluid-icon" (lower-cased)
+                   //
+                   // <link rel> is a space-separated token set, so a tag
+                   // like `rel="shortcut icon"` (legacy IE) or
+                   // `rel="icon apple-touch-icon"` (multi-role) is parsed
+                   // per token. Multi-role declarations emit one Icon per
+                   // matched token, sharing the same href.
   href: string;
   sizes?: string;  // "32x32 16x16" or "any"
   type?: string;   // "image/png"

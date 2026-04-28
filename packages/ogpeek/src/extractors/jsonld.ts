@@ -20,8 +20,12 @@ export class JsonLdExtractor implements HeadExtractor {
     if (this.inScript) return;
     if (name !== "script") return;
     if (this.scope === "head" && !state.inHead) return;
-    const type = typeof attrs.type === "string" ? attrs.type.trim().toLowerCase() : "";
-    if (type !== "application/ld+json") return;
+    // `type` is a MIME literal that may carry parameters
+    // (e.g. `application/ld+json; charset=utf-8`). Strip everything past
+    // the first `;` before comparing.
+    const typeRaw = typeof attrs.type === "string" ? attrs.type.trim().toLowerCase() : "";
+    const mime = typeRaw.split(";")[0]?.trim() ?? "";
+    if (mime !== "application/ld+json") return;
     this.inScript = true;
     this.buf = "";
   }

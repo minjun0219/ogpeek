@@ -98,9 +98,15 @@ OG 가 메인 신호인 건 변하지 않는다. 보조 필드들은 "이 페이
 
 ```ts
 type Icon = {
-  rel: string;     // "icon" | "shortcut icon" | "apple-touch-icon"
+  rel: string;     // 매칭된 아이콘 토큰. 다음 중 하나로 정규화:
+                   // "icon" | "apple-touch-icon"
                    // | "apple-touch-icon-precomposed" | "mask-icon"
-                   // | "fluid-icon" (소문자 정규화)
+                   // | "fluid-icon" (소문자)
+                   //
+                   // <link rel> 은 공백으로 구분된 토큰 셋이라, `rel="shortcut
+                   // icon"` (IE 레거시) 이나 `rel="icon apple-touch-icon"`
+                   // (다중 역할) 같은 변형을 토큰 단위로 매칭한다. 다중
+                   // 역할이면 매칭된 토큰마다 Icon 하나씩 emit (href 공유).
   href: string;
   sizes?: string;  // "32x32 16x16" 또는 "any"
   type?: string;   // "image/png"

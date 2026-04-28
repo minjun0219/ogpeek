@@ -94,6 +94,48 @@ describe("parse()", () => {
     expect(result.jsonld[2]?.types).toEqual(["Article"]);
   });
 
+  it("matches icon-shaped rel as a token set, not as a single string", () => {
+    // `<link rel>` is a space-separated token list per HTML spec, so legacy
+    // IE form (`shortcut icon`), reordered tokens, and multi-role
+    // declarations all need to map to icon entries.
+    const html = `
+      <html><head><title>T</title>
+        <meta property="og:title" content="T">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://a.com">
+        <meta property="og:image" content="https://a.com/x.png">
+        <link rel="shortcut icon" href="/legacy.ico">
+        <link rel="icon shortcut" href="/legacy-reversed.ico">
+        <link rel="icon   apple-touch-icon" href="/dual-role.png" sizes="64x64">
+      </head></html>`;
+    const result = parse(html);
+
+    expect(result.icons).toEqual([
+      { rel: "icon", href: "/legacy.ico" },
+      { rel: "icon", href: "/legacy-reversed.ico" },
+      { rel: "icon", href: "/dual-role.png", sizes: "64x64" },
+      { rel: "apple-touch-icon", href: "/dual-role.png", sizes: "64x64" },
+    ]);
+  });
+
+  it("accepts JSON-LD with a parameterized MIME type", () => {
+    const html = `
+      <html><head><title>T</title>
+        <meta property="og:title" content="T">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://a.com">
+        <meta property="og:image" content="https://a.com/x.png">
+        <script type="application/ld+json; charset=utf-8">
+          { "@context": "https://schema.org", "@type": "WebSite", "name": "X" }
+        </script>
+      </head></html>`;
+    const result = parse(html);
+
+    expect(result.jsonld).toHaveLength(1);
+    expect(result.jsonld[0]?.types).toEqual(["WebSite"]);
+    expect(result.jsonld[0]?.error).toBeUndefined();
+  });
+
   it("handles the minimal fixture with no warnings except info-level", () => {
     const result = parse(load("minimal.html"));
     const errors = result.warnings.filter((w) => w.severity === "error");
