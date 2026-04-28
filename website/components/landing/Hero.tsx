@@ -1,4 +1,3 @@
-import { InstallCopy } from "@/components/landing/InstallCopy";
 import { UrlInput } from "@/components/UrlInput";
 
 export function Hero() {
@@ -10,7 +9,6 @@ export function Hero() {
       <div className="w-full max-w-xl">
         <UrlInput />
       </div>
-      <InstallCopy command="npm install ogpeek" />
     </section>
   );
 }

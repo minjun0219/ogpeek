@@ -41,6 +41,10 @@ export type Dict = {
   packages: {
     title: string;
     subtitle: string;
+    pageLead: string;
+    detailLink: string;
+    backToHome: string;
+    quickStartTitle: string;
     engine: { tagline: string };
     react: { tagline: string };
     npmLink: string;
@@ -102,11 +106,18 @@ const en: Dict = {
   packages: {
     title: "Packages",
     subtitle: "ogpeek ships as two npm packages.",
+    pageLead:
+      "Two small modules — bring in only what you need. The engine runs anywhere; the React layer renders the same panels this site uses.",
+    detailLink: "Read the package docs →",
+    backToHome: "← Back to demo",
+    quickStartTitle: "Quick start",
     engine: {
-      tagline: "Pure parser, fetcher, and validator. One dependency.",
+      tagline:
+        "Pure parser, fetcher, and validator for OpenGraph tags. One external dependency, runs on Node and edge runtimes alike.",
     },
     react: {
-      tagline: "Drop-in React components — same panels this site renders.",
+      tagline:
+        "Drop-in OG-tag inspector React components. The same Result, Preview, ValidationPanel, RedirectFlow, and TagTable this site renders.",
     },
     npmLink: "View on npm",
     readmeLink: "README",
@@ -166,12 +177,18 @@ const ko: Dict = {
   packages: {
     title: "패키지",
     subtitle: "ogpeek은 두 개의 npm 패키지로 배포됩니다.",
+    pageLead:
+      "두 개의 작은 모듈로 나뉘어 있어 필요한 만큼만 가져갈 수 있습니다. 엔진은 Node와 엣지 런타임 어디에서나 동일하게 동작하며, React 레이어는 이 사이트가 그리는 그 패널을 그대로 렌더링합니다.",
+    detailLink: "패키지 자세히 보기 →",
+    backToHome: "← 데모로 돌아가기",
+    quickStartTitle: "Quick start",
     engine: {
-      tagline: "순수 파서·페처·검증기. 외부 의존성은 하나뿐입니다.",
+      tagline:
+        "OpenGraph 메타태그를 위한 순수 파서·페처·검증기. 외부 의존성은 하나뿐이며 Node와 엣지 런타임에서 동일하게 동작합니다.",
     },
     react: {
       tagline:
-        "그대로 가져다 쓰는 React 컴포넌트 — 이 사이트가 렌더링하는 패널 그대로입니다.",
+        "그대로 가져다 쓰는 OG 메타태그 인스펙터 React 컴포넌트. 이 사이트가 렌더링하는 Result, Preview, ValidationPanel, RedirectFlow, TagTable이 그대로입니다.",
     },
     npmLink: "npm에서 보기",
     readmeLink: "README",

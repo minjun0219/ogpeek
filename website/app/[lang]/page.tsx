@@ -88,7 +88,7 @@ function PageLayout({
         <EmptyState dict={dict} />
       )}
 
-      <Packages dict={dict} />
+      <Packages dict={dict} lang={lang} />
 
       <Footer />
     </main>
