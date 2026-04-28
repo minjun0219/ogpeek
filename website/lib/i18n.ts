@@ -39,9 +39,6 @@ export type Dict = {
     rateLimitTemplate: string;
   };
   packages: {
-    title: string;
-    pageLead: string;
-    backToHome: string;
     quickStartTitle: string;
     alsoLabel: string;
     engine: { tagline: string };
@@ -103,15 +100,11 @@ const en: Dict = {
     rateLimitTemplate: "Too many requests. Please try again in {sec} seconds.",
   },
   packages: {
-    title: "Packages",
-    pageLead:
-      "ogpeek is a small parser, fetcher, and validator for OpenGraph tags. Drop it into a Node script, an edge handler, or an API route — one external dependency, runs anywhere.",
-    backToHome: "← Home",
     quickStartTitle: "Quick start",
     alsoLabel: "Also available",
     engine: {
       tagline:
-        "Pure parser, fetcher, and validator for OpenGraph tags. One external dependency, runs on Node and edge runtimes alike.",
+        "ogpeek parses, fetches, and validates OpenGraph tags from any URL. The fetcher ships with built-in SSRF guards for safe server-side use, the parser is tolerant of real-world markup, and the validator catches common OGP spec violations. One external dependency, runs on Node and edge runtimes alike — see the README for the full API.",
     },
     react: {
       tagline:
@@ -173,15 +166,11 @@ const ko: Dict = {
     rateLimitTemplate: "요청이 너무 많습니다. {sec}초 후 다시 시도해 주세요.",
   },
   packages: {
-    title: "패키지",
-    pageLead:
-      "ogpeek은 OpenGraph 메타태그를 위한 작은 파서·페처·검증기입니다. Node 스크립트, 엣지 핸들러, API 라우트 어디에나 가져다 쓸 수 있고 외부 의존성은 하나뿐입니다.",
-    backToHome: "← 홈",
     quickStartTitle: "Quick start",
     alsoLabel: "추가로 사용 가능",
     engine: {
       tagline:
-        "OpenGraph 메타태그를 위한 순수 파서·페처·검증기. 외부 의존성은 하나뿐이며 Node와 엣지 런타임에서 동일하게 동작합니다.",
+        "ogpeek은 임의의 URL에서 OpenGraph 메타태그를 파싱·페치·검증합니다. 페처에는 SSRF 가드가 내장되어 서버에서 안전하게 쓸 수 있고, 파서는 실제 웹의 어수선한 마크업을 잘 허용하며, 검증기는 흔한 OGP 스펙 위반을 잡아냅니다. 외부 의존성은 하나뿐이며 Node와 엣지 런타임에서 동일하게 동작합니다 — 전체 API는 README를 참고하세요.",
     },
     react: {
       tagline:

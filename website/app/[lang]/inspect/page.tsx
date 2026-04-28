@@ -78,7 +78,7 @@ export default async function InspectPage({
         <EmptyState dict={dict} />
       )}
 
-      <Footer lang={lang} dict={dict} />
+      <Footer />
     </main>
   );
 }
