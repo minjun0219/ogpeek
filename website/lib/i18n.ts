@@ -38,6 +38,14 @@ export type Dict = {
     target: string;
     rateLimitTemplate: string;
   };
+  packages: {
+    title: string;
+    subtitle: string;
+    engine: { tagline: string };
+    react: { tagline: string };
+    npmLink: string;
+    readmeLink: string;
+  };
   toggle: { ariaLabel: string };
 };
 
@@ -91,6 +99,18 @@ const en: Dict = {
     target: "Target",
     rateLimitTemplate: "Too many requests. Please try again in {sec} seconds.",
   },
+  packages: {
+    title: "Packages",
+    subtitle: "ogpeek ships as two npm packages.",
+    engine: {
+      tagline: "Pure parser, fetcher, and validator. One dependency.",
+    },
+    react: {
+      tagline: "Drop-in React components — same panels this site renders.",
+    },
+    npmLink: "View on npm",
+    readmeLink: "README",
+  },
   toggle: { ariaLabel: "Switch language" },
 };
 
@@ -142,6 +162,19 @@ const ko: Dict = {
     retryLater: "잠시 후 다시 시도해 주세요",
     target: "대상",
     rateLimitTemplate: "요청이 너무 많습니다. {sec}초 후 다시 시도해 주세요.",
+  },
+  packages: {
+    title: "패키지",
+    subtitle: "ogpeek은 두 개의 npm 패키지로 배포됩니다.",
+    engine: {
+      tagline: "순수 파서·페처·검증기. 외부 의존성은 하나뿐입니다.",
+    },
+    react: {
+      tagline:
+        "그대로 가져다 쓰는 React 컴포넌트 — 이 사이트가 렌더링하는 패널 그대로입니다.",
+    },
+    npmLink: "npm에서 보기",
+    readmeLink: "README",
   },
   toggle: { ariaLabel: "언어 전환" },
 };

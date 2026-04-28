@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { LangToggle } from "@/components/LangToggle";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
+import { Packages } from "@/components/landing/Packages";
 import { type Dict, format, getDict, hasLang, type Lang } from "@/lib/i18n";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
@@ -86,6 +87,8 @@ function PageLayout({
       ) : (
         <EmptyState dict={dict} />
       )}
+
+      <Packages dict={dict} />
 
       <Footer />
     </main>

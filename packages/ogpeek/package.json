@@ -17,7 +17,7 @@
     "url": "git+https://github.com/minjun0219/ogpeek.git",
     "directory": "packages/ogpeek"
   },
-  "homepage": "https://github.com/minjun0219/ogpeek/tree/main/packages/ogpeek#readme",
+  "homepage": "https://ogpeek.minjun.dev",
   "bugs": {
     "url": "https://github.com/minjun0219/ogpeek/issues"
   },

@@ -3,15 +3,13 @@
 import { useState } from "react";
 import { useTranslate } from "@/lib/translate-context";
 
-const COMMAND = "npm install ogpeek";
-
-export function InstallCopy() {
+export function InstallCopy({ command }: { command: string }) {
   const { dict } = useTranslate();
   const [copied, setCopied] = useState(false);
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(COMMAND);
+      await navigator.clipboard.writeText(command);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -23,7 +21,7 @@ export function InstallCopy() {
     <div className="flex w-full max-w-xl items-center gap-2 rounded-lg border border-[color:rgb(var(--border))] bg-[color:rgb(var(--surface))] px-4 py-2 text-left font-mono text-sm">
       <span className="flex-1 truncate">
         <span className="text-[color:rgb(var(--muted))]">$ </span>
-        {COMMAND}
+        {command}
       </span>
       <button
         type="button"

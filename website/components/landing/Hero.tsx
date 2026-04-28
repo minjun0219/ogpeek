@@ -10,7 +10,7 @@ export function Hero() {
       <div className="w-full max-w-xl">
         <UrlInput />
       </div>
-      <InstallCopy />
+      <InstallCopy command="npm install ogpeek" />
     </section>
   );
 }
