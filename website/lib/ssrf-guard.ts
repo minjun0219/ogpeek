@@ -67,9 +67,7 @@ async function dohResolve(hostname: string, type: "A" | "AAAA"): Promise<string[
     throw new Error(`DoH ${type} status ${data.Status}`);
   }
   const recordType = type === "A" ? 1 : 28;
-  return (data.Answer ?? [])
-    .filter((a) => a.type === recordType)
-    .map((a) => a.data);
+  return (data.Answer ?? []).filter((a) => a.type === recordType).map((a) => a.data);
 }
 
 async function assertResolvesToPublic(hostname: string): Promise<void> {
@@ -86,11 +84,7 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
   if (!v4Ok && !v6Ok) {
     const r4 = v4 instanceof Error ? v4.message : String(v4);
     const r6 = v6 instanceof Error ? v6.message : String(v6);
-    throw new FetchError(
-      "DNS_FAILED",
-      400,
-      `failed to resolve "${hostname}": ${r4}; ${r6}`,
-    );
+    throw new FetchError("DNS_FAILED", 400, `failed to resolve "${hostname}": ${r4}; ${r6}`);
   }
 
   const addrs: string[] = [];
@@ -98,11 +92,7 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
   if (v6Ok) addrs.push(...(v6 as string[]));
 
   if (addrs.length === 0) {
-    throw new FetchError(
-      "DNS_FAILED",
-      400,
-      `"${hostname}" has no A/AAAA records`,
-    );
+    throw new FetchError("DNS_FAILED", 400, `"${hostname}" has no A/AAAA records`);
   }
 
   for (const address of addrs) {

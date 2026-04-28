@@ -74,8 +74,7 @@ const en: Dict = {
   validation: {
     severity: { error: "Error", warn: "Warning", info: "Info" },
     passTitle: "Validation passed — no issues detected",
-    passBody:
-      "All required OG tags are present and no spec violations were detected.",
+    passBody: "All required OG tags are present and no spec violations were detected.",
     resultsTitle: "Validation results",
   },
   tagTable: {
@@ -115,10 +114,7 @@ export function hasLang(value: string): value is Lang {
   return value === "ko" || value === "en";
 }
 
-export function format(
-  template: string,
-  values: Record<string, string | number>,
-): string {
+export function format(template: string, values: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) =>
     key in values ? String(values[key]) : `{${key}}`,
   );
@@ -130,10 +126,7 @@ export type DeepPartial<T> = {
 
 // Selective override: any field not present in `override` falls back to the
 // base dict for the given language.
-export function resolveDict(
-  lang: Lang,
-  override?: DeepPartial<Dict>,
-): Dict {
+export function resolveDict(lang: Lang, override?: DeepPartial<Dict>): Dict {
   const base = getDict(lang);
   if (!override) return base;
   return {

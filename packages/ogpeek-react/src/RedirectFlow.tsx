@@ -1,13 +1,13 @@
 import type { RedirectHop } from "ogpeek/fetch";
+import { cls } from "./cls.js";
 import {
   DEFAULT_LANG,
-  format,
-  resolveDict,
   type DeepPartial,
   type Dict,
+  format,
   type Lang,
+  resolveDict,
 } from "./dict.js";
-import { cls } from "./cls.js";
 
 export type RedirectFlowProps = {
   finalUrl: string;
@@ -31,18 +31,11 @@ export function RedirectFlow({
   className,
 }: RedirectFlowProps) {
   const dict = resolveDict(lang, dictOverride);
-  const canonicalDiffers =
-    canonical != null && !sameResource(canonical, finalUrl);
+  const canonicalDiffers = canonical != null && !sameResource(canonical, finalUrl);
   const initialUrl = redirects[0]?.from ?? finalUrl;
 
   return (
-    <section
-      className={cls(
-        composed ? null : "ogpeek-root",
-        "ogpeek-section",
-        className,
-      )}
-    >
+    <section className={cls(composed ? null : "ogpeek-root", "ogpeek-section", className)}>
       <header className="ogpeek-section-header">
         <h2 className="ogpeek-h2">{dict.redirectFlow.title}</h2>
         <span className="ogpeek-text-xs ogpeek-muted">HTTP {status}</span>
@@ -50,21 +43,15 @@ export function RedirectFlow({
       <dl className="ogpeek-flow-grid">
         <dt>{dict.redirectFlow.fetchedUrl}</dt>
         <dd>
-          <span className="ogpeek-mono ogpeek-text-xs ogpeek-break">
-            {finalUrl}
-          </span>
+          <span className="ogpeek-mono ogpeek-text-xs ogpeek-break">{finalUrl}</span>
         </dd>
 
         {canonicalDiffers ? (
           <>
             <dt>{dict.redirectFlow.canonicalUrl}</dt>
             <dd>
-              <span className="ogpeek-mono ogpeek-text-xs ogpeek-break">
-                {canonical}
-              </span>
-              <p className="ogpeek-flow-note">
-                {dict.redirectFlow.canonicalNote}
-              </p>
+              <span className="ogpeek-mono ogpeek-text-xs ogpeek-break">{canonical}</span>
+              <p className="ogpeek-flow-note">{dict.redirectFlow.canonicalNote}</p>
             </dd>
           </>
         ) : null}
@@ -75,9 +62,7 @@ export function RedirectFlow({
             <dd>
               <ol className="ogpeek-flow-list">
                 <li>
-                  <span className="ogpeek-flow-tag">
-                    {dict.redirectFlow.input}
-                  </span>
+                  <span className="ogpeek-flow-tag">{dict.redirectFlow.input}</span>
                   <span className="ogpeek-mono ogpeek-break">{initialUrl}</span>
                 </li>
                 {redirects.map((hop, i) => (

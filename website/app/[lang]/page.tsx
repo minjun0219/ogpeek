@@ -1,12 +1,12 @@
+import { Result } from "@ogpeek/react";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { Result } from "@ogpeek/react";
-import { Hero } from "@/components/landing/Hero";
-import { Footer } from "@/components/landing/Footer";
 import { LangToggle } from "@/components/LangToggle";
-import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
+import { Footer } from "@/components/landing/Footer";
+import { Hero } from "@/components/landing/Hero";
+import { type Dict, format, getDict, hasLang, type Lang } from "@/lib/i18n";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
-import { getDict, hasLang, format, type Dict, type Lang } from "@/lib/i18n";
+import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
 
 export const dynamic = "force-dynamic";
 
@@ -70,11 +70,7 @@ function PageLayout({
       </div>
       <Hero />
 
-      {outcome ? (
-        <Results outcome={outcome} dict={dict} lang={lang} />
-      ) : (
-        <EmptyState dict={dict} />
-      )}
+      {outcome ? <Results outcome={outcome} dict={dict} lang={lang} /> : <EmptyState dict={dict} />}
 
       <Footer />
     </main>
@@ -89,15 +85,7 @@ function EmptyState({ dict }: { dict: Dict }) {
   );
 }
 
-function Results({
-  outcome,
-  dict,
-  lang,
-}: {
-  outcome: PageOutcome;
-  dict: Dict;
-  lang: Lang;
-}) {
+function Results({ outcome, dict, lang }: { outcome: PageOutcome; dict: Dict; lang: Lang }) {
   if (!outcome.ok) {
     return (
       <section className="rounded-xl border border-red-500/40 bg-red-500/5 px-5 py-4">

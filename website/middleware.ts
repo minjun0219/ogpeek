@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { pickLangFromAcceptLanguage } from "@/lib/i18n";
 
 // Language resolution per page request:
@@ -11,9 +11,7 @@ import { pickLangFromAcceptLanguage } from "@/lib/i18n";
 // the URL itself is the source of truth.
 export function middleware(req: NextRequest): NextResponse {
   if (req.nextUrl.pathname === "/") {
-    const target = pickLangFromAcceptLanguage(
-      req.headers.get("accept-language"),
-    );
+    const target = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
     const url = req.nextUrl.clone();
     url.pathname = `/${target}`;
     return NextResponse.redirect(url);

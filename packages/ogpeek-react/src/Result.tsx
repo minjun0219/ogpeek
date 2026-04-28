@@ -1,18 +1,12 @@
 import type { OgDebugResult } from "ogpeek";
 import type { RedirectHop } from "ogpeek/fetch";
-import {
-  DEFAULT_LANG,
-  getDict,
-  type DeepPartial,
-  type Dict,
-  type Lang,
-} from "./dict.js";
-import { derivePreviewData } from "./derivePreviewData.js";
 import { cls } from "./cls.js";
+import { derivePreviewData } from "./derivePreviewData.js";
+import { DEFAULT_LANG, type DeepPartial, type Dict, getDict, type Lang } from "./dict.js";
 import { Preview } from "./Preview.js";
-import { ValidationPanel } from "./ValidationPanel.js";
 import { RedirectFlow } from "./RedirectFlow.js";
 import { TagTable } from "./TagTable.js";
+import { ValidationPanel } from "./ValidationPanel.js";
 
 export type ResultProps = {
   result: OgDebugResult;
@@ -49,17 +43,11 @@ export function Result({
   // Result renders exactly one localized string itself (the preview
   // heading). Resolve only that one slice instead of paying for a full
   // Dict resolution — the children already do their own resolution.
-  const previewHeading =
-    dictOverride?.preview?.heading ?? getDict(lang).preview.heading;
+  const previewHeading = dictOverride?.preview?.heading ?? getDict(lang).preview.heading;
 
   return (
     <div className={cls("ogpeek-root ogpeek-stack", className)}>
-      <ValidationPanel
-        warnings={result.warnings}
-        lang={lang}
-        dict={dictOverride}
-        composed
-      />
+      <ValidationPanel warnings={result.warnings} lang={lang} dict={dictOverride} composed />
       <RedirectFlow
         finalUrl={finalUrl}
         status={status}
@@ -69,13 +57,7 @@ export function Result({
         dict={dictOverride}
         composed
       />
-      <TagTable
-        result={result}
-        baseUrl={finalUrl}
-        lang={lang}
-        dict={dictOverride}
-        composed
-      />
+      <TagTable result={result} baseUrl={finalUrl} lang={lang} dict={dictOverride} composed />
       <section className="ogpeek-preview-section">
         <h2 className="ogpeek-h2">{previewHeading}</h2>
         <Preview data={preview} composed />

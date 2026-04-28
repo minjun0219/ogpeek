@@ -20,14 +20,7 @@ export const KNOWN_OG_TYPES: ReadonlySet<string> = new Set([
 // subproperties (warn level is sufficient), but having the map handy lets
 // future rules classify them.
 export const TYPE_NAMESPACES: Readonly<Record<string, readonly string[]>> = {
-  article: [
-    "published_time",
-    "modified_time",
-    "expiration_time",
-    "author",
-    "section",
-    "tag",
-  ],
+  article: ["published_time", "modified_time", "expiration_time", "author", "section", "tag"],
   book: ["author", "isbn", "release_date", "tag"],
   profile: ["first_name", "last_name", "username", "gender"],
 };

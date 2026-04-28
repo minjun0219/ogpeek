@@ -7,18 +7,11 @@ export type PreviewData = {
   domain: string;
 };
 
-export function derivePreviewData(
-  result: OgDebugResult,
-  finalUrl: string,
-): PreviewData {
+export function derivePreviewData(result: OgDebugResult, finalUrl: string): PreviewData {
   const og = result.ogp;
   const tw = result.twitter;
 
-  const image =
-    og.images[0]?.secure_url ||
-    og.images[0]?.url ||
-    tw["twitter:image"] ||
-    null;
+  const image = og.images[0]?.secure_url || og.images[0]?.url || tw["twitter:image"] || null;
 
   let domain = "";
   try {
@@ -56,10 +49,7 @@ export function safeImageSrc(url: string | null | undefined): string {
 // table standalone. `javascript:`, `data:`, `mailto:` and friends are
 // rejected — `target="_blank" rel="noopener"` is not enough to make those
 // safe inside an anchor.
-export function safeLinkHref(
-  value: string | null | undefined,
-  baseUrl?: string,
-): string | null {
+export function safeLinkHref(value: string | null | undefined, baseUrl?: string): string | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useTranslate } from "@/lib/translate-context";
 
 export function UrlInput({ compact = false }: { compact?: boolean }) {

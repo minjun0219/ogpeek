@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { runParse } from "@/lib/server-parse";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { runParse } from "@/lib/server-parse";
 
 export const dynamic = "force-dynamic";
 
-function rateLimitHeaders(
-  decision: ReturnType<typeof rateLimit>,
-): Record<string, string> {
+function rateLimitHeaders(decision: ReturnType<typeof rateLimit>): Record<string, string> {
   const headers: Record<string, string> = {};
   if (decision.ok) {
     headers["x-ratelimit-remaining"] = String(decision.remaining);

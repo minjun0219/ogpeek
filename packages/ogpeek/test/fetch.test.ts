@@ -99,9 +99,7 @@ describe("fetchHtml()", () => {
   });
 
   it("blocks a redirect to a non-http scheme", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      redirectResponse("file:///etc/passwd"),
-    ) as typeof fetch;
+    globalThis.fetch = vi.fn(async () => redirectResponse("file:///etc/passwd")) as typeof fetch;
     await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
       code: "UNSUPPORTED_SCHEME",
     });
@@ -142,9 +140,7 @@ describe("fetchHtml()", () => {
   });
 
   it("rejects redirect loops", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      redirectResponse("https://public.test/"),
-    ) as typeof fetch;
+    globalThis.fetch = vi.fn(async () => redirectResponse("https://public.test/")) as typeof fetch;
     await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
       code: "REDIRECT_LOOP",
     });
@@ -195,9 +191,7 @@ describe("fetchHtml()", () => {
 
 describe("fetchHtml() — guard hook", () => {
   it("no guard means any url passes through untouched", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      mockResponse({ body: "<html>ok</html>" }),
-    ) as typeof fetch;
+    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
     // A loopback literal that the old built-in SSRF guard would have blocked
     // should now pass through — the engine no longer makes policy decisions.
     const result = await fetchHtml("http://127.0.0.1/");
@@ -205,9 +199,7 @@ describe("fetchHtml() — guard hook", () => {
   });
 
   it("guard that returns allows the request through", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      mockResponse({ body: "<html>ok</html>" }),
-    ) as typeof fetch;
+    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
     const guard = vi.fn(async () => {});
     const result = await fetchHtml("https://public.test/", { guard });
     expect(result.html).toContain("ok");
@@ -218,9 +210,7 @@ describe("fetchHtml() — guard hook", () => {
   });
 
   it("guard throwing a FetchError propagates code and status verbatim", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      mockResponse({ body: "<html>ok</html>" }),
-    ) as typeof fetch;
+    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
     const guard = () => {
       throw new FetchError("BLOCKED", 400, "nope");
     };
@@ -232,9 +222,7 @@ describe("fetchHtml() — guard hook", () => {
   });
 
   it("guard throwing a non-FetchError is wrapped as GUARD_FAILED", async () => {
-    globalThis.fetch = vi.fn(async () =>
-      mockResponse({ body: "<html>ok</html>" }),
-    ) as typeof fetch;
+    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
     const guard = () => {
       throw new Error("boom");
     };

@@ -1,14 +1,14 @@
 import type { Icon, JsonLd, OgDebugResult } from "ogpeek";
-import {
-  DEFAULT_LANG,
-  format,
-  resolveDict,
-  type DeepPartial,
-  type Dict,
-  type Lang,
-} from "./dict.js";
 import { cls } from "./cls.js";
 import { safeLinkHref } from "./derivePreviewData.js";
+import {
+  DEFAULT_LANG,
+  type DeepPartial,
+  type Dict,
+  format,
+  type Lang,
+  resolveDict,
+} from "./dict.js";
 
 export type TagTableProps = {
   result: OgDebugResult;
@@ -49,13 +49,7 @@ export function TagTable({
   const groups = buildGroups(result, dict).filter((g) => g.rows.length > 0);
 
   return (
-    <section
-      className={cls(
-        composed ? null : "ogpeek-root",
-        "ogpeek-section--flat",
-        className,
-      )}
-    >
+    <section className={cls(composed ? null : "ogpeek-root", "ogpeek-section--flat", className)}>
       <div className="ogpeek-table-header">
         <h2 className="ogpeek-h2">{dict.tagTable.title}</h2>
         <span className="ogpeek-text-xs ogpeek-muted">
@@ -87,12 +81,7 @@ function renderValue(row: Row, baseUrl: string | undefined) {
 
   const href = row.link ? safeLinkHref(row.value, baseUrl) : null;
   const body = href ? (
-    <a
-      className="ogpeek-table-link"
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
+    <a className="ogpeek-table-link" href={href} target="_blank" rel="noopener noreferrer">
       {row.value}
     </a>
   ) : (
@@ -129,10 +118,8 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
     addLink(og, label, img.url);
     addLink(og, `${label}:secure_url`, img.secure_url);
     addIf(og, `${label}:type`, img.type);
-    if (img.width !== undefined)
-      og.push({ key: `${label}:width`, value: String(img.width) });
-    if (img.height !== undefined)
-      og.push({ key: `${label}:height`, value: String(img.height) });
+    if (img.width !== undefined) og.push({ key: `${label}:width`, value: String(img.width) });
+    if (img.height !== undefined) og.push({ key: `${label}:height`, value: String(img.height) });
     addIf(og, `${label}:alt`, img.alt);
   });
   ogp.videos.forEach((v, i) => {
@@ -155,9 +142,7 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
   addIf(m, "charset", meta.charset);
   m.push({
     key: "html prefix",
-    value: meta.prefixDeclared
-      ? dict.tagTable.prefixDeclared
-      : dict.tagTable.prefixAbsent,
+    value: meta.prefixDeclared ? dict.tagTable.prefixDeclared : dict.tagTable.prefixAbsent,
   });
   addIf(m, "application-name", meta.applicationName);
   addIf(m, "theme-color", meta.themeColor);
@@ -182,9 +167,7 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
       });
       return;
     }
-    const typeLabel = block.types.length
-      ? block.types.join(", ")
-      : dict.tagTable.jsonldNoType;
+    const typeLabel = block.types.length ? block.types.join(", ") : dict.tagTable.jsonldNoType;
     jl.push({
       key: `${typeLabel}${indexLabel}`,
       value: prettyJson(block.parsed),

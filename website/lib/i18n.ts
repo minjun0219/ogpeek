@@ -44,8 +44,7 @@ export type Dict = {
 const en: Dict = {
   meta: {
     title: "ogpeek — peek into any page's Open Graph tags",
-    description:
-      "Inspect how OG cards render and catch OGP spec violations from a single URL.",
+    description: "Inspect how OG cards render and catch OGP spec violations from a single URL.",
   },
   install: {
     copy: "Copy",
@@ -60,8 +59,7 @@ const en: Dict = {
   validation: {
     severity: { error: "Error", warn: "Warning", info: "Info" },
     passTitle: "Validation passed — no issues detected",
-    passBody:
-      "All required OG tags are present and no spec violations were detected.",
+    passBody: "All required OG tags are present and no spec violations were detected.",
     resultsTitle: "Validation results",
   },
   tagTable: {
@@ -83,14 +81,12 @@ const en: Dict = {
     redirectStatusTemplate: "{status} redirect",
   },
   page: {
-    emptyState:
-      "Enter a URL above to see OG tags, validation results, and a preview here.",
+    emptyState: "Enter a URL above to see OG tags, validation results, and a preview here.",
     preview: "Preview",
     fetchFailed: "Fetch failed",
     retryLater: "Please try again shortly",
     target: "Target",
-    rateLimitTemplate:
-      "Too many requests. Please try again in {sec} seconds.",
+    rateLimitTemplate: "Too many requests. Please try again in {sec} seconds.",
   },
   toggle: { ariaLabel: "Switch language" },
 };
@@ -98,8 +94,7 @@ const en: Dict = {
 const ko: Dict = {
   meta: {
     title: "ogpeek — 어느 페이지든 오픈그래프 메타태그를 바로 들여다봅니다",
-    description:
-      "URL 한 줄로 OG 카드가 어떻게 보이는지 즉시 확인하고 OGP 스펙 위반을 잡아냅니다.",
+    description: "URL 한 줄로 OG 카드가 어떻게 보이는지 즉시 확인하고 OGP 스펙 위반을 잡아냅니다.",
   },
   install: {
     copy: "복사",

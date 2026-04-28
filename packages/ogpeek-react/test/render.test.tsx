@@ -1,24 +1,22 @@
 import type { ReactElement } from "react";
-import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
 import {
+  derivePreviewData,
   Preview,
   RedirectFlow,
   Result,
   TagTable,
   ValidationPanel,
-  derivePreviewData,
 } from "../src/index.js";
-import { FINAL_URL, REDIRECTS, STATUS, makeResult } from "./fixtures.js";
+import { FINAL_URL, makeResult, REDIRECTS, STATUS } from "./fixtures.js";
 
 const render = (node: ReactElement) => renderToStaticMarkup(node);
 
 describe("@ogpeek/react render", () => {
   it("Preview emits real img and description elements", () => {
     const result = makeResult();
-    const html = render(
-      <Preview data={derivePreviewData(result, FINAL_URL)} />,
-    );
+    const html = render(<Preview data={derivePreviewData(result, FINAL_URL)} />);
     expect(html).toContain("ogpeek-root");
     expect(html).toContain("ogpeek-preview");
     expect(html).toContain('<img class="ogpeek-preview-image"');
@@ -30,9 +28,7 @@ describe("@ogpeek/react render", () => {
   it("Preview falls back to empty image placeholder", () => {
     const result = makeResult();
     result.ogp.images = [];
-    const html = render(
-      <Preview data={derivePreviewData(result, FINAL_URL)} />,
-    );
+    const html = render(<Preview data={derivePreviewData(result, FINAL_URL)} />);
     expect(html).toContain('class="ogpeek-preview-image-empty"');
     expect(html).not.toContain("<img");
   });
@@ -106,9 +102,7 @@ describe("@ogpeek/react render", () => {
         },
       ],
     });
-    const html = render(
-      <TagTable result={result} baseUrl="https://example.com/page" />,
-    );
+    const html = render(<TagTable result={result} baseUrl="https://example.com/page" />);
     expect(html).toContain(">아이콘<");
     // Relative href is absolutized against baseUrl.
     expect(html).toContain('href="https://example.com/favicon.ico"');
@@ -127,9 +121,7 @@ describe("@ogpeek/react render", () => {
     const result = makeResult({
       icons: [{ rel: "icon", href: "javascript:alert(1)" }],
     });
-    const html = render(
-      <TagTable result={result} baseUrl="https://example.com/" />,
-    );
+    const html = render(<TagTable result={result} baseUrl="https://example.com/" />);
     // The URL is shown as text but never wrapped in an anchor — the
     // sanitizer rejects non-http(s) schemes so a malicious href can never
     // become a clickable link.
@@ -139,9 +131,7 @@ describe("@ogpeek/react render", () => {
 
   it("TagTable renders og:image and og:url as clickable links", () => {
     const result = makeResult();
-    const html = render(
-      <TagTable result={result} baseUrl="https://example.com/" />,
-    );
+    const html = render(<TagTable result={result} baseUrl="https://example.com/" />);
     expect(html).toContain('href="https://example.com/img.png"');
     expect(html).toContain('href="https://example.com/"');
   });
@@ -234,12 +224,7 @@ describe("@ogpeek/react render", () => {
     // ogpeek exposes the raw canonical href, which may be relative —
     // resolving it against finalUrl should suppress the "differs" note.
     const html = render(
-      <RedirectFlow
-        finalUrl="https://example.com/"
-        status={200}
-        redirects={[]}
-        canonical="/"
-      />,
+      <RedirectFlow finalUrl="https://example.com/" status={200} redirects={[]} canonical="/" />,
     );
     expect(html).not.toContain("표준 URL");
     expect(html).not.toContain("페이지가 선언한 캐노니컬");
@@ -386,9 +371,7 @@ describe("@ogpeek/react render", () => {
     // Sanity check that the context-based scoping is opt-in: rendering a
     // panel directly (no Result wrapper, no provider) keeps the existing
     // ogpeek-root scope so the component is self-contained.
-    const previewHtml = render(
-      <Preview data={derivePreviewData(makeResult(), FINAL_URL)} />,
-    );
+    const previewHtml = render(<Preview data={derivePreviewData(makeResult(), FINAL_URL)} />);
     const validationHtml = render(<ValidationPanel warnings={[]} />);
     expect(previewHtml).toContain("ogpeek-root");
     expect(validationHtml).toContain("ogpeek-root");

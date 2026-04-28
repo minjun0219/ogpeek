@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/index";
 
@@ -43,8 +43,8 @@ describe("parse()", () => {
 
     expect(result.typed).not.toBeNull();
     expect(result.typed?.kind).toBe("article");
-    expect(result.typed?.properties["published_time"]).toBe("1996-06-07T00:00:00Z");
-    expect(result.typed?.properties["tag"]).toEqual(["Alcatraz", "San Francisco"]);
+    expect(result.typed?.properties.published_time).toBe("1996-06-07T00:00:00Z");
+    expect(result.typed?.properties.tag).toEqual(["Alcatraz", "San Francisco"]);
 
     expect(result.twitter).toEqual({
       "twitter:card": "summary_large_image",

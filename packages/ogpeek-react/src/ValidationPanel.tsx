@@ -1,12 +1,6 @@
 import type { Warning } from "ogpeek";
-import {
-  DEFAULT_LANG,
-  resolveDict,
-  type DeepPartial,
-  type Dict,
-  type Lang,
-} from "./dict.js";
 import { cls } from "./cls.js";
+import { DEFAULT_LANG, type DeepPartial, type Dict, type Lang, resolveDict } from "./dict.js";
 
 export type ValidationPanelProps = {
   warnings: Warning[];
@@ -42,9 +36,7 @@ export function ValidationPanel({
     );
   }
 
-  const sorted = [...warnings].sort(
-    (a, b) => ORDER[a.severity] - ORDER[b.severity],
-  );
+  const sorted = [...warnings].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = warnings.reduce<Record<Warning["severity"], number>>(
     (acc, w) => {
       acc[w.severity]++;
@@ -61,10 +53,7 @@ export function ValidationPanel({
           {(["error", "warn", "info"] as const)
             .filter((s) => counts[s])
             .map((s) => (
-              <span
-                key={s}
-                className={`ogpeek-pill ogpeek-pill--${s}`}
-              >
+              <span key={s} className={`ogpeek-pill ogpeek-pill--${s}`}>
                 {severityLabel[s]} {counts[s]}
               </span>
             ))}

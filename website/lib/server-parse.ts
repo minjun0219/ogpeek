@@ -1,4 +1,4 @@
-import { parse, type OgDebugResult } from "ogpeek";
+import { type OgDebugResult, parse } from "ogpeek";
 import { FetchError, fetchHtml, type RedirectHop } from "ogpeek/fetch";
 import { ssrfGuard } from "./ssrf-guard";
 import { normalizeUrlInput } from "./url-normalize";

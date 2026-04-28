@@ -1,11 +1,11 @@
 import { Parser } from "htmlparser2";
-import type { Icon, JsonLd, RawMeta } from "./types.js";
 import { HtmlPrefixExtractor } from "./extractors/html-prefix.js";
-import { TitleExtractor } from "./extractors/title.js";
-import { MetaTagExtractor } from "./extractors/meta-tag.js";
-import { LinkExtractor } from "./extractors/link.js";
 import { JsonLdExtractor } from "./extractors/jsonld.js";
+import { LinkExtractor } from "./extractors/link.js";
+import { MetaTagExtractor } from "./extractors/meta-tag.js";
+import { TitleExtractor } from "./extractors/title.js";
 import type { HeadExtractor, ScanState } from "./extractors/types.js";
+import type { Icon, JsonLd, RawMeta } from "./types.js";
 
 export type HeadScan = {
   raw: RawMeta[];

@@ -1,9 +1,7 @@
 import type { OgDebugResult } from "ogpeek";
 import type { RedirectHop } from "ogpeek/fetch";
 
-export function makeResult(
-  overrides: Partial<OgDebugResult> = {},
-): OgDebugResult {
+export function makeResult(overrides: Partial<OgDebugResult> = {}): OgDebugResult {
   const base: OgDebugResult = {
     ogp: {
       title: "Hello",

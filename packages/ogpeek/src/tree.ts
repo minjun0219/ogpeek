@@ -62,13 +62,7 @@ const SINGLE_OG_FIELDS: Record<string, keyof OpenGraph> = {
   "og:locale": "locale",
 };
 
-const TYPED_NAMESPACES = new Set([
-  "article",
-  "book",
-  "profile",
-  "music",
-  "video",
-]);
+const TYPED_NAMESPACES = new Set(["article", "book", "profile", "music", "video"]);
 
 export function buildTree(raw: RawMeta[]): TreeBuildResult {
   const ogp: OpenGraph = {
@@ -98,15 +92,39 @@ export function buildTree(raw: RawMeta[]): TreeBuildResult {
     // Structured image/video/audio first (so og:image:width doesn't collide
     // with og:image as a singleton).
     if (property in IMAGE_SUBPROPS) {
-      applySub(ogp.images, IMAGE_SUBPROPS[property]!, property, content, orphans, invalidDimensions, property === "og:image");
+      applySub(
+        ogp.images,
+        IMAGE_SUBPROPS[property]!,
+        property,
+        content,
+        orphans,
+        invalidDimensions,
+        property === "og:image",
+      );
       continue;
     }
     if (property in VIDEO_SUBPROPS) {
-      applySub(ogp.videos, VIDEO_SUBPROPS[property]!, property, content, orphans, invalidDimensions, property === "og:video");
+      applySub(
+        ogp.videos,
+        VIDEO_SUBPROPS[property]!,
+        property,
+        content,
+        orphans,
+        invalidDimensions,
+        property === "og:video",
+      );
       continue;
     }
     if (property in AUDIO_SUBPROPS) {
-      applySub(ogp.audios, AUDIO_SUBPROPS[property]!, property, content, orphans, invalidDimensions, property === "og:audio");
+      applySub(
+        ogp.audios,
+        AUDIO_SUBPROPS[property]!,
+        property,
+        content,
+        orphans,
+        invalidDimensions,
+        property === "og:audio",
+      );
       continue;
     }
 
@@ -134,11 +152,11 @@ export function buildTree(raw: RawMeta[]): TreeBuildResult {
       if (Array.isArray(existing)) existing.push(content);
       else if (typeof existing === "string") typedProps[key] = [existing, content];
       else typedProps[key] = content;
-      continue;
     }
   }
 
   const typed: TypedObject | null =
+    // biome-ignore lint/complexity/useOptionalChain: explicit short-circuit chain reads more clearly than `?.` here
     ogp.type && ogp.type.split(".")[0] && TYPED_NAMESPACES.has(ogp.type.split(".")[0]!)
       ? { kind: ogp.type, properties: typedProps }
       : null;

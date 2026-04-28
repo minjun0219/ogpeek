@@ -31,7 +31,7 @@ export class MetaTagExtractor implements HeadExtractor {
       typeof attrs.content === "string"
     ) {
       const match = /charset=([^;]+)/i.exec(attrs.content);
-      if (match && match[1]) this.charset = match[1].trim();
+      if (match?.[1]) this.charset = match[1].trim();
     }
 
     const nameAttr = typeof attrs.name === "string" ? attrs.name.trim().toLowerCase() : "";

@@ -3,7 +3,11 @@ import type { HeadScan } from "./meta.js";
 import type { TreeBuildResult } from "./tree.js";
 import type { Warning } from "./types.js";
 
-export function validate(head: HeadScan, tree: TreeBuildResult, baseUrl: string | undefined): Warning[] {
+export function validate(
+  head: HeadScan,
+  tree: TreeBuildResult,
+  baseUrl: string | undefined,
+): Warning[] {
   const warnings: Warning[] = [];
   const { ogp, orphans, invalidDimensions, duplicateSingletons } = tree;
 
@@ -141,7 +145,10 @@ function sameResource(a: string, b: string): boolean {
   try {
     const ua = new URL(a);
     const ub = new URL(b);
-    return ua.host.toLowerCase() === ub.host.toLowerCase() && stripSlash(ua.pathname) === stripSlash(ub.pathname);
+    return (
+      ua.host.toLowerCase() === ub.host.toLowerCase() &&
+      stripSlash(ua.pathname) === stripSlash(ub.pathname)
+    );
   } catch {
     return a === b;
   }
