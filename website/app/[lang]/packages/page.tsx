@@ -5,6 +5,8 @@ import { Footer } from "@/components/landing/Footer";
 import { PackageDetail } from "@/components/packages/PackageDetail";
 import { getDict, hasLang, type Lang } from "@/lib/i18n";
 
+export const dynamic = "force-dynamic";
+
 type Params = Promise<{ lang: string }>;
 
 const ENGINE_QUICK_START = `import { parse } from "ogpeek";
