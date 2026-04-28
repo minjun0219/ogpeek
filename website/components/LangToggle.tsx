@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { LANGS, type Lang } from "@/lib/i18n";
 import { useTranslate } from "@/lib/translate-context";
@@ -10,9 +10,11 @@ const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
 
 export function LangToggle() {
   const { lang, dict } = useTranslate();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const suffix = query ? `?${query}` : "";
+  const subPath = pathname.replace(/^\/(en|ko)(?=\/|$)/, "");
 
   return (
     <nav
@@ -24,7 +26,7 @@ export function LangToggle() {
         return (
           <Link
             key={target}
-            href={`/${target}${suffix}`}
+            href={`/${target}${subPath}${suffix}`}
             aria-current={active ? "true" : undefined}
             prefetch={false}
             className={cn(

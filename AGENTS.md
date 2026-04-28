@@ -55,7 +55,7 @@ it.
    (cloud / on-prem / edge), so the guard implementation belongs to the
    caller. The website implements its own guard in `lib/ssrf-guard.ts` and
    injects it via `fetchHtml({ guard: ssrfGuard })`. SSR page visits
-   (`/{lang}?url=...`) must share the same guard + rate limiter as
+   (`/{lang}/inspect?url=...`) must share the same guard + rate limiter as
    `/api/parse`. Redirects must always be received with `redirect: "manual"`
    so the guard runs again on every hop.
 4. **Korean UI.** All user-facing strings are Korean. Error codes and API
@@ -113,7 +113,7 @@ pnpm check:fix              # biome auto-fix (format + safe lint fixes)
   ③ a covering test in `test/validate.test.ts`,
   ④ the table in `packages/ogpeek/README.md`.
   Missing any one of the four means the PR will not be accepted.
-- SSR page visits (`/{lang}?url=...`) must share the same per-IP rate
+- SSR page visits (`/{lang}/inspect?url=...`) must share the same per-IP rate
   limiter as `/api/parse`. Do not build a bypass path.
 
 ## Deployment
