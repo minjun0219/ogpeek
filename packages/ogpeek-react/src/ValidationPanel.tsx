@@ -42,19 +42,15 @@ export function ValidationPanel({
     );
   }
 
-  const sorted = [
-    ...warnings,
-  ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
+  const sorted = [...warnings].sort(
+    (a, b) => ORDER[a.severity] - ORDER[b.severity],
+  );
   const counts = warnings.reduce<Record<Warning["severity"], number>>(
     (acc, w) => {
       acc[w.severity]++;
       return acc;
     },
-    {
-      error: 0,
-      warn: 0,
-      info: 0,
-    },
+    { error: 0, warn: 0, info: 0 },
   );
 
   return (
@@ -62,13 +58,7 @@ export function ValidationPanel({
       <header className="ogpeek-section-header">
         <h2 className="ogpeek-h2">{dict.validation.resultsTitle}</h2>
         <div className="ogpeek-pill-row">
-          {(
-            [
-              "error",
-              "warn",
-              "info",
-            ] as const
-          )
+          {(["error", "warn", "info"] as const)
             .filter((s) => counts[s])
             .map((s) => (
               <span key={s} className={`ogpeek-pill ogpeek-pill--${s}`}>

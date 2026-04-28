@@ -28,11 +28,7 @@ describe("XSS escaping", () => {
 
   it("blocks javascript: URLs in preview image", () => {
     const result = makeResult();
-    result.ogp.images = [
-      {
-        url: "javascript:alert(1)",
-      },
-    ];
+    result.ogp.images = [{ url: "javascript:alert(1)" }];
     const html = render(
       <Preview data={derivePreviewData(result, "https://example.com/")} />,
     );
@@ -42,11 +38,7 @@ describe("XSS escaping", () => {
 
   it("blocks data: URLs in preview image", () => {
     const result = makeResult();
-    result.ogp.images = [
-      {
-        url: "data:image/svg+xml;base64,PHN2Zy8+",
-      },
-    ];
+    result.ogp.images = [{ url: "data:image/svg+xml;base64,PHN2Zy8+" }];
     const html = render(
       <Preview data={derivePreviewData(result, "https://example.com/")} />,
     );
@@ -56,11 +48,7 @@ describe("XSS escaping", () => {
 
   it("blocks mailto: URLs in preview image", () => {
     const result = makeResult();
-    result.ogp.images = [
-      {
-        url: "mailto:attacker@example.com",
-      },
-    ];
+    result.ogp.images = [{ url: "mailto:attacker@example.com" }];
     const html = render(
       <Preview data={derivePreviewData(result, "https://example.com/")} />,
     );
@@ -71,12 +59,7 @@ describe("XSS escaping", () => {
   it("escapes hostile values in tag table", () => {
     const result = makeResult();
     result.ogp.title = PAYLOAD;
-    result.raw = [
-      {
-        property: "og:title",
-        content: PAYLOAD,
-      },
-    ];
+    result.raw = [{ property: "og:title", content: PAYLOAD }];
     const html = render(<TagTable result={result} />);
     expect(html).not.toContain("<script>alert");
     expect(html).toContain("&lt;script&gt;");

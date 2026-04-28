@@ -19,9 +19,7 @@ export function UrlInput({ compact = false }: { compact?: boolean }) {
     // permalink changes.
     setValue(currentUrl);
     setPending(false);
-  }, [
-    currentUrl,
-  ]);
+  }, [currentUrl]);
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

@@ -35,10 +35,7 @@ type Row = {
   // metadata). Kept out of `value` so a clickable link covers only the URL.
   meta?: string;
 };
-type Group = {
-  title: string;
-  rows: Row[];
-};
+type Group = { title: string; rows: Row[] };
 
 export function TagTable({
   result,
@@ -62,9 +59,7 @@ export function TagTable({
       <div className="ogpeek-table-header">
         <h2 className="ogpeek-h2">{dict.tagTable.title}</h2>
         <span className="ogpeek-text-xs ogpeek-muted">
-          {format(dict.tagTable.totalTemplate, {
-            n: result.raw.length,
-          })}
+          {format(dict.tagTable.totalTemplate, { n: result.raw.length })}
         </span>
       </div>
       {groups.map((group) => (
@@ -141,16 +136,10 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
     addLink(og, `${label}:secure_url`, img.secure_url);
     addIf(og, `${label}:type`, img.type);
     if (img.width !== undefined) {
-      og.push({
-        key: `${label}:width`,
-        value: String(img.width),
-      });
+      og.push({ key: `${label}:width`, value: String(img.width) });
     }
     if (img.height !== undefined) {
-      og.push({
-        key: `${label}:height`,
-        value: String(img.height),
-      });
+      og.push({ key: `${label}:height`, value: String(img.height) });
     }
     addIf(og, `${label}:alt`, img.alt);
   });
@@ -224,54 +213,26 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
         !r.property.startsWith("twitter:") &&
         !surfacedNames.has(r.property),
     )
-    .map((r) => ({
-      key: r.property,
-      value: r.content,
-    }));
+    .map((r) => ({ key: r.property, value: r.content }));
 
   return [
-    {
-      title: "Open Graph",
-      rows: og,
-    },
-    {
-      title: "Twitter Card",
-      rows: tw,
-    },
-    {
-      title: dict.tagTable.groupBasic,
-      rows: m,
-    },
-    {
-      title: dict.tagTable.groupIcons,
-      rows: ic,
-    },
-    {
-      title: dict.tagTable.groupJsonLd,
-      rows: jl,
-    },
-    {
-      title: dict.tagTable.groupOther,
-      rows: others,
-    },
+    { title: "Open Graph", rows: og },
+    { title: "Twitter Card", rows: tw },
+    { title: dict.tagTable.groupBasic, rows: m },
+    { title: dict.tagTable.groupIcons, rows: ic },
+    { title: dict.tagTable.groupJsonLd, rows: jl },
+    { title: dict.tagTable.groupOther, rows: others },
   ];
 }
 
 function addIf(rows: Row[], key: string, value: string | undefined | null) {
   if (value) {
-    rows.push({
-      key,
-      value,
-    });
+    rows.push({ key, value });
   }
 }
 function addLink(rows: Row[], key: string, value: string | undefined | null) {
   if (value) {
-    rows.push({
-      key,
-      value,
-      link: true,
-    });
+    rows.push({ key, value, link: true });
   }
 }
 

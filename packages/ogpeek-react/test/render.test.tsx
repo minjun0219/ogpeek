@@ -54,16 +54,8 @@ describe("@ogpeek/react render", () => {
       <ValidationPanel
         lang="ko"
         warnings={[
-          {
-            code: "OG_TITLE_MISSING",
-            severity: "error",
-            message: "missing",
-          },
-          {
-            code: "OG_URL_MISMATCH",
-            severity: "warn",
-            message: "mismatch",
-          },
+          { code: "OG_TITLE_MISSING", severity: "error", message: "missing" },
+          { code: "OG_URL_MISMATCH", severity: "warn", message: "mismatch" },
         ]}
       />,
     );
@@ -105,11 +97,7 @@ describe("@ogpeek/react render", () => {
   it("TagTable renders icons as clickable links resolved against baseUrl", () => {
     const result = makeResult({
       icons: [
-        {
-          rel: "icon",
-          href: "/favicon.ico",
-          sizes: "any",
-        },
+        { rel: "icon", href: "/favicon.ico", sizes: "any" },
         {
           rel: "apple-touch-icon",
           href: "https://cdn.example.com/apple-icon.png",
@@ -137,12 +125,7 @@ describe("@ogpeek/react render", () => {
 
   it("TagTable falls back to plain text when an icon href has no safe URL", () => {
     const result = makeResult({
-      icons: [
-        {
-          rel: "icon",
-          href: "javascript:alert(1)",
-        },
-      ],
+      icons: [{ rel: "icon", href: "javascript:alert(1)" }],
     });
     const html = render(
       <TagTable result={result} baseUrl="https://example.com/" />,
@@ -168,13 +151,8 @@ describe("@ogpeek/react render", () => {
       jsonld: [
         {
           raw: '{"@type":"WebSite","name":"Example"}',
-          parsed: {
-            "@type": "WebSite",
-            name: "Example",
-          },
-          types: [
-            "WebSite",
-          ],
+          parsed: { "@type": "WebSite", name: "Example" },
+          types: ["WebSite"],
         },
         {
           raw: "{ broken",
@@ -210,18 +188,9 @@ describe("@ogpeek/react render", () => {
         msTileColor: "#0a84ff",
       },
       raw: [
-        {
-          property: "og:title",
-          content: "Hello",
-        },
-        {
-          property: "application-name",
-          content: "Example App",
-        },
-        {
-          property: "theme-color",
-          content: "#0a84ff",
-        },
+        { property: "og:title", content: "Hello" },
+        { property: "application-name", content: "Example App" },
+        { property: "theme-color", content: "#0a84ff" },
       ],
     });
     const html = render(<TagTable result={result} />);
@@ -355,11 +324,7 @@ describe("@ogpeek/react render", () => {
         redirects={REDIRECTS}
         canonical={FINAL_URL}
         lang="en"
-        dict={{
-          preview: {
-            heading: "Card preview",
-          },
-        }}
+        dict={{ preview: { heading: "Card preview" } }}
       />,
     );
     expect(html).toContain(">Card preview<");
@@ -410,11 +375,7 @@ describe("@ogpeek/react render", () => {
         redirects={REDIRECTS}
         canonical={FINAL_URL}
         lang="en"
-        dict={{
-          redirectFlow: {
-            fetchedUrl: "Resolved URL",
-          },
-        }}
+        dict={{ redirectFlow: { fetchedUrl: "Resolved URL" } }}
       />,
     );
     expect(html).toContain("Resolved URL");

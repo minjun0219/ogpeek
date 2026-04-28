@@ -34,16 +34,10 @@ export async function runParse(rawUrl: string): Promise<ServerParseOutcome> {
 
   try {
     const fetched = await fetchHtml(normalized, {
-      ...(userAgent
-        ? {
-            userAgent,
-          }
-        : {}),
+      ...(userAgent ? { userAgent } : {}),
       guard: ssrfGuard,
     });
-    const result = parse(fetched.html, {
-      url: fetched.finalUrl,
-    });
+    const result = parse(fetched.html, { url: fetched.finalUrl });
 
     return {
       ok: true,
@@ -59,22 +53,14 @@ export async function runParse(rawUrl: string): Promise<ServerParseOutcome> {
       return {
         ok: false,
         target,
-        error: {
-          code: err.code,
-          status: err.status,
-          message: err.message,
-        },
+        error: { code: err.code, status: err.status, message: err.message },
       };
     }
     const message = err instanceof Error ? err.message : String(err);
     return {
       ok: false,
       target,
-      error: {
-        code: "UNKNOWN",
-        status: 500,
-        message,
-      },
+      error: { code: "UNKNOWN", status: 500, message },
     };
   }
 }

@@ -59,10 +59,7 @@ export class LinkExtractor implements HeadExtractor {
       if (!ICON_RELS.has(token)) {
         continue;
       }
-      const icon: Icon = {
-        rel: token,
-        href,
-      };
+      const icon: Icon = { rel: token, href };
       if (typeof attrs.sizes === "string" && attrs.sizes.trim()) {
         icon.sizes = attrs.sizes.trim();
       }

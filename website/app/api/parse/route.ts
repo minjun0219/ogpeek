@@ -22,9 +22,7 @@ async function readTarget(req: Request): Promise<string | null> {
     return new URL(req.url).searchParams.get("url");
   }
   try {
-    const body = (await req.json()) as {
-      url?: unknown;
-    };
+    const body = (await req.json()) as { url?: unknown };
     return typeof body.url === "string" ? body.url : null;
   } catch {
     return null;
@@ -43,9 +41,7 @@ async function handle(req: Request): Promise<Response> {
           message: "url parameter is required",
         },
       },
-      {
-        status: 400,
-      },
+      { status: 400 },
     );
   }
 
@@ -61,10 +57,7 @@ async function handle(req: Request): Promise<Response> {
           message: `too many requests, retry in ${decision.retryAfterSec}s`,
         },
       },
-      {
-        status: 429,
-        headers: rateLimitHeaders(decision),
-      },
+      { status: 429, headers: rateLimitHeaders(decision) },
     );
   }
 

@@ -6,10 +6,7 @@ import { cn } from "@/lib/cn";
 import { LANGS, type Lang } from "@/lib/i18n";
 import { useTranslate } from "@/lib/translate-context";
 
-const LABELS: Record<Lang, string> = {
-  en: "EN",
-  ko: "KO",
-};
+const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
 
 export function LangToggle() {
   const { lang, dict } = useTranslate();

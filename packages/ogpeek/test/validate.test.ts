@@ -12,11 +12,8 @@ const fixturesDir = path.resolve(
 const load = (name: string) =>
   readFileSync(path.join(fixturesDir, name), "utf8");
 
-const codes = (
-  warnings: {
-    code: WarningCode;
-  }[],
-) => warnings.map((w) => w.code);
+const codes = (warnings: { code: WarningCode }[]) =>
+  warnings.map((w) => w.code);
 
 describe("validate()", () => {
   it("reports required-field errors on the invalid fixture", () => {
@@ -93,20 +90,14 @@ describe("validate()", () => {
   it("flags mismatched og:url vs requested URL", () => {
     const html = `<html><head><title>T</title><meta property="og:title" content="T"><meta property="og:type" content="website"><meta property="og:url" content="https://canonical.example/"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
     const got = codes(
-      parse(html, {
-        url: "https://staging.example/path",
-      }).warnings,
+      parse(html, { url: "https://staging.example/path" }).warnings,
     );
     expect(got).toContain("OG_URL_MISMATCH");
   });
 
   it("treats trailing-slash-only differences as same resource", () => {
     const html = `<html><head><title>T</title><meta property="og:title" content="T"><meta property="og:type" content="website"><meta property="og:url" content="https://a.com/"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
-    const got = codes(
-      parse(html, {
-        url: "https://a.com",
-      }).warnings,
-    );
+    const got = codes(parse(html, { url: "https://a.com" }).warnings);
     expect(got).not.toContain("OG_URL_MISMATCH");
   });
 

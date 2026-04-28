@@ -28,18 +28,8 @@ export const TYPE_NAMESPACES: Readonly<Record<string, readonly string[]>> = {
     "section",
     "tag",
   ],
-  book: [
-    "author",
-    "isbn",
-    "release_date",
-    "tag",
-  ],
-  profile: [
-    "first_name",
-    "last_name",
-    "username",
-    "gender",
-  ],
+  book: ["author", "isbn", "release_date", "tag"],
+  profile: ["first_name", "last_name", "username", "gender"],
 };
 
 // Properties that must appear at most once. Extra occurrences → DUPLICATE_SINGLETON.

@@ -24,10 +24,7 @@ export class MetaTagExtractor implements HeadExtractor {
     const property = attrs.property ?? attrs.name;
     const content = attrs.content;
     if (typeof property === "string" && typeof content === "string") {
-      this.raw.push({
-        property: property.trim().toLowerCase(),
-        content,
-      });
+      this.raw.push({ property: property.trim().toLowerCase(), content });
     }
 
     if (typeof attrs.charset === "string" && this.charset === null) {

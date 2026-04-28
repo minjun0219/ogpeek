@@ -28,16 +28,8 @@ import { FetchError } from "ogpeek/fetch";
 const DOH_ENDPOINT = "https://cloudflare-dns.com/dns-query";
 const DOH_TIMEOUT_MS = 3000;
 
-type DohAnswer = {
-  name: string;
-  type: number;
-  TTL: number;
-  data: string;
-};
-type DohResponse = {
-  Status: number;
-  Answer?: DohAnswer[];
-};
+type DohAnswer = { name: string; type: number; TTL: number; data: string };
+type DohResponse = { Status: number; Answer?: DohAnswer[] };
 
 export const ssrfGuard = async (url: URL): Promise<void> => {
   assertSafeHostname(url.hostname);
@@ -71,9 +63,7 @@ async function dohResolve(
 ): Promise<string[]> {
   const target = `${DOH_ENDPOINT}?name=${encodeURIComponent(hostname)}&type=${type}`;
   const res = await fetch(target, {
-    headers: {
-      accept: "application/dns-json",
-    },
+    headers: { accept: "application/dns-json" },
     signal: AbortSignal.timeout(DOH_TIMEOUT_MS),
   });
   if (!res.ok) {

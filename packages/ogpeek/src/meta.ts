@@ -36,10 +36,7 @@ export function scanHead(html: string, options: ScanOptions = {}): HeadScan {
   const jsonldScope = options.jsonldScope ?? "head";
   const stopAtHeadClose = jsonldScope === "head";
 
-  const state: ScanState = {
-    inHead: false,
-    done: false,
-  };
+  const state: ScanState = { inHead: false, done: false };
 
   const htmlPrefix = new HtmlPrefixExtractor();
   const title = new TitleExtractor();

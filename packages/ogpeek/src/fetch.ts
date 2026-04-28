@@ -139,9 +139,7 @@ export async function fetchHtml(
           `upstream exceeded ${maxBytes} bytes`,
         );
       }
-      buf += decoder.decode(value, {
-        stream: true,
-      });
+      buf += decoder.decode(value, { stream: true });
     }
   } catch (err) {
     if (err instanceof FetchError) {
@@ -156,12 +154,7 @@ export async function fetchHtml(
   }
   buf += decoder.decode();
 
-  return {
-    html: buf,
-    finalUrl,
-    status: finalRes.status,
-    redirects,
-  };
+  return { html: buf, finalUrl, status: finalRes.status, redirects };
 }
 
 // Manual redirect following so every hop's URL goes through the caller-
@@ -176,14 +169,8 @@ async function followRedirects(
     fetch: (url: string, init: RequestInit) => Promise<Response>;
     signal: AbortSignal;
   },
-): Promise<{
-  res: Response;
-  finalUrl: string;
-  redirects: RedirectHop[];
-}> {
-  const visited = new Set<string>([
-    start.toString(),
-  ]);
+): Promise<{ res: Response; finalUrl: string; redirects: RedirectHop[] }> {
+  const visited = new Set<string>([start.toString()]);
   const redirects: RedirectHop[] = [];
   let current = start;
 
@@ -200,11 +187,7 @@ async function followRedirects(
     });
 
     if (!isRedirect(res.status) || !res.headers.has("location")) {
-      return {
-        res,
-        finalUrl: current.toString(),
-        redirects,
-      };
+      return { res, finalUrl: current.toString(), redirects };
     }
 
     await discard(res);

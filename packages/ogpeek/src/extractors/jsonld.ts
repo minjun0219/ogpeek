@@ -59,11 +59,7 @@ export class JsonLdExtractor implements HeadExtractor {
     if (!raw) {
       return;
     }
-    const block: JsonLd = {
-      raw,
-      parsed: null,
-      types: [],
-    };
+    const block: JsonLd = { raw, parsed: null, types: [] };
     try {
       const parsed = JSON.parse(raw);
       block.parsed = parsed;

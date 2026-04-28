@@ -1,32 +1,14 @@
 export type Lang = "en" | "ko";
 
-export const LANGS = [
-  "en",
-  "ko",
-] as const;
+export const LANGS = ["en", "ko"] as const;
 export const DEFAULT_LANG: Lang = "en";
 
 export type Dict = {
-  meta: {
-    title: string;
-    description: string;
-  };
-  install: {
-    copy: string;
-    copied: string;
-    ariaLabel: string;
-  };
-  urlInput: {
-    placeholder: string;
-    submit: string;
-    loading: string;
-  };
+  meta: { title: string; description: string };
+  install: { copy: string; copied: string; ariaLabel: string };
+  urlInput: { placeholder: string; submit: string; loading: string };
   validation: {
-    severity: {
-      error: string;
-      warn: string;
-      info: string;
-    };
+    severity: { error: string; warn: string; info: string };
     passTitle: string;
     passBody: string;
     resultsTitle: string;
@@ -56,9 +38,7 @@ export type Dict = {
     target: string;
     rateLimitTemplate: string;
   };
-  toggle: {
-    ariaLabel: string;
-  };
+  toggle: { ariaLabel: string };
 };
 
 const en: Dict = {
@@ -78,11 +58,7 @@ const en: Dict = {
     loading: "Loading…",
   },
   validation: {
-    severity: {
-      error: "Error",
-      warn: "Warning",
-      info: "Info",
-    },
+    severity: { error: "Error", warn: "Warning", info: "Info" },
     passTitle: "Validation passed — no issues detected",
     passBody:
       "All required OG tags are present and no spec violations were detected.",
@@ -115,9 +91,7 @@ const en: Dict = {
     target: "Target",
     rateLimitTemplate: "Too many requests. Please try again in {sec} seconds.",
   },
-  toggle: {
-    ariaLabel: "Switch language",
-  },
+  toggle: { ariaLabel: "Switch language" },
 };
 
 const ko: Dict = {
@@ -137,11 +111,7 @@ const ko: Dict = {
     loading: "불러오는 중…",
   },
   validation: {
-    severity: {
-      error: "에러",
-      warn: "경고",
-      info: "안내",
-    },
+    severity: { error: "에러", warn: "경고", info: "안내" },
     passTitle: "검증 통과 — 확인된 문제 없음",
     passBody: "필수 OG 태그가 모두 존재하고 스펙 위반이 감지되지 않았습니다.",
     resultsTitle: "검증 결과",
@@ -173,15 +143,10 @@ const ko: Dict = {
     target: "대상",
     rateLimitTemplate: "요청이 너무 많습니다. {sec}초 후 다시 시도해 주세요.",
   },
-  toggle: {
-    ariaLabel: "언어 전환",
-  },
+  toggle: { ariaLabel: "언어 전환" },
 };
 
-const DICTIONARIES: Record<Lang, Dict> = {
-  en,
-  ko,
-};
+const DICTIONARIES: Record<Lang, Dict> = { en, ko };
 
 export function getDict(lang: Lang): Dict {
   return DICTIONARIES[lang];
@@ -208,10 +173,7 @@ export function pickLangFromAcceptLanguage(header: string | null): Lang {
         .map((p) => p.trim())
         .find((p) => p.startsWith("q="));
       const quality = q ? Number(q.slice(2)) : 1;
-      return {
-        tag,
-        quality: Number.isFinite(quality) ? quality : 0,
-      };
+      return { tag, quality: Number.isFinite(quality) ? quality : 0 };
     })
     .filter((t) => t.tag && t.quality > 0)
     .sort((a, b) => b.quality - a.quality);

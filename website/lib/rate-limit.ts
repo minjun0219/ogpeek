@@ -12,16 +12,8 @@ const MAX_BUCKETS = 10_000;
 const buckets = new Map<string, Bucket>();
 
 export type RateLimitDecision =
-  | {
-      ok: true;
-      remaining: number;
-      resetAt: number;
-    }
-  | {
-      ok: false;
-      retryAfterSec: number;
-      resetAt: number;
-    };
+  | { ok: true; remaining: number; resetAt: number }
+  | { ok: false; retryAfterSec: number; resetAt: number };
 
 export function rateLimit(key: string): RateLimitDecision {
   const limit = readLimit();
@@ -35,9 +27,7 @@ export function rateLimit(key: string): RateLimitDecision {
 
   const now = Date.now();
   const cutoff = now - WINDOW_MS;
-  const bucket = buckets.get(key) ?? {
-    tokens: [],
-  };
+  const bucket = buckets.get(key) ?? { tokens: [] };
   const kept = bucket.tokens.filter((t) => t > cutoff);
 
   if (kept.length >= limit) {
@@ -100,9 +90,7 @@ function touch(key: string, bucket: Bucket): void {
 // Structural type so we accept both the standard fetch `Headers` and Next's
 // ReadonlyHeaders (from next/headers), and stay decoupled from runtime-
 // specific types.
-export type HeaderBag = {
-  get(name: string): string | null;
-};
+export type HeaderBag = { get(name: string): string | null };
 
 // Platform-specific "real client" headers we'll trust before falling back to
 // the proxy chain. Order matters — most specific first. If none of these and

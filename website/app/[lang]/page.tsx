@@ -10,22 +10,14 @@ import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{
-  url?: string | string[];
-}>;
-type Params = Promise<{
-  lang: string;
-}>;
+type SearchParams = Promise<{ url?: string | string[] }>;
+type Params = Promise<{ lang: string }>;
 type PageOutcome =
   | ServerParseOutcome
   | {
       ok: false;
       target: string;
-      error: {
-        code: "RATE_LIMITED";
-        status: 429;
-        message: string;
-      };
+      error: { code: "RATE_LIMITED"; status: 429; message: string };
     };
 
 export default async function Page({
