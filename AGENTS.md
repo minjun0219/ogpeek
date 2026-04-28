@@ -2,8 +2,14 @@
 
 > Korean translation (reference only): [AGENTS.ko.md](./AGENTS.ko.md) (not consulted by agents)
 
-ogpeek has exactly one purpose: "peek into any page's Open Graph tags right
-away." Hold to that identity and the principles below when you work on it.
+ogpeek has one focused purpose: "peek into any page's Open Graph tags
+right away." Open Graph stays the **primary** signal — auxiliary head
+metadata that travels with OG (favicons / apple-touch-icon / mask-icon,
+msapplication tiles, `application-name` / `theme-color`, JSON-LD blocks)
+is exposed alongside OG so that "how does this page advertise itself
+elsewhere?" debugging stays in one place. Hold to that framing — primary
+OG, thin auxiliary surface — and the principles below when you work on
+it.
 
 ## Layout
 
@@ -58,6 +64,15 @@ away." Hold to that identity and the principles below when you work on it.
    platforms, so a single representative preview is enough. Do not add
    per-platform variants or tag previews with social-network names — that
    dilutes the tool's single-purpose framing.
+7. **Auxiliary stays thin.** The auxiliary metadata surface (icons,
+   JSON-LD, `application-name` / `theme-color` / `msapplication-*`) is a
+   debugging viewport, not a validator. Keep it to "extract + display +
+   parse-error reporting." Deep schema.org rule checking, manifest.json
+   fetching, or per-platform icon resolution are out of scope — those
+   tools already exist (Google Rich Results Test, Schema.org Validator)
+   and pulling them in would dilute the OG-primary framing. The
+   `parse()` `jsonldScope` option exists so that callers can opt into
+   `<body>` JSON-LD without making it the default cost.
 
 ## Frequently used commands
 

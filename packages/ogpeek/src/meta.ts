@@ -1,5 +1,11 @@
 import { Parser } from "htmlparser2";
-import type { RawMeta } from "./types.js";
+import type { Icon, JsonLd, RawMeta } from "./types.js";
+import { HtmlPrefixExtractor } from "./extractors/html-prefix.js";
+import { TitleExtractor } from "./extractors/title.js";
+import { MetaTagExtractor } from "./extractors/meta-tag.js";
+import { LinkExtractor } from "./extractors/link.js";
+import { JsonLdExtractor } from "./extractors/jsonld.js";
+import type { HeadExtractor, ScanState } from "./extractors/types.js";
 
 export type HeadScan = {
   raw: RawMeta[];
@@ -7,86 +13,59 @@ export type HeadScan = {
   canonical: string | null;
   prefixDeclared: boolean;
   charset: string | null;
+  applicationName: string | null;
+  msTileImage: string | null;
+  msTileColor: string | null;
+  themeColor: string | null;
+  icons: Icon[];
+  jsonld: JsonLd[];
+};
+
+export type ScanOptions = {
+  // Where to harvest JSON-LD blocks from. Default "head".
+  jsonldScope?: "head" | "document";
 };
 
 /**
- * Stream-parses the input HTML and collects everything we need from <head>.
- * We stop feeding the parser the moment </head> closes — the rest of the
- * document is irrelevant for OGP debugging.
+ * Stream-parses the input HTML and runs every head extractor against the same
+ * htmlparser2 walk. By default we stop feeding the parser the moment </head>
+ * closes; the JSON-LD scope can extend that to the full document when callers
+ * opt in via `jsonldScope: "document"`.
  */
-export function scanHead(html: string): HeadScan {
-  const raw: RawMeta[] = [];
-  let title: string | null = null;
-  let canonical: string | null = null;
-  let prefixDeclared = false;
-  let charset: string | null = null;
+export function scanHead(html: string, options: ScanOptions = {}): HeadScan {
+  const jsonldScope = options.jsonldScope ?? "head";
+  const stopAtHeadClose = jsonldScope === "head";
 
-  let inHead = false;
-  let inTitle = false;
-  let titleBuf = "";
-  let done = false;
+  const state: ScanState = { inHead: false, done: false };
+
+  const htmlPrefix = new HtmlPrefixExtractor();
+  const title = new TitleExtractor();
+  const metaTag = new MetaTagExtractor();
+  const link = new LinkExtractor();
+  const jsonld = new JsonLdExtractor(jsonldScope);
+
+  const extractors: HeadExtractor[] = [htmlPrefix, title, metaTag, link, jsonld];
 
   const parser = new Parser(
     {
       onopentag(name, attrs) {
-        if (done) return;
-        if (name === "html") {
-          if (typeof attrs.prefix === "string" && /\bog:\s*https?:\/\/ogp\.me\/ns#/i.test(attrs.prefix)) {
-            prefixDeclared = true;
-          }
-          return;
-        }
-        if (name === "head") {
-          inHead = true;
-          return;
-        }
-        if (!inHead) return;
-        if (name === "title") {
-          inTitle = true;
-          titleBuf = "";
-          return;
-        }
-        if (name === "meta") {
-          const property = attrs.property ?? attrs.name;
-          const content = attrs.content;
-          if (typeof property === "string" && typeof content === "string") {
-            raw.push({ property: property.trim().toLowerCase(), content });
-          }
-          if (typeof attrs.charset === "string" && charset === null) {
-            charset = attrs.charset.trim();
-          }
-          if (
-            charset === null &&
-            typeof attrs["http-equiv"] === "string" &&
-            attrs["http-equiv"].toLowerCase() === "content-type" &&
-            typeof attrs.content === "string"
-          ) {
-            const match = /charset=([^;]+)/i.exec(attrs.content);
-            if (match && match[1]) charset = match[1].trim();
-          }
-          return;
-        }
-        if (name === "link") {
-          const rel = typeof attrs.rel === "string" ? attrs.rel.trim().toLowerCase() : "";
-          if (rel === "canonical" && typeof attrs.href === "string" && canonical === null) {
-            canonical = attrs.href.trim();
-          }
-        }
+        if (state.done) return;
+        if (name === "head") state.inHead = true;
+        for (const ex of extractors) ex.onOpenTag?.(name, attrs, state);
       },
       ontext(text) {
-        if (inTitle) titleBuf += text;
+        if (state.done) return;
+        for (const ex of extractors) ex.onText?.(text, state);
       },
       onclosetag(name) {
-        if (done) return;
-        if (name === "title" && inTitle) {
-          inTitle = false;
-          if (title === null) title = titleBuf.trim() || null;
-          return;
-        }
+        if (state.done) return;
+        for (const ex of extractors) ex.onCloseTag?.(name, state);
         if (name === "head") {
-          inHead = false;
-          done = true;
-          parser.reset();
+          state.inHead = false;
+          if (stopAtHeadClose) {
+            state.done = true;
+            parser.reset();
+          }
         }
       },
     },
@@ -96,5 +75,17 @@ export function scanHead(html: string): HeadScan {
   parser.write(html);
   parser.end();
 
-  return { raw, title, canonical, prefixDeclared, charset };
+  return {
+    raw: metaTag.raw,
+    title: title.title,
+    canonical: link.canonical,
+    prefixDeclared: htmlPrefix.prefixDeclared,
+    charset: metaTag.charset,
+    applicationName: metaTag.applicationName,
+    msTileImage: metaTag.msTileImage,
+    msTileColor: metaTag.msTileColor,
+    themeColor: metaTag.themeColor,
+    icons: link.icons,
+    jsonld: jsonld.blocks,
+  };
 }

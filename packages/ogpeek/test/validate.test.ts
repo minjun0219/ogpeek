@@ -91,4 +91,20 @@ describe("validate()", () => {
     const got = codes(parse(html, { url: "https://a.com" }).warnings);
     expect(got).not.toContain("OG_URL_MISMATCH");
   });
+
+  it("flags JSON-LD blocks that fail JSON.parse", () => {
+    const result = parse(load("jsonld-broken.html"));
+    const got = codes(result.warnings);
+    expect(got).toContain("JSONLD_PARSE_ERROR");
+
+    const block = result.jsonld[0];
+    expect(block?.parsed).toBeNull();
+    expect(typeof block?.error).toBe("string");
+  });
+
+  it("does not warn when JSON-LD is absent", () => {
+    const html = `<html><head><title>T</title><meta property="og:title" content="T"><meta property="og:type" content="website"><meta property="og:url" content="https://a.com"><meta property="og:image" content="https://a.com/x.png"></head></html>`;
+    const got = codes(parse(html).warnings);
+    expect(got).not.toContain("JSONLD_PARSE_ERROR");
+  });
 });

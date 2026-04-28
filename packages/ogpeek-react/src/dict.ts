@@ -17,6 +17,10 @@ export type Dict = {
     prefixAbsent: string;
     groupBasic: string;
     groupOther: string;
+    groupIcons: string;
+    groupJsonLd: string;
+    jsonldNoType: string;
+    jsonldError: string;
   };
   redirectFlow: {
     title: string;
@@ -46,6 +50,10 @@ const ko: Dict = {
     prefixAbsent: "없음",
     groupBasic: "기본 메타",
     groupOther: "기타",
+    groupIcons: "아이콘",
+    groupJsonLd: "JSON-LD",
+    jsonldNoType: "(@type 없음)",
+    jsonldError: "(파싱 오류)",
   },
   redirectFlow: {
     title: "요청 흐름",
@@ -77,6 +85,10 @@ const en: Dict = {
     prefixAbsent: "absent",
     groupBasic: "Basic meta",
     groupOther: "Other",
+    groupIcons: "Icons",
+    groupJsonLd: "JSON-LD",
+    jsonldNoType: "(no @type)",
+    jsonldError: "(parse error)",
   },
   redirectFlow: {
     title: "Request flow",

@@ -1,12 +1,16 @@
 # ogpeek
 
-> 어느 페이지든 오픈그래프 메타태그를 바로 들여다본다.
+> 어느 페이지든 오픈그래프 메타태그를 바로 들여다본다 — 그리고 같이 따라
+> 다니는 favicon · JSON-LD 같은 보조 메타까지.
 
 > English: [README.md](./README.md)
 
-OpenGraph 태그 파싱 · 페치 · 검증을 한 패키지에서 다루는 경량 엔진. 외부
-의존성은 `htmlparser2` 하나. Node 20+ · Bun · Workers · 브라우저에서 모두
-동작한다.
+OpenGraph 태그 파싱 · 페치 · 검증을 한 패키지에서 다루는 경량 엔진. 메인
+신호는 OG 그대로 두고, 그 옆으로 페이지가 함께 싣고 다니는 보조 헤드 메타
+— favicon · apple-touch-icon · mask-icon · msapplication 타일 ·
+`application-name` / `theme-color` · JSON-LD 블록 — 도 같이 노출한다.
+외부 의존성은 `htmlparser2` 하나. Node 20+ · Bun · Workers · 브라우저에서
+모두 동작한다.
 
 ## 설치
 
@@ -53,6 +57,9 @@ for (const w of result.warnings) {
 - `html` — 원문 HTML 문자열.
 - `options.url` — 상대 URL을 절대 URL로 해석할 때 기준이 되는 base. 없으면
   원문에 선언된 `og:url` 을 base로 사용한다.
+- `options.jsonldScope` — `"head" | "document"`. JSON-LD 블록을 어디까지
+  훑을지. 기본은 `"head"` 로 비용을 예측 가능한 범위에 두고, JSON-LD 가
+  `<body>` 에 있는 페이지를 포함하려면 `"document"` 를 넘긴다.
 
 반환값은 다음 형태다.
 
@@ -63,17 +70,60 @@ type OgDebugResult = {
   twitter: Record<string, string>; // twitter:* passthrough
   raw: Array<{ property: string; content: string }>; // 등장 순서
   warnings: Warning[];
+  // OG 옆에 같이 따라다니는 보조 메타:
+  icons: Icon[];                   // <link rel="icon" | "apple-touch-icon" | ...>
+  jsonld: JsonLd[];                // <script type="application/ld+json"> 블록
   meta: {
     title: string | null;
     canonical: string | null;      // <link rel="canonical">
     prefixDeclared: boolean;       // <html prefix="og: https://ogp.me/ns#">
     charset: string | null;
+    applicationName: string | null;// <meta name="application-name">
+    themeColor: string | null;     // <meta name="theme-color">
+    msTileImage: string | null;    // <meta name="msapplication-TileImage">
+    msTileColor: string | null;    // <meta name="msapplication-TileColor">
   };
 };
 ```
 
 각 구조 속성(`og:image:width` 등)은 가장 최근의 부모(`og:image`)에 attach
 된다. 부모 없이 먼저 등장하면 `ORPHAN_STRUCTURED_PROPERTY` 경고로 보고된다.
+
+#### 보조 메타 (auxiliary metadata)
+
+OG 가 메인 신호인 건 변하지 않는다. 보조 필드들은 "이 페이지가 다른 곳에서
+어떻게 보일까?" 디버깅을 한 자리에서 끝낼 수 있도록 함께 노출되며, 의도적
+으로 얇게 유지한다 — schema.org 스펙 검증이나 manifest.json 페치는 하지 않
+는다.
+
+```ts
+type Icon = {
+  rel: string;     // 매칭된 아이콘 토큰. 다음 중 하나로 정규화:
+                   // "icon" | "apple-touch-icon"
+                   // | "apple-touch-icon-precomposed" | "mask-icon"
+                   // | "fluid-icon" (소문자)
+                   //
+                   // <link rel> 은 공백으로 구분된 토큰 셋이라, `rel="shortcut
+                   // icon"` (IE 레거시) 이나 `rel="icon apple-touch-icon"`
+                   // (다중 역할) 같은 변형을 토큰 단위로 매칭한다. 다중
+                   // 역할이면 매칭된 토큰마다 Icon 하나씩 emit (href 공유).
+  href: string;
+  sizes?: string;  // "32x32 16x16" 또는 "any"
+  type?: string;   // "image/png"
+  color?: string;  // mask-icon 색상
+};
+
+type JsonLd = {
+  raw: string;            // 원문 script 본문
+  parsed: unknown | null; // JSON.parse 결과, 실패 시 null
+  types: string[];        // 발견된 모든 @type (@graph 재귀 포함)
+  error?: string;         // parsed === null 일 때만 채워짐
+};
+```
+
+severity 는 모든 경고에 붙는다 (`error` / `warn` / `info`). 소비자가 전부
+받아서 표시 시점에 필터하는 게 보통이고, 엔진은 "어디까지가 중요" 인지
+판단하지 않는다.
 
 ### `fetchHtml(url: string, options?: FetchOptions): Promise<FetchResult>`
 
@@ -148,6 +198,7 @@ Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forger
 | `ORPHAN_STRUCTURED_PROPERTY` | warn | 구조화 속성 앞에 부모가 없음 |
 | `INVALID_DIMENSION` | warn | width/height 정수 파싱 실패 |
 | `MISSING_PREFIX_ATTR` | info | `<html prefix>` 선언 없음 |
+| `JSONLD_PARSE_ERROR` | warn | `<script type="application/ld+json">` 블록이 JSON 으로 파싱 안됨 |
 
 ## 관련 프로젝트
 

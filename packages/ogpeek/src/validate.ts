@@ -112,6 +112,16 @@ export function validate(head: HeadScan, tree: TreeBuildResult, baseUrl: string 
     });
   }
 
+  for (const block of head.jsonld) {
+    if (block.error) {
+      warnings.push({
+        code: "JSONLD_PARSE_ERROR",
+        severity: "warn",
+        message: `JSON-LD block could not be parsed: ${block.error}`,
+      });
+    }
+  }
+
   return warnings;
 }
 

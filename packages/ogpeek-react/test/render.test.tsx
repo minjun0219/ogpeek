@@ -94,6 +94,115 @@ describe("@ogpeek/react render", () => {
     expect(html).toContain("총 3개");
   });
 
+  it("TagTable renders icons as clickable links resolved against baseUrl", () => {
+    const result = makeResult({
+      icons: [
+        { rel: "icon", href: "/favicon.ico", sizes: "any" },
+        {
+          rel: "apple-touch-icon",
+          href: "https://cdn.example.com/apple-icon.png",
+          sizes: "180x180",
+          type: "image/png",
+        },
+      ],
+    });
+    const html = render(
+      <TagTable result={result} baseUrl="https://example.com/page" />,
+    );
+    expect(html).toContain(">아이콘<");
+    // Relative href is absolutized against baseUrl.
+    expect(html).toContain('href="https://example.com/favicon.ico"');
+    // Already-absolute href is preserved.
+    expect(html).toContain('href="https://cdn.example.com/apple-icon.png"');
+    // target/rel are attached.
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer"');
+    // Sizes/type metadata is shown as muted suffix, not part of the link.
+    expect(html).toContain("sizes: any");
+    expect(html).toContain("sizes: 180x180");
+    expect(html).toContain("type: image/png");
+  });
+
+  it("TagTable falls back to plain text when an icon href has no safe URL", () => {
+    const result = makeResult({
+      icons: [{ rel: "icon", href: "javascript:alert(1)" }],
+    });
+    const html = render(
+      <TagTable result={result} baseUrl="https://example.com/" />,
+    );
+    // The URL is shown as text but never wrapped in an anchor — the
+    // sanitizer rejects non-http(s) schemes so a malicious href can never
+    // become a clickable link.
+    expect(html).not.toContain('href="javascript:');
+    expect(html).toContain("<td>javascript:alert(1)</td>");
+  });
+
+  it("TagTable renders og:image and og:url as clickable links", () => {
+    const result = makeResult();
+    const html = render(
+      <TagTable result={result} baseUrl="https://example.com/" />,
+    );
+    expect(html).toContain('href="https://example.com/img.png"');
+    expect(html).toContain('href="https://example.com/"');
+  });
+
+  it("TagTable renders a JSON-LD group with pretty JSON and parse-error payloads", () => {
+    const result = makeResult({
+      jsonld: [
+        {
+          raw: '{"@type":"WebSite","name":"Example"}',
+          parsed: { "@type": "WebSite", name: "Example" },
+          types: ["WebSite"],
+        },
+        {
+          raw: "{ broken",
+          parsed: null,
+          types: [],
+          error: "Unexpected token b",
+        },
+      ],
+    });
+    const html = render(<TagTable result={result} />);
+    expect(html).toContain(">JSON-LD<");
+    // Successful block: pretty-printed JSON inside a <pre> element with
+    // both @type and the inner field surfaced verbatim.
+    expect(html).toContain("ogpeek-table-pre");
+    expect(html).toContain("&quot;@type&quot;: &quot;WebSite&quot;");
+    expect(html).toContain("&quot;name&quot;: &quot;Example&quot;");
+    // Error block: parser message and the original payload both visible.
+    expect(html).toContain("(파싱 오류)");
+    expect(html).toContain("Unexpected token b");
+    expect(html).toContain("{ broken");
+  });
+
+  it("TagTable surfaces auxiliary meta-name tags in the basic-meta group", () => {
+    const result = makeResult({
+      meta: {
+        title: "Hello",
+        canonical: "https://example.com/",
+        prefixDeclared: true,
+        charset: "utf-8",
+        applicationName: "Example App",
+        themeColor: "#0a84ff",
+        msTileImage: "https://example.com/tile.png",
+        msTileColor: "#0a84ff",
+      },
+      raw: [
+        { property: "og:title", content: "Hello" },
+        { property: "application-name", content: "Example App" },
+        { property: "theme-color", content: "#0a84ff" },
+      ],
+    });
+    const html = render(<TagTable result={result} />);
+    expect(html).toContain("application-name");
+    expect(html).toContain("Example App");
+    expect(html).toContain("theme-color");
+    // The Other group must not duplicate the auxiliary meta-name tags it
+    // has already promoted into Basic meta.
+    const appNameMatches = html.match(/application-name/g) ?? [];
+    expect(appNameMatches.length).toBe(1);
+  });
+
   it("RedirectFlow shows fetched URL and status", () => {
     const html = render(
       <RedirectFlow

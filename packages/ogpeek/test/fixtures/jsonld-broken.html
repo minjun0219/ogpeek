@@ -1,0 +1,16 @@
+<!doctype html>
+<html prefix="og: https://ogp.me/ns#">
+<head>
+  <meta charset="utf-8">
+  <title>Broken JSON-LD</title>
+
+  <meta property="og:title" content="T">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://example.com/">
+  <meta property="og:image" content="https://example.com/x.png">
+
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "WebSite", "name": "missing closing brace"
+  </script>
+</head>
+</html>
