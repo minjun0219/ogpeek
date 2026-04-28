@@ -34,3 +34,17 @@ export function derivePreviewData(
     domain,
   };
 }
+
+// Returns a value safe to drop into <img src=""> — empty string blocks
+// any scheme that isn't http(s) or a relative reference. data:, javascript:,
+// vbscript:, mailto:, etc. all get rejected (mailto: makes no sense in an
+// <img> and the rest can carry script).
+export function safeImageSrc(url: string | null | undefined): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/^https?:/i.test(trimmed)) return trimmed;
+  if (/^[/?#]/.test(trimmed)) return trimmed;
+  if (/^[a-z][a-z0-9+\-.]*:/i.test(trimmed)) return "";
+  return trimmed;
+}

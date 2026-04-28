@@ -1,0 +1,405 @@
+/*
+ * @ogpeek/react styles. `.ogpeek-root` is the selector that declares
+ * the theme token variables and base typography. Standalone components
+ * apply it to their outermost element. When composed inside <Result />,
+ * children opt out via the `composed` prop and rely on the wrapper's
+ * `.ogpeek-root` instead — that keeps the subtree to a single token
+ * scope so inline overrides on the wrapper cascade into every panel.
+ *
+ * The remaining rules use `ogpeek-`-prefixed class names to keep the
+ * risk of colliding with host-page CSS low; they aren't all gated
+ * behind a `.ogpeek-root` ancestor, but every `ogpeek-` class is
+ * rendered inside one (either on the component's own root or on a
+ * composed ancestor).
+ */
+
+.ogpeek-root {
+  --ogpeek-bg: 255 255 255;
+  --ogpeek-fg: 17 24 39;
+  --ogpeek-muted: 107 114 128;
+  --ogpeek-surface: 249 250 251;
+  --ogpeek-border: 229 231 235;
+  --ogpeek-error-fg: 185 28 28;
+  --ogpeek-error-bg: 254 226 226;
+  --ogpeek-error-ring: 252 165 165;
+  --ogpeek-warn-fg: 180 83 9;
+  --ogpeek-warn-bg: 254 243 199;
+  --ogpeek-warn-ring: 252 211 77;
+  --ogpeek-info-fg: 29 78 216;
+  --ogpeek-info-bg: 219 234 254;
+  --ogpeek-info-ring: 147 197 253;
+  --ogpeek-pass-fg: 4 120 87;
+  --ogpeek-pass-bg: 209 250 229;
+
+  /* Preview card has its own palette so it visually echoes how social
+     platforms render the OG card on a white surface — the rest of the
+     panels use the page tokens above. Tokenized so dark mode can swap. */
+  --ogpeek-preview-card-bg: 255 255 255;
+  --ogpeek-preview-body-bg: 240 242 245;
+  --ogpeek-preview-image-empty: 241 245 249;
+  --ogpeek-preview-title-fg: 15 23 42;
+  --ogpeek-preview-description-fg: 71 85 105;
+  --ogpeek-preview-domain-fg: 100 116 139;
+
+  display: block;
+  color: rgb(var(--ogpeek-fg));
+  font: 14px / 1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ogpeek-root {
+    --ogpeek-bg: 15 17 21;
+    --ogpeek-fg: 226 232 240;
+    --ogpeek-muted: 148 163 184;
+    --ogpeek-surface: 24 28 35;
+    --ogpeek-border: 44 50 60;
+
+    /* Without these the pale red/amber/blue/green light-mode bgs
+       blended against the dark page surface and looked washed out
+       ("물빠진 색"). Use deeper hues with the same alpha so the pills
+       and warning rows still read as colored at a glance. */
+    --ogpeek-error-fg: 252 165 165;
+    --ogpeek-error-bg: 127 29 29;
+    --ogpeek-error-ring: 153 27 27;
+    --ogpeek-warn-fg: 252 211 77;
+    --ogpeek-warn-bg: 113 63 18;
+    --ogpeek-warn-ring: 146 64 14;
+    --ogpeek-info-fg: 147 197 253;
+    --ogpeek-info-bg: 30 58 138;
+    --ogpeek-info-ring: 30 64 175;
+    --ogpeek-pass-fg: 110 231 183;
+    --ogpeek-pass-bg: 6 78 59;
+
+    /* Dark-mode preview palette mirrors how Slack / Telegram / Discord
+       render the same card on a dark surface — slightly elevated body
+       with light text, rather than a clinical white card on a dark page. */
+    --ogpeek-preview-card-bg: 30 36 46;
+    --ogpeek-preview-body-bg: 36 42 53;
+    --ogpeek-preview-image-empty: 30 36 46;
+    --ogpeek-preview-title-fg: 226 232 240;
+    --ogpeek-preview-description-fg: 148 163 184;
+    --ogpeek-preview-domain-fg: 148 163 184;
+  }
+}
+
+.ogpeek-root *,
+.ogpeek-root *::before,
+.ogpeek-root *::after {
+  box-sizing: border-box;
+}
+
+.ogpeek-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ogpeek-preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ogpeek-section {
+  border: 1px solid rgb(var(--ogpeek-border));
+  background: rgb(var(--ogpeek-surface));
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.ogpeek-section--flat {
+  border: 1px solid rgb(var(--ogpeek-border));
+  border-radius: 12px;
+  overflow: hidden;
+  background: transparent;
+}
+.ogpeek-section--pass {
+  border: 1px solid rgb(var(--ogpeek-border));
+  background: rgb(var(--ogpeek-pass-bg) / 0.5);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.ogpeek-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ogpeek-h2 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+.ogpeek-h3 {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgb(var(--ogpeek-muted));
+  margin: 0;
+}
+.ogpeek-muted {
+  color: rgb(var(--ogpeek-muted));
+}
+.ogpeek-mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+.ogpeek-text-xs {
+  font-size: 12px;
+}
+.ogpeek-text-sm {
+  font-size: 14px;
+}
+.ogpeek-break {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.ogpeek-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ogpeek-pass-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgb(var(--ogpeek-pass-fg));
+}
+.ogpeek-pass-body {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: rgb(var(--ogpeek-muted));
+}
+
+.ogpeek-pill-row {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+}
+.ogpeek-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 1.2;
+  box-shadow: inset 0 0 0 1px transparent;
+}
+.ogpeek-pill--error {
+  color: rgb(var(--ogpeek-error-fg));
+  background: rgb(var(--ogpeek-error-bg) / 0.4);
+  box-shadow: inset 0 0 0 1px rgb(var(--ogpeek-error-ring) / 0.6);
+}
+.ogpeek-pill--warn {
+  color: rgb(var(--ogpeek-warn-fg));
+  background: rgb(var(--ogpeek-warn-bg) / 0.4);
+  box-shadow: inset 0 0 0 1px rgb(var(--ogpeek-warn-ring) / 0.6);
+}
+.ogpeek-pill--info {
+  color: rgb(var(--ogpeek-info-fg));
+  background: rgb(var(--ogpeek-info-bg) / 0.4);
+  box-shadow: inset 0 0 0 1px rgb(var(--ogpeek-info-ring) / 0.6);
+}
+
+.ogpeek-warning-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.ogpeek-warning-item {
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  box-shadow: inset 0 0 0 1px transparent;
+  margin-top: 8px;
+}
+.ogpeek-warning-item:first-child {
+  margin-top: 0;
+}
+.ogpeek-warning-item--error {
+  color: rgb(var(--ogpeek-error-fg));
+  background: rgb(var(--ogpeek-error-bg) / 0.4);
+  box-shadow: inset 0 0 0 1px rgb(var(--ogpeek-error-ring) / 0.6);
+}
+.ogpeek-warning-item--warn {
+  color: rgb(var(--ogpeek-warn-fg));
+  background: rgb(var(--ogpeek-warn-bg) / 0.4);
+  box-shadow: inset 0 0 0 1px rgb(var(--ogpeek-warn-ring) / 0.6);
+}
+.ogpeek-warning-item--info {
+  color: rgb(var(--ogpeek-info-fg));
+  background: rgb(var(--ogpeek-info-bg) / 0.4);
+  box-shadow: inset 0 0 0 1px rgb(var(--ogpeek-info-ring) / 0.6);
+}
+.ogpeek-warning-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.ogpeek-warning-meta-code {
+  opacity: 0.6;
+}
+.ogpeek-warning-message {
+  margin-top: 4px;
+}
+.ogpeek-warning-value {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ogpeek-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgb(var(--ogpeek-border));
+  background: rgb(var(--ogpeek-surface));
+  padding: 12px 20px;
+}
+.ogpeek-table-group {
+  padding: 12px 20px;
+  border-top: 1px solid rgb(var(--ogpeek-border));
+}
+.ogpeek-table-group:first-of-type {
+  border-top: 0;
+}
+.ogpeek-table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  text-align: left;
+}
+.ogpeek-table th,
+.ogpeek-table td {
+  padding: 4px 0;
+  vertical-align: top;
+  font-size: 12px;
+}
+.ogpeek-table th {
+  width: 28%;
+  padding-right: 16px;
+  color: rgb(var(--ogpeek-muted));
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-weight: 400;
+}
+.ogpeek-table td {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+.ogpeek-table-empty {
+  opacity: 0.4;
+}
+
+.ogpeek-flow-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 16px;
+  row-gap: 8px;
+  margin: 12px 0 0;
+}
+.ogpeek-flow-grid dt {
+  font-size: 12px;
+  color: rgb(var(--ogpeek-muted));
+}
+.ogpeek-flow-grid dd {
+  margin: 0;
+}
+.ogpeek-flow-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+}
+.ogpeek-flow-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 6px;
+}
+.ogpeek-flow-list li:first-child {
+  margin-top: 0;
+}
+.ogpeek-flow-tag {
+  flex-shrink: 0;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgb(var(--ogpeek-bg));
+  color: rgb(var(--ogpeek-muted));
+  box-shadow: inset 0 0 0 1px rgb(var(--ogpeek-border));
+}
+.ogpeek-flow-tag--redirect {
+  background: rgb(var(--ogpeek-warn-bg) / 0.4);
+  color: rgb(var(--ogpeek-warn-fg));
+  box-shadow: inset 0 0 0 1px rgb(var(--ogpeek-warn-ring) / 0.6);
+  font-weight: 500;
+}
+.ogpeek-flow-note {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: rgb(var(--ogpeek-muted));
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.ogpeek-preview {
+  margin: 0;
+  border-radius: 16px;
+  border: 1px solid rgb(var(--ogpeek-border));
+  background: rgb(var(--ogpeek-preview-card-bg));
+  overflow: hidden;
+  max-width: 480px;
+}
+.ogpeek-preview-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.91 / 1;
+  object-fit: cover;
+  background: rgb(var(--ogpeek-preview-image-empty));
+}
+.ogpeek-preview-image-empty {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.91 / 1;
+  background: rgb(var(--ogpeek-preview-image-empty));
+}
+.ogpeek-preview-body {
+  background: rgb(var(--ogpeek-preview-body-bg));
+  color: rgb(var(--ogpeek-preview-title-fg));
+  padding: 12px 16px;
+}
+.ogpeek-preview-domain {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(var(--ogpeek-preview-domain-fg));
+}
+.ogpeek-preview-title {
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ogpeek-preview-description {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgb(var(--ogpeek-preview-description-fg));
+  /* Show the full description; truncation in this tool isn't useful —
+     consumers want to see what the social platform will display verbatim. */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}

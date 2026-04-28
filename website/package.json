@@ -4,16 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter ogpeek run build && next dev -p 3000",
-    "build": "pnpm --filter ogpeek run build && next build",
+    "dev": "pnpm --filter ogpeek run build && pnpm --filter @ogpeek/react run build && next dev -p 3000",
+    "build": "pnpm --filter ogpeek run build && pnpm --filter @ogpeek/react run build && next build",
     "start": "next start -p 3000",
     "lint": "next lint",
-    "typecheck": "pnpm --filter ogpeek run build && tsc --noEmit",
-    "cf:build": "pnpm --filter ogpeek run build && opennextjs-cloudflare build",
+    "typecheck": "pnpm --filter ogpeek run build && pnpm --filter @ogpeek/react run build && tsc --noEmit",
+    "cf:build": "pnpm --filter ogpeek run build && pnpm --filter @ogpeek/react run build && opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy"
   },
   "dependencies": {
+    "@ogpeek/react": "workspace:*",
     "ipaddr.js": "2.3.0",
     "next": "15.5.15",
     "ogpeek": "workspace:*",

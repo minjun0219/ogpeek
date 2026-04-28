@@ -5,6 +5,7 @@ import { Noto_Sans_KR } from "next/font/google";
 import { LANGS, getDict, hasLang, type Lang } from "@/lib/i18n";
 import { TranslateProvider } from "@/lib/translate-context";
 import "../globals.css";
+import "@ogpeek/react/styles.css";
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ["latin"],
