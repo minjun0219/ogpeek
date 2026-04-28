@@ -1,7 +1,18 @@
-export function Footer() {
+import Link from "next/link";
+import type { Dict, Lang } from "@/lib/i18n";
+
+export function Footer({ lang, dict }: { lang: Lang; dict: Dict }) {
   return (
     <footer className="mt-10 flex flex-col items-center gap-2 border-t border-[color:rgb(var(--border))] pt-10 text-sm text-[color:rgb(var(--muted))]">
-      <div className="flex gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
+        <Link
+          className="hover:text-[color:rgb(var(--foreground))] hover:underline"
+          href={`/${lang}/packages`}
+          prefetch={false}
+        >
+          {dict.packages.title}
+        </Link>
+        <span aria-hidden>·</span>
         <a
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
           href="https://github.com/minjun0219/ogpeek"
