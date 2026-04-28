@@ -4,10 +4,17 @@
     "packages/ogpeek": {
       "release-type": "node",
       "package-name": "ogpeek",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false
+    },
+    "packages/ogpeek-react": {
+      "release-type": "node",
+      "package-name": "@ogpeek/react",
+      "component": "ogpeek-react",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true
     }
   },
-  "include-component-in-tag": false,
   "separate-pull-requests": false,
-  "pull-request-title-pattern": "chore: release ogpeek ${version}"
+  "pull-request-title-pattern": "chore: release ${branch}"
 }

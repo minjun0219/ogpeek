@@ -3,17 +3,6 @@ name: Release Please
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "npm dist-tag (수동 publish 시 사용, 기본값: latest)"
-        required: false
-        default: latest
-      dry-run:
-        description: "실제 publish 없이 리허설만 수행"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -22,11 +11,12 @@ permissions:
 jobs:
   release-please:
     name: Open release PR / cut release
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.release.outputs['packages/ogpeek--release_created'] }}
-      tag_name: ${{ steps.release.outputs['packages/ogpeek--tag_name'] }}
+      ogpeek_release_created: ${{ steps.release.outputs['packages/ogpeek--release_created'] }}
+      ogpeek_tag_name: ${{ steps.release.outputs['packages/ogpeek--tag_name'] }}
+      react_release_created: ${{ steps.release.outputs['packages/ogpeek-react--release_created'] }}
+      react_tag_name: ${{ steps.release.outputs['packages/ogpeek-react--tag_name'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -34,16 +24,10 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  publish:
-    name: Publish packages/ogpeek to npm
+  publish-ogpeek:
+    name: Publish ogpeek to npm
     needs: release-please
-    # push 일 때는 release-please 가 릴리스를 잘랐을 때만,
-    # workflow_dispatch 일 때는 release-please 잡을 건너뛰고 바로 실행.
-    if: |
-      always() && (
-        github.event_name == 'workflow_dispatch' ||
-        (github.event_name == 'push' && needs.release-please.outputs.release_created == 'true')
-      )
+    if: needs.release-please.outputs.ogpeek_release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -51,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name || github.ref }}
+          ref: ${{ needs.release-please.outputs.ogpeek_tag_name }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -81,11 +65,49 @@ jobs:
           # secrets.NPM_AUTH_TOKEN 이 비어있으면 npm CLI 가 OIDC(Trusted
           # Publisher) 로 폴백한다.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-          DIST_TAG: ${{ github.event.inputs.tag || 'latest' }}
-          DRY_RUN: ${{ github.event.inputs['dry-run'] || 'false' }}
-        run: |
-          args=(--access public --provenance --no-git-checks --tag "$DIST_TAG")
-          if [ "$DRY_RUN" = "true" ]; then
-            args+=(--dry-run)
-          fi
-          pnpm publish "${args[@]}"
+        run: pnpm publish --access public --provenance --no-git-checks
+
+  publish-ogpeek-react:
+    name: Publish @ogpeek/react to npm
+    needs: release-please
+    if: needs.release-please.outputs.react_release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.react_tag_name }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # @ogpeek/react 는 ogpeek/dist 의 타입을 참조하므로 먼저 빌드해 둔다.
+      - name: Build ogpeek
+        run: pnpm -F ogpeek build
+
+      - name: Typecheck
+        run: pnpm -F @ogpeek/react typecheck
+
+      - name: Test
+        run: pnpm -F @ogpeek/react test
+
+      - name: Build
+        run: pnpm -F @ogpeek/react build
+
+      - name: Publish to npm
+        working-directory: packages/ogpeek-react
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        run: pnpm publish --access public --provenance --no-git-checks

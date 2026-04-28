@@ -40,6 +40,37 @@ jobs:
       - name: Build
         run: pnpm -F ogpeek build
 
+  ogpeek-react:
+    name: "@ogpeek/react (typecheck + test + build)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # @ogpeek/react 는 ogpeek/dist 의 타입을 참조하므로 먼저 빌드해 둔다.
+      - name: Build ogpeek
+        run: pnpm -F ogpeek build
+
+      - name: Typecheck
+        run: pnpm -F @ogpeek/react typecheck
+
+      - name: Test
+        run: pnpm -F @ogpeek/react test
+
+      - name: Build
+        run: pnpm -F @ogpeek/react build
+
   website:
     name: website (typecheck)
     runs-on: ubuntu-latest
@@ -58,6 +89,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # `website` 의 typecheck 는 내부적으로 ogpeek 빌드를 먼저 돈다.
+      # `website` 의 typecheck 는 내부적으로 ogpeek + @ogpeek/react 빌드를 먼저 돈다.
       - name: Typecheck
         run: pnpm -F website typecheck

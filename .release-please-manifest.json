@@ -1,3 +1,4 @@
 {
-  "packages/ogpeek": "0.4.0"
+  "packages/ogpeek": "0.4.0",
+  "packages/ogpeek-react": "0.4.0"
 }
