@@ -1,4 +1,4 @@
-import type { OgDebugResult } from "ogpeek";
+import type { Icon, JsonLd, OgDebugResult } from "ogpeek";
 import {
   DEFAULT_LANG,
   format,
@@ -70,7 +70,7 @@ export function TagTable({
 }
 
 function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
-  const { ogp, twitter, meta, raw: rawTags } = result;
+  const { ogp, twitter, meta, raw: rawTags, icons, jsonld } = result;
 
   const og: Row[] = [];
   addIf(og, "og:title", ogp.title);
@@ -117,11 +117,49 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
       ? dict.tagTable.prefixDeclared
       : dict.tagTable.prefixAbsent,
   });
+  addIf(m, "application-name", meta.applicationName);
+  addIf(m, "theme-color", meta.themeColor);
+  addIf(m, "msapplication-TileImage", meta.msTileImage);
+  addIf(m, "msapplication-TileColor", meta.msTileColor);
 
+  const ic: Row[] = icons.map((icon) => ({
+    key: icon.rel,
+    value: formatIcon(icon),
+  }));
+
+  const jl: Row[] = [];
+  jsonld.forEach((block, i) => {
+    const label = jsonld.length > 1 ? `JSON-LD[${i}]` : "JSON-LD";
+    if (block.error) {
+      jl.push({
+        key: `${label} ${dict.tagTable.jsonldError}`,
+        value: block.error,
+      });
+      return;
+    }
+    jl.push({
+      key: `${label} @type`,
+      value: block.types.length
+        ? block.types.join(", ")
+        : dict.tagTable.jsonldNoType,
+    });
+  });
+
+  // Reserve "Other" for tags that are not OG / twitter / already-surfaced
+  // auxiliary signals. Without this filter the meta-name auxiliary tags
+  // (application-name, theme-color, msapplication-*) would render twice.
+  const surfacedNames = new Set([
+    "application-name",
+    "theme-color",
+    "msapplication-tileimage",
+    "msapplication-tilecolor",
+  ]);
   const others: Row[] = rawTags
     .filter(
       (r) =>
-        !r.property.startsWith("og:") && !r.property.startsWith("twitter:"),
+        !r.property.startsWith("og:") &&
+        !r.property.startsWith("twitter:") &&
+        !surfacedNames.has(r.property),
     )
     .map((r) => ({ key: r.property, value: r.content }));
 
@@ -129,6 +167,8 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
     { title: "Open Graph", rows: og },
     { title: "Twitter Card", rows: tw },
     { title: dict.tagTable.groupBasic, rows: m },
+    { title: dict.tagTable.groupIcons, rows: ic },
+    { title: dict.tagTable.groupJsonLd, rows: jl },
     { title: dict.tagTable.groupOther, rows: others },
   ];
 }
@@ -136,3 +176,15 @@ function buildGroups(result: OgDebugResult, dict: Dict): Group[] {
 function addIf(rows: Row[], key: string, value: string | undefined | null) {
   if (value) rows.push({ key, value });
 }
+
+function formatIcon(icon: Icon): string {
+  const parts = [icon.href];
+  if (icon.sizes) parts.push(`sizes: ${icon.sizes}`);
+  if (icon.type) parts.push(`type: ${icon.type}`);
+  if (icon.color) parts.push(`color: ${icon.color}`);
+  return parts.join(" · ");
+}
+
+// Re-export the JsonLd type so callers picking up the auxiliary section
+// don't need a second import path.
+export type { JsonLd };

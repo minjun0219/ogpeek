@@ -31,11 +31,17 @@ export function makeResult(
       { property: "description", content: "An example" },
     ],
     warnings: [],
+    icons: [],
+    jsonld: [],
     meta: {
       title: "Hello — Example",
       canonical: "https://example.com/",
       prefixDeclared: true,
       charset: "utf-8",
+      applicationName: null,
+      msTileImage: null,
+      msTileColor: null,
+      themeColor: null,
     },
   };
   return { ...base, ...overrides };

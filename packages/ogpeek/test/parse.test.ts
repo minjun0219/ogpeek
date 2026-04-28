@@ -55,8 +55,43 @@ describe("parse()", () => {
     expect(result.meta.canonical).toBe("https://www.imdb.com/title/tt0117500/");
     expect(result.meta.prefixDeclared).toBe(true);
     expect(result.meta.charset).toBe("utf-8");
+    expect(result.icons).toEqual([]);
+    expect(result.jsonld).toEqual([]);
 
     expect(result.warnings).toEqual([]);
+  });
+
+  it("collects favicons, app icons, and msapplication / theme tiles", () => {
+    const result = parse(load("auxiliary.html"));
+
+    expect(result.icons).toEqual([
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", href: "/icon-32.png", sizes: "32x32", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/apple-icon-180.png", sizes: "180x180" },
+      { rel: "mask-icon", href: "/safari-pinned.svg", color: "#0a84ff" },
+    ]);
+
+    expect(result.meta.applicationName).toBe("Example App");
+    expect(result.meta.themeColor).toBe("#0a84ff");
+    expect(result.meta.msTileImage).toBe("https://example.com/tile.png");
+    expect(result.meta.msTileColor).toBe("#0a84ff");
+  });
+
+  it("collects JSON-LD blocks from <head> by default and exposes their @types", () => {
+    const result = parse(load("auxiliary.html"));
+
+    expect(result.jsonld).toHaveLength(2);
+    expect(result.jsonld[0]?.types).toEqual(["WebSite"]);
+    expect(result.jsonld[1]?.types).toEqual(["Organization", "BreadcrumbList"]);
+    expect(result.jsonld[0]?.error).toBeUndefined();
+    expect(result.jsonld[1]?.error).toBeUndefined();
+  });
+
+  it("extends JSON-LD scan into <body> when jsonldScope is 'document'", () => {
+    const result = parse(load("auxiliary.html"), { jsonldScope: "document" });
+
+    expect(result.jsonld).toHaveLength(3);
+    expect(result.jsonld[2]?.types).toEqual(["Article"]);
   });
 
   it("handles the minimal fixture with no warnings except info-level", () => {

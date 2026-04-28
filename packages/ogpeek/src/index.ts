@@ -1,5 +1,7 @@
 export { parse } from "./parse.js";
 export type {
+  Icon,
+  JsonLd,
   OgAudio,
   OgDebugResult,
   OgImage,

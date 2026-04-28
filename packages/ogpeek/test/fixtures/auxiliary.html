@@ -1,0 +1,47 @@
+<!doctype html>
+<html prefix="og: https://ogp.me/ns#" lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Auxiliary metadata fixture</title>
+
+  <meta property="og:title" content="Aux">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://example.com/aux">
+  <meta property="og:image" content="https://example.com/aux.png">
+  <meta property="og:site_name" content="Example">
+
+  <meta name="application-name" content="Example App">
+  <meta name="theme-color" content="#0a84ff">
+  <meta name="msapplication-TileImage" content="https://example.com/tile.png">
+  <meta name="msapplication-TileColor" content="#0a84ff">
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180.png">
+  <link rel="mask-icon" href="/safari-pinned.svg" color="#0a84ff">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Example",
+    "url": "https://example.com"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "Organization", "name": "Example Org" },
+      { "@type": "BreadcrumbList", "itemListElement": [] }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <script type="application/ld+json">
+  { "@context": "https://schema.org", "@type": "Article", "headline": "From body" }
+  </script>
+</body>
+</html>

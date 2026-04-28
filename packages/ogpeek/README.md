@@ -1,12 +1,16 @@
 # ogpeek
 
-> peek into any page's Open Graph tags
+> peek into any page's Open Graph tags — and the favicon / JSON-LD signals
+> that travel with them
 
 > Korean: [README.ko.md](./README.ko.md)
 
 A small engine that handles parsing, fetching, and validating OpenGraph
-tags in a single package. Single external dependency: `htmlparser2`. Runs
-on Node 20+, Bun, Workers, and the browser.
+tags in a single package. Open Graph stays the primary signal; alongside
+it the engine also surfaces the auxiliary head metadata most pages ship
+with — favicons, apple-touch-icons, mask-icons, msapplication tiles,
+`application-name` / `theme-color`, and JSON-LD blocks. Single external
+dependency: `htmlparser2`. Runs on Node 20+, Bun, Workers, and the browser.
 
 ## Install
 
@@ -54,6 +58,10 @@ for (const w of result.warnings) {
 - `html` — the raw HTML string.
 - `options.url` — the base used to resolve relative URLs to absolute URLs.
   If omitted, the `og:url` declared in the document is used as the base.
+- `options.jsonldScope` — `"head" | "document"`. Where to harvest
+  `<script type="application/ld+json">` blocks from. Default is `"head"`
+  to keep the scan cost predictable; pass `"document"` to also walk
+  `<body>` (JSON-LD is often placed there).
 
 The return shape:
 
@@ -64,11 +72,18 @@ type OgDebugResult = {
   twitter: Record<string, string>; // twitter:* passthrough
   raw: Array<{ property: string; content: string }>; // declaration order
   warnings: Warning[];
+  // Auxiliary metadata travelling alongside OG:
+  icons: Icon[];                   // <link rel="icon" | "apple-touch-icon" | ...>
+  jsonld: JsonLd[];                // <script type="application/ld+json"> blocks
   meta: {
     title: string | null;
     canonical: string | null;      // <link rel="canonical">
     prefixDeclared: boolean;       // <html prefix="og: https://ogp.me/ns#">
     charset: string | null;
+    applicationName: string | null;// <meta name="application-name">
+    themeColor: string | null;     // <meta name="theme-color">
+    msTileImage: string | null;    // <meta name="msapplication-TileImage">
+    msTileColor: string | null;    // <meta name="msapplication-TileColor">
   };
 };
 ```
@@ -76,6 +91,36 @@ type OgDebugResult = {
 Each structured property (`og:image:width` and friends) attaches to the
 most recent parent (`og:image`). If one appears before any parent, it is
 reported as an `ORPHAN_STRUCTURED_PROPERTY` warning.
+
+#### Auxiliary metadata
+
+Open Graph remains the primary signal. The auxiliary fields are surfaced
+so that "how does this page advertise itself elsewhere?" debugging stays
+in one place — they are intentionally kept thin (no schema.org rule
+checking, no manifest.json fetching).
+
+```ts
+type Icon = {
+  rel: string;     // "icon" | "shortcut icon" | "apple-touch-icon"
+                   // | "apple-touch-icon-precomposed" | "mask-icon"
+                   // | "fluid-icon" (lower-cased)
+  href: string;
+  sizes?: string;  // "32x32 16x16" or "any"
+  type?: string;   // "image/png"
+  color?: string;  // mask-icon color
+};
+
+type JsonLd = {
+  raw: string;            // original script body
+  parsed: unknown | null; // JSON.parse result, or null on failure
+  types: string[];        // every @type seen (recurses into @graph)
+  error?: string;         // populated when parsed === null
+};
+```
+
+Severity is set on every warning (`error` / `warn` / `info`). Consumers
+typically render all of them and let the user filter at display time;
+the engine never decides what is "important enough to show".
 
 ### `fetchHtml(url: string, options?: FetchOptions): Promise<FetchResult>`
 
@@ -157,6 +202,7 @@ Workers-compatible DoH guard.
 | `ORPHAN_STRUCTURED_PROPERTY` | warn | a structured property appears with no parent |
 | `INVALID_DIMENSION` | warn | width/height failed integer parsing |
 | `MISSING_PREFIX_ATTR` | info | `<html prefix>` is not declared |
+| `JSONLD_PARSE_ERROR` | warn | a `<script type="application/ld+json">` block did not parse as JSON |
 
 ## Related projects
 

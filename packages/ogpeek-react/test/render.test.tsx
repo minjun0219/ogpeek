@@ -94,6 +94,76 @@ describe("@ogpeek/react render", () => {
     expect(html).toContain("총 3개");
   });
 
+  it("TagTable renders an Icons group when icons are present", () => {
+    const result = makeResult({
+      icons: [
+        { rel: "icon", href: "/favicon.ico", sizes: "any" },
+        {
+          rel: "apple-touch-icon",
+          href: "/apple-icon.png",
+          sizes: "180x180",
+        },
+      ],
+    });
+    const html = render(<TagTable result={result} />);
+    expect(html).toContain(">아이콘<");
+    expect(html).toContain("/favicon.ico");
+    expect(html).toContain("sizes: any");
+    expect(html).toContain("apple-touch-icon");
+    expect(html).toContain("/apple-icon.png");
+  });
+
+  it("TagTable renders a JSON-LD group with @type and parse-error rows", () => {
+    const result = makeResult({
+      jsonld: [
+        {
+          raw: "{...}",
+          parsed: { "@type": "WebSite" },
+          types: ["WebSite"],
+        },
+        {
+          raw: "{ broken",
+          parsed: null,
+          types: [],
+          error: "Unexpected token b",
+        },
+      ],
+    });
+    const html = render(<TagTable result={result} />);
+    expect(html).toContain(">JSON-LD<");
+    expect(html).toContain("WebSite");
+    expect(html).toContain("(파싱 오류)");
+    expect(html).toContain("Unexpected token b");
+  });
+
+  it("TagTable surfaces auxiliary meta-name tags in the basic-meta group", () => {
+    const result = makeResult({
+      meta: {
+        title: "Hello",
+        canonical: "https://example.com/",
+        prefixDeclared: true,
+        charset: "utf-8",
+        applicationName: "Example App",
+        themeColor: "#0a84ff",
+        msTileImage: "https://example.com/tile.png",
+        msTileColor: "#0a84ff",
+      },
+      raw: [
+        { property: "og:title", content: "Hello" },
+        { property: "application-name", content: "Example App" },
+        { property: "theme-color", content: "#0a84ff" },
+      ],
+    });
+    const html = render(<TagTable result={result} />);
+    expect(html).toContain("application-name");
+    expect(html).toContain("Example App");
+    expect(html).toContain("theme-color");
+    // The Other group must not duplicate the auxiliary meta-name tags it
+    // has already promoted into Basic meta.
+    const appNameMatches = html.match(/application-name/g) ?? [];
+    expect(appNameMatches.length).toBe(1);
+  });
+
   it("RedirectFlow shows fetched URL and status", () => {
     const html = render(
       <RedirectFlow

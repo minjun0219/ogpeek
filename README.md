@@ -1,13 +1,17 @@
 # ogpeek
 
-> peek into any page's Open Graph tags
+> peek into any page's Open Graph tags — and the favicon / JSON-LD
+> signals that travel with them
 
 > Korean: [README.ko.md](./README.ko.md)
 
 A focused OpenGraph debugging tool: paste a URL, see exactly how the page's
 OG card will render, and get OGP-spec violations called out automatically.
-Built as a shared utility for QA, product, and engineering — and as the
-landing page when published publicly.
+Open Graph stays the primary signal; ogpeek also surfaces the auxiliary
+head metadata most pages ship with — favicons / apple-touch-icons /
+mask-icons, msapplication tiles, `application-name` / `theme-color`,
+and JSON-LD blocks — so "how does this page advertise itself elsewhere?"
+debugging stays in one place.
 
 ## Layout
 
@@ -28,7 +32,7 @@ pnpm -F ogpeek test      # engine unit tests
 
 ## Validation rules at a glance
 
-The 12 rules maintained in `packages/ogpeek/src/validate.ts`:
+The rules maintained in `packages/ogpeek/src/validate.ts`:
 
 - `OG_TITLE_MISSING` / `OG_TITLE_TOO_LONG` (over 60 chars — KakaoTalk truncates)
 - `OG_TYPE_MISSING` / `OG_TYPE_UNKNOWN`
@@ -38,6 +42,8 @@ The 12 rules maintained in `packages/ogpeek/src/validate.ts`:
 - `URL_NOT_ABSOLUTE` / `DUPLICATE_SINGLETON` /
   `ORPHAN_STRUCTURED_PROPERTY` / `INVALID_DIMENSION`
 - `MISSING_PREFIX_ATTR` (info)
+- `JSONLD_PARSE_ERROR` (a `<script type="application/ld+json">` block did
+  not parse)
 
 See `packages/ogpeek/README.md` for full descriptions.
 
