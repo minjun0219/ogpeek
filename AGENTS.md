@@ -16,14 +16,22 @@ it.
 - `packages/ogpeek` — the parser/fetcher/validator engine. **The body of this
   repo.** **Published publicly to npm** as `ogpeek` — change it with public
   API compatibility in mind. Only one external dependency: `htmlparser2`.
+- `packages/ogpeek-react` — drop-in React components that render parser
+  results (`<Result>`, `<Preview>`, `<TagTable>`, `<ValidationPanel>`,
+  `<RedirectFlow>`). **Published publicly to npm** as `@ogpeek/react`.
+  Depends on `ogpeek` via `workspace:^` peer dep; no client-only React
+  hooks, so the components are SSR-safe.
 - `website` — Next.js 15 App Router + TypeScript strict + Tailwind. The
   engine's **example / introductory demo site**. It's not a production tool —
   it's a place to show how the package is used. Deployed only to Cloudflare
   Workers.
-- Inside the workspace, `ogpeek` is referenced as `workspace:*`. Its exports
-  point at `dist/*.js` / `dist/*.d.ts`, so the website scripts (`dev` /
-  `typecheck` / `cf:build`) chain `pnpm --filter ogpeek run build` first. If
-  you change ogpeek source, rebuild manually or run `tsc --watch` alongside.
+- Inside the workspace, both libraries are referenced as `workspace:*`.
+  Their exports point at `dist/*.js` / `dist/*.d.ts`, so any consumer
+  (the website, or `@ogpeek/react` consuming `ogpeek`) needs the upstream
+  built first. The root `pnpm libs:build` script runs that build chain in
+  topological order; the website's `dev` / `build` / `typecheck` /
+  `cf:build` scripts each call it. If you change library source, re-run
+  `pnpm libs:build` or run `tsc --watch` alongside.
 - The engine exposes two entry points: the root `ogpeek` (portable
   parse/validate) and `ogpeek/fetch` (Node-friendly fetcher). Do not pull
   Node-only modules into the portable path.
@@ -77,13 +85,17 @@ it.
 ## Frequently used commands
 
 ```bash
-pnpm -F ogpeek test        # engine unit tests
-pnpm -F ogpeek build       # build dist/ (tsc)
-pnpm -F website typecheck  # type-check the demo site (chains ogpeek build)
-pnpm -F website dev        # local dev server (Node 24, chains ogpeek build)
-pnpm -F website cf:build   # OpenNext + Workers bundle (chains ogpeek build)
-pnpm -F website cf:preview # local wrangler preview
-pnpm -F website cf:deploy  # deploy to Workers
+pnpm libs:build             # build both libs in topo order (ogpeek -> @ogpeek/react)
+pnpm libs:typecheck         # typecheck both libs
+pnpm -F ogpeek test         # engine unit tests
+pnpm -F @ogpeek/react test  # React component tests
+pnpm -F website typecheck   # type-check the demo site (chains libs:build)
+pnpm -F website dev         # local dev server (Node 24, chains libs:build)
+pnpm -F website cf:build    # OpenNext + Workers bundle (chains libs:build)
+pnpm -F website cf:preview  # local wrangler preview
+pnpm -F website cf:deploy   # deploy to Workers
+pnpm check                  # biome format + lint check (CI runs `biome ci`)
+pnpm check:fix              # biome auto-fix (format + safe lint fixes)
 ```
 
 ## Directory conventions
@@ -144,8 +156,17 @@ into the engine (`packages/ogpeek`).
 
 ## Out of scope
 
-- Turborepo: only two workspaces today, so we are not adopting it. Revisit
-  when a third one appears.
+- Turborepo: still not adopted. Three workspaces with a linear build DAG
+  (`ogpeek` → `@ogpeek/react` → `website`); `pnpm -r --filter 'website^...'`
+  already handles topological ordering, and the publish jobs must do
+  fresh builds for npm provenance attestation, so a remote-cache layer
+  has limited payoff. Revisit when **(a) a 4th workspace appears**,
+  **(b) a 3rd npm-published package appears** (release-please grows a
+  3rd entry), **(c) `pnpm -F website dev` cold start exceeds ~15s**, or
+  **(d) cross-job CI cache sharing becomes worth a remote cache**.
+- TypeScript project references (`composite: true` + `tsc -b`): not
+  enabled. Same trigger as Turborepo's (c) — adopt when warm-pass
+  typecheck/dev start times become a real friction point.
 - CLI: out of scope for v1.
 - Auth / SSO: not needed for a tool of this shape.
 

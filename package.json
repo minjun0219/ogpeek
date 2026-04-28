@@ -12,6 +12,8 @@
     "test": "pnpm -r --filter './packages/*' test",
     "typecheck": "pnpm -r typecheck",
     "dev": "pnpm -F website dev",
+    "libs:build": "pnpm -r --filter 'website^...' run build",
+    "libs:typecheck": "pnpm -r --filter 'website^...' run typecheck",
     "format": "biome format --write",
     "lint": "biome lint",
     "check": "biome check",

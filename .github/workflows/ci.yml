@@ -34,8 +34,8 @@ jobs:
       - name: Biome check
         run: pnpm exec biome ci
 
-  ogpeek:
-    name: ogpeek (typecheck + test + build)
+  build-test:
+    name: typecheck + test + build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,64 +52,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
+      # Build the two libraries once, in topo order. Downstream steps below
+      # consume dist/ and skip rebuilding (we bypass the website typecheck
+      # script's own libs:build chain to avoid the second compile).
+      - name: Build libraries
+        run: pnpm libs:build
+
+      - name: Typecheck ogpeek
         run: pnpm -F ogpeek typecheck
 
-      - name: Test
-        run: pnpm -F ogpeek test
-
-      - name: Build
-        run: pnpm -F ogpeek build
-
-  ogpeek-react:
-    name: "@ogpeek/react (typecheck + test + build)"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # @ogpeek/react 는 ogpeek/dist 의 타입을 참조하므로 먼저 빌드해 둔다.
-      - name: Build ogpeek
-        run: pnpm -F ogpeek build
-
-      - name: Typecheck
+      - name: Typecheck @ogpeek/react
         run: pnpm -F @ogpeek/react typecheck
 
+      - name: Typecheck website
+        working-directory: website
+        run: pnpm exec tsc --noEmit
+
       - name: Test
-        run: pnpm -F @ogpeek/react test
-
-      - name: Build
-        run: pnpm -F @ogpeek/react build
-
-  website:
-    name: website (typecheck)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # `website` 의 typecheck 는 내부적으로 ogpeek + @ogpeek/react 빌드를 먼저 돈다.
-      - name: Typecheck
-        run: pnpm -F website typecheck
+        run: pnpm -r --filter './packages/*' test
