@@ -1,14 +1,32 @@
 export type Lang = "en" | "ko";
 
-export const LANGS = ["en", "ko"] as const;
+export const LANGS = [
+  "en",
+  "ko",
+] as const;
 export const DEFAULT_LANG: Lang = "en";
 
 export type Dict = {
-  meta: { title: string; description: string };
-  install: { copy: string; copied: string; ariaLabel: string };
-  urlInput: { placeholder: string; submit: string; loading: string };
+  meta: {
+    title: string;
+    description: string;
+  };
+  install: {
+    copy: string;
+    copied: string;
+    ariaLabel: string;
+  };
+  urlInput: {
+    placeholder: string;
+    submit: string;
+    loading: string;
+  };
   validation: {
-    severity: { error: string; warn: string; info: string };
+    severity: {
+      error: string;
+      warn: string;
+      info: string;
+    };
     passTitle: string;
     passBody: string;
     resultsTitle: string;
@@ -38,13 +56,16 @@ export type Dict = {
     target: string;
     rateLimitTemplate: string;
   };
-  toggle: { ariaLabel: string };
+  toggle: {
+    ariaLabel: string;
+  };
 };
 
 const en: Dict = {
   meta: {
     title: "ogpeek — peek into any page's Open Graph tags",
-    description: "Inspect how OG cards render and catch OGP spec violations from a single URL.",
+    description:
+      "Inspect how OG cards render and catch OGP spec violations from a single URL.",
   },
   install: {
     copy: "Copy",
@@ -57,9 +78,14 @@ const en: Dict = {
     loading: "Loading…",
   },
   validation: {
-    severity: { error: "Error", warn: "Warning", info: "Info" },
+    severity: {
+      error: "Error",
+      warn: "Warning",
+      info: "Info",
+    },
     passTitle: "Validation passed — no issues detected",
-    passBody: "All required OG tags are present and no spec violations were detected.",
+    passBody:
+      "All required OG tags are present and no spec violations were detected.",
     resultsTitle: "Validation results",
   },
   tagTable: {
@@ -81,20 +107,24 @@ const en: Dict = {
     redirectStatusTemplate: "{status} redirect",
   },
   page: {
-    emptyState: "Enter a URL above to see OG tags, validation results, and a preview here.",
+    emptyState:
+      "Enter a URL above to see OG tags, validation results, and a preview here.",
     preview: "Preview",
     fetchFailed: "Fetch failed",
     retryLater: "Please try again shortly",
     target: "Target",
     rateLimitTemplate: "Too many requests. Please try again in {sec} seconds.",
   },
-  toggle: { ariaLabel: "Switch language" },
+  toggle: {
+    ariaLabel: "Switch language",
+  },
 };
 
 const ko: Dict = {
   meta: {
     title: "ogpeek — 어느 페이지든 오픈그래프 메타태그를 바로 들여다봅니다",
-    description: "URL 한 줄로 OG 카드가 어떻게 보이는지 즉시 확인하고 OGP 스펙 위반을 잡아냅니다.",
+    description:
+      "URL 한 줄로 OG 카드가 어떻게 보이는지 즉시 확인하고 OGP 스펙 위반을 잡아냅니다.",
   },
   install: {
     copy: "복사",
@@ -107,7 +137,11 @@ const ko: Dict = {
     loading: "불러오는 중…",
   },
   validation: {
-    severity: { error: "에러", warn: "경고", info: "안내" },
+    severity: {
+      error: "에러",
+      warn: "경고",
+      info: "안내",
+    },
     passTitle: "검증 통과 — 확인된 문제 없음",
     passBody: "필수 OG 태그가 모두 존재하고 스펙 위반이 감지되지 않았습니다.",
     resultsTitle: "검증 결과",
@@ -131,17 +165,23 @@ const ko: Dict = {
     redirectStatusTemplate: "{status} 리디렉션",
   },
   page: {
-    emptyState: "URL을 입력하면 OG 태그, 검증 결과, 미리보기가 여기에 표시됩니다.",
+    emptyState:
+      "URL을 입력하면 OG 태그, 검증 결과, 미리보기가 여기에 표시됩니다.",
     preview: "미리보기",
     fetchFailed: "가져오기 실패",
     retryLater: "잠시 후 다시 시도해 주세요",
     target: "대상",
     rateLimitTemplate: "요청이 너무 많습니다. {sec}초 후 다시 시도해 주세요.",
   },
-  toggle: { ariaLabel: "언어 전환" },
+  toggle: {
+    ariaLabel: "언어 전환",
+  },
 };
 
-const DICTIONARIES: Record<Lang, Dict> = { en, ko };
+const DICTIONARIES: Record<Lang, Dict> = {
+  en,
+  ko,
+};
 
 export function getDict(lang: Lang): Dict {
   return DICTIONARIES[lang];
@@ -155,7 +195,9 @@ export function hasLang(value: string): value is Lang {
 // Falls back to DEFAULT_LANG when nothing matches. Only the language
 // subtag is used (so "ko-KR" matches "ko").
 export function pickLangFromAcceptLanguage(header: string | null): Lang {
-  if (!header) return DEFAULT_LANG;
+  if (!header) {
+    return DEFAULT_LANG;
+  }
   const tags = header
     .split(",")
     .map((entry) => {
@@ -166,18 +208,26 @@ export function pickLangFromAcceptLanguage(header: string | null): Lang {
         .map((p) => p.trim())
         .find((p) => p.startsWith("q="));
       const quality = q ? Number(q.slice(2)) : 1;
-      return { tag, quality: Number.isFinite(quality) ? quality : 0 };
+      return {
+        tag,
+        quality: Number.isFinite(quality) ? quality : 0,
+      };
     })
     .filter((t) => t.tag && t.quality > 0)
     .sort((a, b) => b.quality - a.quality);
   for (const { tag } of tags) {
     const primary = tag.split("-")[0] ?? "";
-    if (hasLang(primary)) return primary;
+    if (hasLang(primary)) {
+      return primary;
+    }
   }
   return DEFAULT_LANG;
 }
 
-export function format(template: string, values: Record<string, string | number>): string {
+export function format(
+  template: string,
+  values: Record<string, string | number>,
+): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) =>
     key in values ? String(values[key]) : `{${key}}`,
   );

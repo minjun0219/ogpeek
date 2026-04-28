@@ -11,7 +11,9 @@ import { pickLangFromAcceptLanguage } from "@/lib/i18n";
 // the URL itself is the source of truth.
 export function middleware(req: NextRequest): NextResponse {
   if (req.nextUrl.pathname === "/") {
-    const target = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
+    const target = pickLangFromAcceptLanguage(
+      req.headers.get("accept-language"),
+    );
     const url = req.nextUrl.clone();
     url.pathname = `/${target}`;
     return NextResponse.redirect(url);
@@ -21,5 +23,7 @@ export function middleware(req: NextRequest): NextResponse {
 
 export const config = {
   // Skip Next internals, the API route, and any static asset path.
-  matcher: ["/((?!_next/|api/|favicon\\.ico|.*\\..*).*)"],
+  matcher: [
+    "/((?!_next/|api/|favicon\\.ico|.*\\..*).*)",
+  ],
 };

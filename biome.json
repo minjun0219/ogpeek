@@ -25,8 +25,9 @@
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 100,
-    "lineEnding": "lf"
+    "lineWidth": 80,
+    "lineEnding": "lf",
+    "expand": "always"
   },
   "javascript": {
     "formatter": {
@@ -46,6 +47,9 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "style": {
+        "useBlockStatements": "error"
+      },
       "suspicious": {
         "noArrayIndexKey": "off"
       }
@@ -53,7 +57,9 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.css"],
+      "includes": [
+        "**/*.css"
+      ],
       "linter": {
         "rules": {
           "suspicious": {

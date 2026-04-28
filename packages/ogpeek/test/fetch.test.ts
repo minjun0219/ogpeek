@@ -11,26 +11,47 @@ type MockResponseInit = {
 
 function mockResponse(init: MockResponseInit = {}): Response {
   const status = init.status ?? 200;
-  const headers = new Headers(init.headers ?? { "content-type": "text/html" });
+  const headers = new Headers(
+    init.headers ?? {
+      "content-type": "text/html",
+    },
+  );
   const encoder = new TextEncoder();
-  const chunks = init.chunks ?? (init.body != null ? [encoder.encode(init.body)] : []);
+  const chunks =
+    init.chunks ??
+    (init.body != null
+      ? [
+          encoder.encode(init.body),
+        ]
+      : []);
 
   const stream = new ReadableStream({
     start(controller) {
-      for (const chunk of chunks) controller.enqueue(chunk);
+      for (const chunk of chunks) {
+        controller.enqueue(chunk);
+      }
       controller.close();
     },
   });
 
-  const res = new Response(stream, { status, headers });
-  Object.defineProperty(res, "url", { value: init.url ?? "", configurable: true });
+  const res = new Response(stream, {
+    status,
+    headers,
+  });
+  Object.defineProperty(res, "url", {
+    value: init.url ?? "",
+    configurable: true,
+  });
   return res;
 }
 
 function redirectResponse(location: string, status = 302): Response {
   return new Response("", {
     status,
-    headers: { location, "content-type": "text/html" },
+    headers: {
+      location,
+      "content-type": "text/html",
+    },
   });
 }
 
@@ -50,7 +71,9 @@ describe("fetchHtml()", () => {
   });
 
   it("rejects malformed urls", async () => {
-    await expect(fetchHtml("not-a-url")).rejects.toMatchObject({ code: "INVALID_URL" });
+    await expect(fetchHtml("not-a-url")).rejects.toMatchObject({
+      code: "INVALID_URL",
+    });
   });
 
   it("fetches and decodes an html body", async () => {
@@ -70,7 +93,12 @@ describe("fetchHtml()", () => {
 
   it("rejects non-html content types", async () => {
     globalThis.fetch = vi.fn(async () =>
-      mockResponse({ body: "{}", headers: { "content-type": "application/json" } }),
+      mockResponse({
+        body: "{}",
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
     ) as typeof fetch;
 
     await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
@@ -80,7 +108,11 @@ describe("fetchHtml()", () => {
   });
 
   it("rejects upstream non-2xx", async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ status: 500 })) as typeof fetch;
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({
+        status: 500,
+      }),
+    ) as typeof fetch;
     await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
       code: "UPSTREAM_STATUS",
     });
@@ -89,17 +121,30 @@ describe("fetchHtml()", () => {
   it("enforces the size cap via streaming", async () => {
     const big = new Uint8Array(1024).fill(65); // 'A' * 1024
     globalThis.fetch = vi.fn(async () =>
-      mockResponse({ chunks: [big, big, big, big] }),
+      mockResponse({
+        chunks: [
+          big,
+          big,
+          big,
+          big,
+        ],
+      }),
     ) as typeof fetch;
 
-    await expect(fetchHtml("https://public.test/", { maxBytes: 2048 })).rejects.toMatchObject({
+    await expect(
+      fetchHtml("https://public.test/", {
+        maxBytes: 2048,
+      }),
+    ).rejects.toMatchObject({
       code: "TOO_LARGE",
       status: 413,
     });
   });
 
   it("blocks a redirect to a non-http scheme", async () => {
-    globalThis.fetch = vi.fn(async () => redirectResponse("file:///etc/passwd")) as typeof fetch;
+    globalThis.fetch = vi.fn(async () =>
+      redirectResponse("file:///etc/passwd"),
+    ) as typeof fetch;
     await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
       code: "UNSUPPORTED_SCHEME",
     });
@@ -109,8 +154,12 @@ describe("fetchHtml()", () => {
     let call = 0;
     globalThis.fetch = vi.fn(async () => {
       call++;
-      if (call === 1) return redirectResponse("https://public.test/final");
-      return mockResponse({ body: "<html>ok</html>" });
+      if (call === 1) {
+        return redirectResponse("https://public.test/final");
+      }
+      return mockResponse({
+        body: "<html>ok</html>",
+      });
     }) as typeof fetch;
 
     const result = await fetchHtml("https://public.test/");
@@ -118,7 +167,11 @@ describe("fetchHtml()", () => {
     expect(result.finalUrl).toBe("https://public.test/final");
     expect(result.html).toContain("ok");
     expect(result.redirects).toEqual([
-      { from: "https://public.test/", to: "https://public.test/final", status: 302 },
+      {
+        from: "https://public.test/",
+        to: "https://public.test/final",
+        status: 302,
+      },
     ]);
   });
 
@@ -126,21 +179,37 @@ describe("fetchHtml()", () => {
     let call = 0;
     globalThis.fetch = vi.fn(async () => {
       call++;
-      if (call === 1) return redirectResponse("https://public.test/hop1", 301);
-      if (call === 2) return redirectResponse("https://public.test/final", 308);
-      return mockResponse({ body: "<html>ok</html>" });
+      if (call === 1) {
+        return redirectResponse("https://public.test/hop1", 301);
+      }
+      if (call === 2) {
+        return redirectResponse("https://public.test/final", 308);
+      }
+      return mockResponse({
+        body: "<html>ok</html>",
+      });
     }) as typeof fetch;
 
     const result = await fetchHtml("https://public.test/start");
     expect(result.finalUrl).toBe("https://public.test/final");
     expect(result.redirects).toEqual([
-      { from: "https://public.test/start", to: "https://public.test/hop1", status: 301 },
-      { from: "https://public.test/hop1", to: "https://public.test/final", status: 308 },
+      {
+        from: "https://public.test/start",
+        to: "https://public.test/hop1",
+        status: 301,
+      },
+      {
+        from: "https://public.test/hop1",
+        to: "https://public.test/final",
+        status: 308,
+      },
     ]);
   });
 
   it("rejects redirect loops", async () => {
-    globalThis.fetch = vi.fn(async () => redirectResponse("https://public.test/")) as typeof fetch;
+    globalThis.fetch = vi.fn(async () =>
+      redirectResponse("https://public.test/"),
+    ) as typeof fetch;
     await expect(fetchHtml("https://public.test/")).rejects.toMatchObject({
       code: "REDIRECT_LOOP",
     });
@@ -163,10 +232,16 @@ describe("fetchHtml()", () => {
       throw err;
     }) as typeof fetch;
 
-    await expect(fetchHtml("https://public.test/", { timeoutMs: 10 })).rejects.toBeInstanceOf(
-      FetchError,
-    );
-    await expect(fetchHtml("https://public.test/", { timeoutMs: 10 })).rejects.toMatchObject({
+    await expect(
+      fetchHtml("https://public.test/", {
+        timeoutMs: 10,
+      }),
+    ).rejects.toBeInstanceOf(FetchError);
+    await expect(
+      fetchHtml("https://public.test/", {
+        timeoutMs: 10,
+      }),
+    ).rejects.toMatchObject({
       code: "TIMEOUT",
     });
   });
@@ -176,7 +251,10 @@ describe("fetchHtml()", () => {
       throw new Error("globalThis.fetch should not be called");
     }) as typeof fetch;
     const customFetch = vi.fn(async () =>
-      mockResponse({ body: "<html>injected</html>", url: "https://public.test/" }),
+      mockResponse({
+        body: "<html>injected</html>",
+        url: "https://public.test/",
+      }),
     );
 
     const result = await fetchHtml("https://public.test/", {
@@ -191,7 +269,11 @@ describe("fetchHtml()", () => {
 
 describe("fetchHtml() — guard hook", () => {
   it("no guard means any url passes through untouched", async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({
+        body: "<html>ok</html>",
+      }),
+    ) as typeof fetch;
     // A loopback literal that the old built-in SSRF guard would have blocked
     // should now pass through — the engine no longer makes policy decisions.
     const result = await fetchHtml("http://127.0.0.1/");
@@ -199,9 +281,15 @@ describe("fetchHtml() — guard hook", () => {
   });
 
   it("guard that returns allows the request through", async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({
+        body: "<html>ok</html>",
+      }),
+    ) as typeof fetch;
     const guard = vi.fn(async () => {});
-    const result = await fetchHtml("https://public.test/", { guard });
+    const result = await fetchHtml("https://public.test/", {
+      guard,
+    });
     expect(result.html).toContain("ok");
     expect(guard).toHaveBeenCalledTimes(1);
     const calledWith = guard.mock.calls[0]?.[0];
@@ -210,11 +298,19 @@ describe("fetchHtml() — guard hook", () => {
   });
 
   it("guard throwing a FetchError propagates code and status verbatim", async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({
+        body: "<html>ok</html>",
+      }),
+    ) as typeof fetch;
     const guard = () => {
       throw new FetchError("BLOCKED", 400, "nope");
     };
-    await expect(fetchHtml("https://public.test/", { guard })).rejects.toMatchObject({
+    await expect(
+      fetchHtml("https://public.test/", {
+        guard,
+      }),
+    ).rejects.toMatchObject({
       code: "BLOCKED",
       status: 400,
       message: "nope",
@@ -222,11 +318,19 @@ describe("fetchHtml() — guard hook", () => {
   });
 
   it("guard throwing a non-FetchError is wrapped as GUARD_FAILED", async () => {
-    globalThis.fetch = vi.fn(async () => mockResponse({ body: "<html>ok</html>" })) as typeof fetch;
+    globalThis.fetch = vi.fn(async () =>
+      mockResponse({
+        body: "<html>ok</html>",
+      }),
+    ) as typeof fetch;
     const guard = () => {
       throw new Error("boom");
     };
-    await expect(fetchHtml("https://public.test/", { guard })).rejects.toMatchObject({
+    await expect(
+      fetchHtml("https://public.test/", {
+        guard,
+      }),
+    ).rejects.toMatchObject({
       code: "GUARD_FAILED",
       status: 500,
     });
@@ -236,9 +340,15 @@ describe("fetchHtml() — guard hook", () => {
     let call = 0;
     globalThis.fetch = vi.fn(async () => {
       call++;
-      if (call === 1) return redirectResponse("https://public.test/hop1");
-      if (call === 2) return redirectResponse("https://public.test/final");
-      return mockResponse({ body: "<html>ok</html>" });
+      if (call === 1) {
+        return redirectResponse("https://public.test/hop1");
+      }
+      if (call === 2) {
+        return redirectResponse("https://public.test/final");
+      }
+      return mockResponse({
+        body: "<html>ok</html>",
+      });
     }) as typeof fetch;
 
     const seen: string[] = [];
@@ -246,7 +356,9 @@ describe("fetchHtml() — guard hook", () => {
       seen.push(url.toString());
     };
 
-    const result = await fetchHtml("https://public.test/start", { guard });
+    const result = await fetchHtml("https://public.test/start", {
+      guard,
+    });
     expect(result.finalUrl).toBe("https://public.test/final");
     expect(seen).toEqual([
       "https://public.test/start",
@@ -259,8 +371,12 @@ describe("fetchHtml() — guard hook", () => {
     let call = 0;
     globalThis.fetch = vi.fn(async () => {
       call++;
-      if (call === 1) return redirectResponse("http://10.0.0.1/admin");
-      return mockResponse({ body: "<html>ok</html>" });
+      if (call === 1) {
+        return redirectResponse("http://10.0.0.1/admin");
+      }
+      return mockResponse({
+        body: "<html>ok</html>",
+      });
     }) as typeof fetch;
 
     const guard = (url: URL) => {
@@ -269,7 +385,11 @@ describe("fetchHtml() — guard hook", () => {
       }
     };
 
-    await expect(fetchHtml("https://public.test/", { guard })).rejects.toMatchObject({
+    await expect(
+      fetchHtml("https://public.test/", {
+        guard,
+      }),
+    ).rejects.toMatchObject({
       code: "BLOCKED_PRIVATE_IP",
       status: 400,
     });

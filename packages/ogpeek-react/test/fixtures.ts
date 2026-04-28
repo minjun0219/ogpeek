@@ -1,7 +1,9 @@
 import type { OgDebugResult } from "ogpeek";
 import type { RedirectHop } from "ogpeek/fetch";
 
-export function makeResult(overrides: Partial<OgDebugResult> = {}): OgDebugResult {
+export function makeResult(
+  overrides: Partial<OgDebugResult> = {},
+): OgDebugResult {
   const base: OgDebugResult = {
     ogp: {
       title: "Hello",
@@ -22,11 +24,22 @@ export function makeResult(overrides: Partial<OgDebugResult> = {}): OgDebugResul
       audios: [],
     },
     typed: null,
-    twitter: { "twitter:card": "summary_large_image" },
+    twitter: {
+      "twitter:card": "summary_large_image",
+    },
     raw: [
-      { property: "og:title", content: "Hello" },
-      { property: "og:type", content: "website" },
-      { property: "description", content: "An example" },
+      {
+        property: "og:title",
+        content: "Hello",
+      },
+      {
+        property: "og:type",
+        content: "website",
+      },
+      {
+        property: "description",
+        content: "An example",
+      },
     ],
     warnings: [],
     icons: [],
@@ -42,7 +55,10 @@ export function makeResult(overrides: Partial<OgDebugResult> = {}): OgDebugResul
       themeColor: null,
     },
   };
-  return { ...base, ...overrides };
+  return {
+    ...base,
+    ...overrides,
+  };
 }
 
 export const FINAL_URL = "https://example.com/";

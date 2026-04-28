@@ -16,7 +16,13 @@ export function Preview({ data, composed = false, className }: PreviewProps) {
   const safeImage = data.image ? safeImageSrc(data.image) : "";
 
   return (
-    <figure className={cls(composed ? null : "ogpeek-root", "ogpeek-preview", className)}>
+    <figure
+      className={cls(
+        composed ? null : "ogpeek-root",
+        "ogpeek-preview",
+        className,
+      )}
+    >
       {safeImage ? (
         <img className="ogpeek-preview-image" src={safeImage} alt="" />
       ) : (

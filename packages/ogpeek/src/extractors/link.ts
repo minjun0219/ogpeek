@@ -27,14 +27,24 @@ export class LinkExtractor implements HeadExtractor {
   canonical: string | null = null;
   icons: Icon[] = [];
 
-  onOpenTag(name: string, attrs: Record<string, string>, state: ScanState): void {
-    if (!state.inHead || name !== "link") return;
+  onOpenTag(
+    name: string,
+    attrs: Record<string, string>,
+    state: ScanState,
+  ): void {
+    if (!state.inHead || name !== "link") {
+      return;
+    }
     const relRaw = typeof attrs.rel === "string" ? attrs.rel.trim() : "";
     const href = typeof attrs.href === "string" ? attrs.href.trim() : "";
-    if (!relRaw || !href) return;
+    if (!relRaw || !href) {
+      return;
+    }
 
     const tokens = relRaw.toLowerCase().split(/\s+/).filter(Boolean);
-    if (tokens.length === 0) return;
+    if (tokens.length === 0) {
+      return;
+    }
 
     if (this.canonical === null && tokens.includes("canonical")) {
       this.canonical = href;
@@ -46,8 +56,13 @@ export class LinkExtractor implements HeadExtractor {
     // so the resulting list reflects exactly what the browser sees, with
     // the stored `rel` normalized to the specific matched token.
     for (const token of tokens) {
-      if (!ICON_RELS.has(token)) continue;
-      const icon: Icon = { rel: token, href };
+      if (!ICON_RELS.has(token)) {
+        continue;
+      }
+      const icon: Icon = {
+        rel: token,
+        href,
+      };
       if (typeof attrs.sizes === "string" && attrs.sizes.trim()) {
         icon.sizes = attrs.sizes.trim();
       }

@@ -36,7 +36,10 @@ export function scanHead(html: string, options: ScanOptions = {}): HeadScan {
   const jsonldScope = options.jsonldScope ?? "head";
   const stopAtHeadClose = jsonldScope === "head";
 
-  const state: ScanState = { inHead: false, done: false };
+  const state: ScanState = {
+    inHead: false,
+    done: false,
+  };
 
   const htmlPrefix = new HtmlPrefixExtractor();
   const title = new TitleExtractor();
@@ -44,22 +47,42 @@ export function scanHead(html: string, options: ScanOptions = {}): HeadScan {
   const link = new LinkExtractor();
   const jsonld = new JsonLdExtractor(jsonldScope);
 
-  const extractors: HeadExtractor[] = [htmlPrefix, title, metaTag, link, jsonld];
+  const extractors: HeadExtractor[] = [
+    htmlPrefix,
+    title,
+    metaTag,
+    link,
+    jsonld,
+  ];
 
   const parser = new Parser(
     {
       onopentag(name, attrs) {
-        if (state.done) return;
-        if (name === "head") state.inHead = true;
-        for (const ex of extractors) ex.onOpenTag?.(name, attrs, state);
+        if (state.done) {
+          return;
+        }
+        if (name === "head") {
+          state.inHead = true;
+        }
+        for (const ex of extractors) {
+          ex.onOpenTag?.(name, attrs, state);
+        }
       },
       ontext(text) {
-        if (state.done) return;
-        for (const ex of extractors) ex.onText?.(text, state);
+        if (state.done) {
+          return;
+        }
+        for (const ex of extractors) {
+          ex.onText?.(text, state);
+        }
       },
       onclosetag(name) {
-        if (state.done) return;
-        for (const ex of extractors) ex.onCloseTag?.(name, state);
+        if (state.done) {
+          return;
+        }
+        for (const ex of extractors) {
+          ex.onCloseTag?.(name, state);
+        }
         if (name === "head") {
           state.inHead = false;
           if (stopAtHeadClose) {
@@ -69,7 +92,11 @@ export function scanHead(html: string, options: ScanOptions = {}): HeadScan {
         }
       },
     },
-    { decodeEntities: true, lowerCaseTags: true, lowerCaseAttributeNames: true },
+    {
+      decodeEntities: true,
+      lowerCaseTags: true,
+      lowerCaseAttributeNames: true,
+    },
   );
 
   parser.write(html);

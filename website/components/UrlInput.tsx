@@ -19,13 +19,19 @@ export function UrlInput({ compact = false }: { compact?: boolean }) {
     // permalink changes.
     setValue(currentUrl);
     setPending(false);
-  }, [currentUrl]);
+  }, [
+    currentUrl,
+  ]);
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const trimmed = value.trim();
-    if (!trimmed) return;
-    if (trimmed === currentUrl) return;
+    if (!trimmed) {
+      return;
+    }
+    if (trimmed === currentUrl) {
+      return;
+    }
     setPending(true);
     const next = new URLSearchParams();
     next.set("url", trimmed);

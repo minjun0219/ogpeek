@@ -4,7 +4,9 @@ import type { OgDebugResult, ParseOptions } from "./types.js";
 import { validate } from "./validate.js";
 
 export function parse(html: string, options: ParseOptions = {}): OgDebugResult {
-  const head = scanHead(html, { jsonldScope: options.jsonldScope });
+  const head = scanHead(html, {
+    jsonldScope: options.jsonldScope,
+  });
   const tree = buildTree(head.raw);
   const warnings = validate(head, tree, options.url);
 

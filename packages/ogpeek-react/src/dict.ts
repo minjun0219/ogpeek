@@ -1,11 +1,18 @@
 export type Lang = "ko" | "en";
 
-export const LANGS: readonly Lang[] = ["ko", "en"];
+export const LANGS: readonly Lang[] = [
+  "ko",
+  "en",
+];
 export const DEFAULT_LANG: Lang = "ko";
 
 export type Dict = {
   validation: {
-    severity: { error: string; warn: string; info: string };
+    severity: {
+      error: string;
+      warn: string;
+      info: string;
+    };
     passTitle: string;
     passBody: string;
     resultsTitle: string;
@@ -38,7 +45,11 @@ export type Dict = {
 
 const ko: Dict = {
   validation: {
-    severity: { error: "에러", warn: "경고", info: "안내" },
+    severity: {
+      error: "에러",
+      warn: "경고",
+      info: "안내",
+    },
     passTitle: "검증 통과 — 확인된 문제 없음",
     passBody: "필수 OG 태그가 모두 존재하고 스펙 위반이 감지되지 않았습니다.",
     resultsTitle: "검증 결과",
@@ -72,9 +83,14 @@ const ko: Dict = {
 
 const en: Dict = {
   validation: {
-    severity: { error: "Error", warn: "Warning", info: "Info" },
+    severity: {
+      error: "Error",
+      warn: "Warning",
+      info: "Info",
+    },
     passTitle: "Validation passed — no issues detected",
-    passBody: "All required OG tags are present and no spec violations were detected.",
+    passBody:
+      "All required OG tags are present and no spec violations were detected.",
     resultsTitle: "Validation results",
   },
   tagTable: {
@@ -104,7 +120,10 @@ const en: Dict = {
   },
 };
 
-const DICTIONARIES: Record<Lang, Dict> = { ko, en };
+const DICTIONARIES: Record<Lang, Dict> = {
+  ko,
+  en,
+};
 
 export function getDict(lang: Lang): Dict {
   return DICTIONARIES[lang];
@@ -114,7 +133,10 @@ export function hasLang(value: string): value is Lang {
   return value === "ko" || value === "en";
 }
 
-export function format(template: string, values: Record<string, string | number>): string {
+export function format(
+  template: string,
+  values: Record<string, string | number>,
+): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) =>
     key in values ? String(values[key]) : `{${key}}`,
   );
@@ -128,7 +150,9 @@ export type DeepPartial<T> = {
 // base dict for the given language.
 export function resolveDict(lang: Lang, override?: DeepPartial<Dict>): Dict {
   const base = getDict(lang);
-  if (!override) return base;
+  if (!override) {
+    return base;
+  }
   return {
     validation: {
       ...base.validation,
@@ -138,8 +162,17 @@ export function resolveDict(lang: Lang, override?: DeepPartial<Dict>): Dict {
         ...override.validation?.severity,
       },
     },
-    tagTable: { ...base.tagTable, ...override.tagTable },
-    redirectFlow: { ...base.redirectFlow, ...override.redirectFlow },
-    preview: { ...base.preview, ...override.preview },
+    tagTable: {
+      ...base.tagTable,
+      ...override.tagTable,
+    },
+    redirectFlow: {
+      ...base.redirectFlow,
+      ...override.redirectFlow,
+    },
+    preview: {
+      ...base.preview,
+      ...override.preview,
+    },
   };
 }

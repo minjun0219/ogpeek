@@ -4,12 +4,18 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/index";
 
-const fixturesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
-const load = (name: string) => readFileSync(path.join(fixturesDir, name), "utf8");
+const fixturesDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "fixtures",
+);
+const load = (name: string) =>
+  readFileSync(path.join(fixturesDir, name), "utf8");
 
 describe("parse()", () => {
   it("parses the full fixture into a complete OGP tree", () => {
-    const result = parse(load("full.html"), { url: "https://www.imdb.com/title/tt0117500/" });
+    const result = parse(load("full.html"), {
+      url: "https://www.imdb.com/title/tt0117500/",
+    });
 
     expect(result.ogp.title).toBe("The Rock");
     expect(result.ogp.type).toBe("article");
@@ -17,7 +23,10 @@ describe("parse()", () => {
     expect(result.ogp.site_name).toBe("IMDb");
     expect(result.ogp.determiner).toBe("the");
     expect(result.ogp.locale).toBe("en_US");
-    expect(result.ogp.locale_alternate).toEqual(["fr_FR", "es_ES"]);
+    expect(result.ogp.locale_alternate).toEqual([
+      "fr_FR",
+      "es_ES",
+    ]);
 
     expect(result.ogp.images).toHaveLength(1);
     expect(result.ogp.images[0]).toEqual({
@@ -43,8 +52,13 @@ describe("parse()", () => {
 
     expect(result.typed).not.toBeNull();
     expect(result.typed?.kind).toBe("article");
-    expect(result.typed?.properties.published_time).toBe("1996-06-07T00:00:00Z");
-    expect(result.typed?.properties.tag).toEqual(["Alcatraz", "San Francisco"]);
+    expect(result.typed?.properties.published_time).toBe(
+      "1996-06-07T00:00:00Z",
+    );
+    expect(result.typed?.properties.tag).toEqual([
+      "Alcatraz",
+      "San Francisco",
+    ]);
 
     expect(result.twitter).toEqual({
       "twitter:card": "summary_large_image",
@@ -65,10 +79,27 @@ describe("parse()", () => {
     const result = parse(load("auxiliary.html"));
 
     expect(result.icons).toEqual([
-      { rel: "icon", href: "/favicon.ico", sizes: "any" },
-      { rel: "icon", href: "/icon-32.png", sizes: "32x32", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/apple-icon-180.png", sizes: "180x180" },
-      { rel: "mask-icon", href: "/safari-pinned.svg", color: "#0a84ff" },
+      {
+        rel: "icon",
+        href: "/favicon.ico",
+        sizes: "any",
+      },
+      {
+        rel: "icon",
+        href: "/icon-32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/apple-icon-180.png",
+        sizes: "180x180",
+      },
+      {
+        rel: "mask-icon",
+        href: "/safari-pinned.svg",
+        color: "#0a84ff",
+      },
     ]);
 
     expect(result.meta.applicationName).toBe("Example App");
@@ -81,17 +112,26 @@ describe("parse()", () => {
     const result = parse(load("auxiliary.html"));
 
     expect(result.jsonld).toHaveLength(2);
-    expect(result.jsonld[0]?.types).toEqual(["WebSite"]);
-    expect(result.jsonld[1]?.types).toEqual(["Organization", "BreadcrumbList"]);
+    expect(result.jsonld[0]?.types).toEqual([
+      "WebSite",
+    ]);
+    expect(result.jsonld[1]?.types).toEqual([
+      "Organization",
+      "BreadcrumbList",
+    ]);
     expect(result.jsonld[0]?.error).toBeUndefined();
     expect(result.jsonld[1]?.error).toBeUndefined();
   });
 
   it("extends JSON-LD scan into <body> when jsonldScope is 'document'", () => {
-    const result = parse(load("auxiliary.html"), { jsonldScope: "document" });
+    const result = parse(load("auxiliary.html"), {
+      jsonldScope: "document",
+    });
 
     expect(result.jsonld).toHaveLength(3);
-    expect(result.jsonld[2]?.types).toEqual(["Article"]);
+    expect(result.jsonld[2]?.types).toEqual([
+      "Article",
+    ]);
   });
 
   it("matches icon-shaped rel as a token set, not as a single string", () => {
@@ -111,10 +151,24 @@ describe("parse()", () => {
     const result = parse(html);
 
     expect(result.icons).toEqual([
-      { rel: "icon", href: "/legacy.ico" },
-      { rel: "icon", href: "/legacy-reversed.ico" },
-      { rel: "icon", href: "/dual-role.png", sizes: "64x64" },
-      { rel: "apple-touch-icon", href: "/dual-role.png", sizes: "64x64" },
+      {
+        rel: "icon",
+        href: "/legacy.ico",
+      },
+      {
+        rel: "icon",
+        href: "/legacy-reversed.ico",
+      },
+      {
+        rel: "icon",
+        href: "/dual-role.png",
+        sizes: "64x64",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/dual-role.png",
+        sizes: "64x64",
+      },
     ]);
   });
 
@@ -132,7 +186,9 @@ describe("parse()", () => {
     const result = parse(html);
 
     expect(result.jsonld).toHaveLength(1);
-    expect(result.jsonld[0]?.types).toEqual(["WebSite"]);
+    expect(result.jsonld[0]?.types).toEqual([
+      "WebSite",
+    ]);
     expect(result.jsonld[0]?.error).toBeUndefined();
   });
 

@@ -28,8 +28,16 @@ import { FetchError } from "ogpeek/fetch";
 const DOH_ENDPOINT = "https://cloudflare-dns.com/dns-query";
 const DOH_TIMEOUT_MS = 3000;
 
-type DohAnswer = { name: string; type: number; TTL: number; data: string };
-type DohResponse = { Status: number; Answer?: DohAnswer[] };
+type DohAnswer = {
+  name: string;
+  type: number;
+  TTL: number;
+  data: string;
+};
+type DohResponse = {
+  Status: number;
+  Answer?: DohAnswer[];
+};
 
 export const ssrfGuard = async (url: URL): Promise<void> => {
   assertSafeHostname(url.hostname);
@@ -42,17 +50,30 @@ function assertSafeHostname(hostname: string): void {
   }
   const lower = hostname.toLowerCase();
   if (lower === "localhost" || lower.endsWith(".localhost")) {
-    throw new FetchError("BLOCKED_PRIVATE_HOST", 400, `hostname "${hostname}" is a loopback name`);
+    throw new FetchError(
+      "BLOCKED_PRIVATE_HOST",
+      400,
+      `hostname "${hostname}" is a loopback name`,
+    );
   }
   if (ipaddr.isValid(hostname) && isPrivateIp(hostname)) {
-    throw new FetchError("BLOCKED_PRIVATE_IP", 400, `ip ${hostname} is in a private range`);
+    throw new FetchError(
+      "BLOCKED_PRIVATE_IP",
+      400,
+      `ip ${hostname} is in a private range`,
+    );
   }
 }
 
-async function dohResolve(hostname: string, type: "A" | "AAAA"): Promise<string[]> {
+async function dohResolve(
+  hostname: string,
+  type: "A" | "AAAA",
+): Promise<string[]> {
   const target = `${DOH_ENDPOINT}?name=${encodeURIComponent(hostname)}&type=${type}`;
   const res = await fetch(target, {
-    headers: { accept: "application/dns-json" },
+    headers: {
+      accept: "application/dns-json",
+    },
     signal: AbortSignal.timeout(DOH_TIMEOUT_MS),
   });
   if (!res.ok) {
@@ -67,12 +88,16 @@ async function dohResolve(hostname: string, type: "A" | "AAAA"): Promise<string[
     throw new Error(`DoH ${type} status ${data.Status}`);
   }
   const recordType = type === "A" ? 1 : 28;
-  return (data.Answer ?? []).filter((a) => a.type === recordType).map((a) => a.data);
+  return (data.Answer ?? [])
+    .filter((a) => a.type === recordType)
+    .map((a) => a.data);
 }
 
 async function assertResolvesToPublic(hostname: string): Promise<void> {
   // Literal IPs were already adjudicated in assertSafeHostname.
-  if (ipaddr.isValid(hostname)) return;
+  if (ipaddr.isValid(hostname)) {
+    return;
+  }
 
   const [v4, v6] = await Promise.all([
     dohResolve(hostname, "A").catch((err: unknown) => err as Error),
@@ -84,15 +109,27 @@ async function assertResolvesToPublic(hostname: string): Promise<void> {
   if (!v4Ok && !v6Ok) {
     const r4 = v4 instanceof Error ? v4.message : String(v4);
     const r6 = v6 instanceof Error ? v6.message : String(v6);
-    throw new FetchError("DNS_FAILED", 400, `failed to resolve "${hostname}": ${r4}; ${r6}`);
+    throw new FetchError(
+      "DNS_FAILED",
+      400,
+      `failed to resolve "${hostname}": ${r4}; ${r6}`,
+    );
   }
 
   const addrs: string[] = [];
-  if (v4Ok) addrs.push(...(v4 as string[]));
-  if (v6Ok) addrs.push(...(v6 as string[]));
+  if (v4Ok) {
+    addrs.push(...(v4 as string[]));
+  }
+  if (v6Ok) {
+    addrs.push(...(v6 as string[]));
+  }
 
   if (addrs.length === 0) {
-    throw new FetchError("DNS_FAILED", 400, `"${hostname}" has no A/AAAA records`);
+    throw new FetchError(
+      "DNS_FAILED",
+      400,
+      `"${hostname}" has no A/AAAA records`,
+    );
   }
 
   for (const address of addrs) {
