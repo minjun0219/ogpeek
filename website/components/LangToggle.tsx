@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { LANGS, type Lang } from "@/lib/i18n";
+import { LANGS, type Lang, stripLangPrefix } from "@/lib/i18n";
 import { useTranslate } from "@/lib/translate-context";
 
 const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
@@ -11,8 +11,19 @@ const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
 export function LangToggle() {
   const { lang, dict } = useTranslate();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const query = searchParams.toString();
   const suffix = query ? `?${query}` : "";
+  const base = stripLangPrefix(pathname);
+
+  // Both targets are lang-prefixed URLs that the middleware passes through
+  // unchanged. Sending EN to "/en" (rather than "/") keeps the toggle
+  // working even for visitors whose Accept-Language is Korean — otherwise
+  // hitting "/" would redirect them straight back to /ko.
+  const HREF: Record<Lang, string> = {
+    en: base === "/" ? "/en" : `/en${base}`,
+    ko: base === "/" ? "/ko" : `/ko${base}`,
+  };
 
   return (
     <nav
@@ -24,7 +35,7 @@ export function LangToggle() {
         return (
           <Link
             key={target}
-            href={`/${target}${suffix}`}
+            href={`${HREF[target]}${suffix}`}
             aria-current={active ? "true" : undefined}
             prefetch={false}
             className={cn(

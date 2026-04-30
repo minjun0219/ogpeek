@@ -1,24 +1,43 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { pickLangFromAcceptLanguage } from "@/lib/i18n";
 
+const HAS_LANG_PREFIX = /^\/(en|ko)(\/|$)/;
+
 // Language resolution per page request:
-//   /en/*  → English passthrough.
-//   /ko/*  → Korean  passthrough.
-//   /      → pure redirector. Picks `/en` or `/ko` based on the visitor's
-//            Accept-Language (falling back to DEFAULT_LANG).
-// Because `/` always redirects and `/en` / `/ko` never do, redirect loops
-// are structurally impossible. No cookie or other persistence is needed —
-// the URL itself is the source of truth.
+//   /en/*, /ko/* → passthrough. These are stable, never redirected and never
+//                  rewritten — the EN toggle relies on /en being reachable
+//                  even for visitors with a Korean Accept-Language.
+//   /<path>      + Korean Accept-Language → redirect to /ko<path>.
+//   /<path>      + everything else        → internal rewrite to /en<path>.
+//                  The browser URL stays unprefixed; only one [lang]/ tree
+//                  exists in the file system.
+//
+// Because lang-prefixed paths are passthrough, redirect loops are
+// structurally impossible.
 export function middleware(req: NextRequest): NextResponse {
-  if (req.nextUrl.pathname === "/") {
-    const target = pickLangFromAcceptLanguage(
-      req.headers.get("accept-language"),
-    );
+  const { pathname } = req.nextUrl;
+
+  if (HAS_LANG_PREFIX.test(pathname)) {
+    return NextResponse.next();
+  }
+
+  const lang = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
+
+  if (lang === "ko") {
     const url = req.nextUrl.clone();
-    url.pathname = `/${target}`;
+    url.pathname = pathname === "/" ? "/ko" : `/ko${pathname}`;
     return NextResponse.redirect(url);
   }
-  return NextResponse.next();
+
+  const url = req.nextUrl.clone();
+  url.pathname = pathname === "/" ? "/en" : `/en${pathname}`;
+
+  // Pass the user-visible pathname through so server components can build
+  // canonical URLs and lang-toggle hrefs against the public path, not the
+  // internal /en-prefixed one.
+  const headers = new Headers(req.headers);
+  headers.set("x-public-pathname", pathname);
+  return NextResponse.rewrite(url, { request: { headers } });
 }
 
 export const config = {

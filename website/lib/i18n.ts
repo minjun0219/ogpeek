@@ -194,3 +194,16 @@ export function format(
     key in values ? String(values[key]) : `{${key}}`,
   );
 }
+
+// Removes a leading lang segment (/en or /ko) from a pathname so callers can
+// reason about the language-agnostic part. "/en" → "/", "/ko/inspect" →
+// "/inspect", "/inspect" → "/inspect" (no prefix). The lookahead guards
+// against false positives like "/enable" or "/koala".
+export function stripLangPrefix(pathname: string): string {
+  const m = pathname.match(/^\/(en|ko)(?=\/|$)(.*)$/);
+  if (!m) {
+    return pathname;
+  }
+  const rest = m[2] ?? "";
+  return rest === "" ? "/" : rest;
+}
