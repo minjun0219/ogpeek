@@ -10,7 +10,7 @@
     "build:chrome": "BROWSER=chrome vite build",
     "build:firefox": "BROWSER=firefox vite build",
     "build:safari": "BROWSER=safari vite build",
-    "package:chrome": "pnpm build:chrome && node ./scripts/zip.mjs chrome",
+    "package:chrome": "pnpm build && node ./scripts/zip.mjs chrome",
     "dev": "BROWSER=chrome vite build --watch --mode development",
     "typecheck": "tsc --noEmit"
   },

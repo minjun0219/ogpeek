@@ -17,6 +17,6 @@
     "scripts": ["background.js"],
     "type": "module"
   },
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab"],
   "host_permissions": ["<all_urls>"]
 }

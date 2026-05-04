@@ -125,6 +125,7 @@ export function App() {
           autoCorrect="off"
           spellCheck={false}
           placeholder="https://example.com"
+          aria-label="검사할 URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />

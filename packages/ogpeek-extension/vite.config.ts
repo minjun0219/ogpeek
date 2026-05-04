@@ -69,9 +69,11 @@ export default defineConfig(({ mode }) => {
               : "assets/[name]-[hash].js",
           chunkFileNames: "assets/[name]-[hash].js",
           assetFileNames: "assets/[name]-[hash][extname]",
-          // Force the background entry to be a single inlined chunk; MV3
-          // service workers cannot fetch dynamic chunks reliably.
-          manualChunks: undefined,
+          // Rollup is allowed to split shared modules (e.g. webextension-
+          // polyfill) into a sibling chunk under assets/. MV3 service
+          // workers registered as `type: "module"` accept static `import`
+          // declarations, so the emitted background.js can pull its shared
+          // chunk at register time without runtime dynamic-import.
         },
       },
     },
