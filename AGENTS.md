@@ -21,6 +21,12 @@ it.
   `<RedirectFlow>`). **Published publicly to npm** as `@ogpeek/react`.
   Depends on `ogpeek` via `workspace:^` peer dep; no client-only React
   hooks, so the components are SSR-safe.
+- `packages/ogpeek-extension` — cross-browser MV3 extension that runs the
+  engine inside the user's own browser, so it can fetch intranet / VPN
+  hosts the Workers demo can't reach. **Not published to npm** — shipped
+  as a zipped unpacked extension via GitHub Releases. The same source
+  builds Chrome / Firefox / Safari (chosen by `BROWSER=` env var); v1
+  pipeline only emits Chrome, the other manifests are scaffolded.
 - `website` — Next.js 15 App Router + TypeScript strict + Tailwind. The
   engine's **example / introductory demo site**. It's not a production tool —
   it's a place to show how the package is used. Deployed only to Cloudflare
@@ -156,14 +162,16 @@ into the engine (`packages/ogpeek`).
 
 ## Out of scope
 
-- Turborepo: still not adopted. Three workspaces with a linear build DAG
-  (`ogpeek` → `@ogpeek/react` → `website`); `pnpm -r --filter 'website^...'`
-  already handles topological ordering, and the publish jobs must do
+- Turborepo: still not adopted. The build DAG is `ogpeek` → `@ogpeek/react` →
+  `website`, with `packages/ogpeek-extension` as a leaf consumer of both
+  libraries; `pnpm -r --filter 'website^...'` already handles topological
+  ordering for the publish-relevant subgraph, and the publish jobs must do
   fresh builds for npm provenance attestation, so a remote-cache layer
-  has limited payoff. Revisit when **(a) a 4th workspace appears**,
-  **(b) a 3rd npm-published package appears** (release-please grows a
-  3rd entry), **(c) `pnpm -F website dev` cold start exceeds ~15s**, or
-  **(d) cross-job CI cache sharing becomes worth a remote cache**.
+  has limited payoff. Trigger (a) (a 4th workspace appears) has now fired
+  — revisit if any of these tightens further: **(b) a 3rd npm-published
+  package appears** (release-please grows a 3rd entry), **(c) `pnpm -F
+  website dev` cold start exceeds ~15s**, or **(d) cross-job CI cache
+  sharing becomes worth a remote cache**.
 - TypeScript project references (`composite: true` + `tsc -b`): not
   enabled. Same trigger as Turborepo's (c) — adopt when warm-pass
   typecheck/dev start times become a real friction point.

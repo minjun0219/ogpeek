@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "ogpeek",
+  "version": "0.0.1",
+  "description": "Peek into any page's Open Graph tags from your own machine — no server in the loop.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ogpeek@minjun.dev",
+      "strict_min_version": "115.0"
+    }
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ogpeek"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "type": "module"
+  },
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": ["<all_urls>"]
+}

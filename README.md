@@ -18,6 +18,12 @@ debugging stays in one place.
 - `packages/ogpeek` — the pure engine that handles `fetch` · `parse` ·
   `validate`. This is the body of the repo. Single external dependency:
   `htmlparser2`. Node 22.19+ (development is on Node 24 LTS).
+- `packages/ogpeek-react` — drop-in React components that render the
+  engine's results.
+- `packages/ogpeek-extension` — cross-browser MV3 extension that ships the
+  engine in the user's own browser, so it can inspect intranet hosts that
+  the public demo can't reach. v1 builds Chrome only; Firefox / Safari
+  manifests are scaffolded for follow-up.
 - `website` — a **demo site** built on Next.js 15 (App Router). It exists as
   a usage example for the engine and as a landing page. Deployed only to
   Cloudflare Workers (via OpenNext).
@@ -26,8 +32,9 @@ debugging stays in one place.
 
 ```bash
 pnpm install
-pnpm -F website dev      # http://localhost:3000
-pnpm -F ogpeek test      # engine unit tests
+pnpm -F website dev               # http://localhost:3000
+pnpm -F ogpeek test               # engine unit tests
+pnpm -F ogpeek-extension build    # Chrome MV3 unpacked at packages/ogpeek-extension/dist/chrome
 ```
 
 ## Validation rules at a glance
