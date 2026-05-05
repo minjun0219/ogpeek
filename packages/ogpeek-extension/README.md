@@ -1,7 +1,6 @@
 # ogpeek-extension
 
-> Install guide for testers: [INSTALL.md](./INSTALL.md) ·
-> [한국어](./INSTALL.ko.md)
+> 한국어: [README.ko.md](./README.ko.md)
 
 Cross-browser MV3 extension that runs the ogpeek engine inside the user's
 own browser. Built so the same source compiles for Chrome, Firefox, and
@@ -16,6 +15,56 @@ browser extension's background service worker can `fetch()` arbitrary URLs
 through the browser's own network stack with `host_permissions`, bypassing
 page-level CORS — the request leaves the user's machine, not a server. That
 is what we need to inspect intranet pages.
+
+## Install (testers, Chrome)
+
+Pre-merge testing happens through CI artifacts.
+
+1. Open the latest **successful** CI run on the
+   [Actions tab for this branch](https://github.com/minjun0219/ogpeek/actions?query=branch%3Aclaude%2Fdesktop-app-alternatives-V2coN).
+2. Scroll to the **Artifacts** section and click `ogpeek-chrome-<sha>` to
+   download the zip.
+3. Unzip it into a directory of your choice. Don't load the zip itself —
+   Chrome needs the unpacked folder.
+4. Visit `chrome://extensions`, toggle **Developer mode** on, click **Load
+   unpacked**, and pick the folder you just unzipped (the one that
+   contains `manifest.json` directly).
+
+To use it: click the ogpeek action in the toolbar; the URL field is
+pre-filled with the active tab's URL — press **검사**. You can also paste
+any absolute `http(s)://` URL.
+
+Artifacts expire after 30 days. A real prerelease/release with the same
+zip will be cut once this PR merges. v1 ships without custom icons, so
+the toolbar entry shows Chrome's default puzzle glyph.
+
+### Troubleshooting
+
+- **"Manifest file is missing or unreadable."** — Make sure
+  `manifest.json` is directly inside the folder you selected. One level
+  too deep produces this error.
+- **Empty popup or no result** — From `chrome://extensions`, click the
+  ogpeek card's **service worker** link to open its DevTools and check
+  for errors. A corporate proxy / firewall may be blocking the outbound
+  request.
+- **Internal hosts don't resolve** — Confirm your VPN is connected. The
+  extension uses your OS network stack, so the host has to be reachable
+  from your machine in the first place.
+- **`TIMEOUT` / `NETWORK` codes** — The response didn't arrive in 8 s, or
+  the network call itself failed. If a different URL works, it's
+  usually transient.
+
+### Permissions
+
+Declared in `manifest/chrome.json`:
+
+- `activeTab` — used only to read the current tab's URL when you open the
+  popup, so the input can be pre-filled.
+- `host_permissions: <all_urls>` — the background service worker uses
+  this to issue HTTP requests to arbitrary hosts. It's the key
+  permission that lets the extension bypass page-level CORS and reach
+  intranet hosts. Requests fire only when you click **검사**; the
+  extension does not silently scrape pages in the background.
 
 ## Layout
 
@@ -49,7 +98,7 @@ packages/ogpeek-extension/
   (`popup.html`, `background.js`), so the manifest does not need build-time
   rewriting.
 
-## Build
+## Build (developers)
 
 The build chains the workspace libraries first.
 
@@ -66,14 +115,6 @@ Output:
 - `dist/ogpeek-chrome.zip` — distributable archive.
 
 `build:firefox` and `build:safari` are wired up but disabled in CI for v1.
-
-## Loading the unpacked build (Chrome)
-
-1. `pnpm -F ogpeek-extension build`
-2. Open `chrome://extensions`, enable Developer mode.
-3. *Load unpacked* → pick `packages/ogpeek-extension/dist/chrome/`.
-4. Click the toolbar action; the popup is pre-filled with the active tab's
-   URL. Press *검사* to run.
 
 ## Distribution
 
