@@ -134,5 +134,4 @@ referencing them from each manifest is a v1.1 cleanup item.
 The engine's `guard` hook is intentionally unset here. Per `AGENTS.md`
 principle 3, SSRF policy is the caller's responsibility, and an extension
 runs in a single user's local context — there is no shared infrastructure
-to protect, only the user's own machine. If you ever embed this code in a
-shared deployment, inject a guard via `fetchHtml({ guard })`.
+to protect, only the user's own machine.
