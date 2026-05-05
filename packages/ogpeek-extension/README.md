@@ -128,10 +128,3 @@ pipeline is intentionally out of scope for v1.
 The current build does not ship custom icons; Chrome falls back to the
 default puzzle-piece glyph. Adding `public/icons/{16,32,48,128}.png` and
 referencing them from each manifest is a v1.1 cleanup item.
-
-## SSRF
-
-The engine's `guard` hook is intentionally unset here. Per `AGENTS.md`
-principle 3, SSRF policy is the caller's responsibility, and an extension
-runs in a single user's local context — there is no shared infrastructure
-to protect, only the user's own machine.
