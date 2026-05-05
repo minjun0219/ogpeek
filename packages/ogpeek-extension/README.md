@@ -1,6 +1,7 @@
 # ogpeek-extension
 
-> Korean install guide for testers: [INSTALL.ko.md](./INSTALL.ko.md)
+> Install guide for testers: [INSTALL.md](./INSTALL.md) ·
+> [한국어](./INSTALL.ko.md)
 
 Cross-browser MV3 extension that runs the ogpeek engine inside the user's
 own browser. Built so the same source compiles for Chrome, Firefox, and

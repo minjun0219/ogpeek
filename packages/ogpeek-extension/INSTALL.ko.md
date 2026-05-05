@@ -1,6 +1,6 @@
 # ogpeek 크롬 확장 설치하기
 
-> 영문 개발자 문서: [README.md](./README.md)
+> English: [INSTALL.md](./INSTALL.md) · 개발자 문서: [README.md](./README.md)
 
 ogpeek 확장은 사용자 브라우저에서 직접 페이지의 OG 태그를 검사합니다 —
 사내망 / VPN 너머 페이지처럼 공개 데모(Cloudflare Workers)가 닿지 못하는
