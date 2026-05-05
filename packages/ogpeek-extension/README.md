@@ -124,9 +124,10 @@ pipeline is intentionally out of scope for v1.
 
 ## Icons
 
-Master sits at `public/icons/ogpeek-1024.png` (1024×1024). The script
-`scripts/render-icons.mjs` resamples it into `16/32/48/128.png` using
-sharp's `trim` to strip whitespace, then pads ~8% safe-zone before
-resizing — re-run it (`node scripts/render-icons.mjs`) whenever the
-master changes. Manifests reference the four size-named PNGs; the
-master and the script are kept out of the bundle.
+The repo-wide brand master sits at `assets/logo.png` (1024×1024) at
+the monorepo root. The script `scripts/render-icons.mjs` resamples it
+into `public/icons/{16,32,48,128}.png` using sharp's `trim` to strip
+whitespace, then pads ~8% safe-zone before resizing — re-run it
+(`node scripts/render-icons.mjs`) whenever the master changes.
+Manifests reference the four size-named PNGs; the rendered files are
+the only icons that ship in the bundle.

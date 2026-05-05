@@ -16,8 +16,9 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const root = resolve(here, "..");
-const source = resolve(root, "public/icons/ogpeek-1024.png");
+const pkg = resolve(here, "..");
+const repo = resolve(pkg, "../..");
+const source = resolve(repo, "assets/logo.png");
 const sizes = [16, 32, 48, 128];
 
 const trimmed = await sharp(source)
@@ -26,7 +27,7 @@ const trimmed = await sharp(source)
 
 await Promise.all(
   sizes.map(async (size) => {
-    const out = resolve(root, `public/icons/${size}.png`);
+    const out = resolve(pkg, `public/icons/${size}.png`);
     const padding = Math.max(1, Math.round(size * 0.08));
     const inner = size - padding * 2;
     await sharp(trimmed)

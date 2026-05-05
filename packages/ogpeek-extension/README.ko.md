@@ -124,8 +124,9 @@ v1에서 의도적으로 out-of-scope.
 
 ## 아이콘
 
-마스터는 `public/icons/ogpeek-1024.png` (1024×1024). `scripts/render-icons.mjs`
-가 sharp의 `trim`으로 여백을 제거하고 ~8% 안전 영역을 패딩한 뒤
-`16/32/48/128.png`로 리샘플합니다 — 마스터를 바꿀 때마다
-`node scripts/render-icons.mjs`로 다시 돌리면 됩니다. 매니페스트는 4종
-사이즈 PNG만 참조하고, 마스터와 스크립트는 번들에 포함되지 않습니다.
+레포 공통 브랜드 마스터는 모노레포 루트의 `assets/logo.png` (1024×1024).
+`scripts/render-icons.mjs`가 sharp의 `trim`으로 여백을 제거하고 ~8% 안전
+영역을 패딩한 뒤 `public/icons/{16,32,48,128}.png`로 리샘플합니다 —
+마스터를 바꿀 때마다 `node scripts/render-icons.mjs`로 다시 돌리면 됩니다.
+매니페스트는 4종 사이즈 PNG만 참조하고, 그 PNG들이 번들에 포함되는
+유일한 아이콘 파일입니다.

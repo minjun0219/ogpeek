@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/logo.png" alt="ogpeek" width="128" height="128">
+</p>
+
 # ogpeek
 
 > peek into any page's Open Graph tags — and the favicon / JSON-LD
