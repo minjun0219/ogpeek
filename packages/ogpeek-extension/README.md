@@ -35,8 +35,7 @@ pre-filled with the active tab's URL — press **검사**. You can also paste
 any absolute `http(s)://` URL.
 
 Artifacts expire after 30 days. A real prerelease/release with the same
-zip will be cut once this PR merges. v1 ships without custom icons, so
-the toolbar entry shows Chrome's default puzzle glyph.
+zip will be cut once this PR merges.
 
 ### Troubleshooting
 
@@ -125,6 +124,9 @@ pipeline is intentionally out of scope for v1.
 
 ## Icons
 
-The current build does not ship custom icons; Chrome falls back to the
-default puzzle-piece glyph. Adding `public/icons/{16,32,48,128}.png` and
-referencing them from each manifest is a v1.1 cleanup item.
+Master sits at `public/icons/ogpeek-1024.png` (1024×1024). The script
+`scripts/render-icons.mjs` resamples it into `16/32/48/128.png` using
+sharp's `trim` to strip whitespace, then pads ~8% safe-zone before
+resizing — re-run it (`node scripts/render-icons.mjs`) whenever the
+master changes. Manifests reference the four size-named PNGs; the
+master and the script are kept out of the bundle.

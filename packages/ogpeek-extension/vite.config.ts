@@ -1,4 +1,4 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
@@ -32,9 +32,16 @@ function packageExtensionPlugin(browser: Browser): Plugin {
       mkdirSync(outDir, { recursive: true });
       const manifestSrc = resolve(here, `manifest/${browser}.json`);
       copyFileSync(manifestSrc, resolve(outDir, "manifest.json"));
-      const iconsSrc = resolve(here, "public/icons");
-      if (existsSync(iconsSrc)) {
-        cpSync(iconsSrc, resolve(outDir, "icons"), { recursive: true });
+      // Only ship the size-named icons that manifests reference. The 1024
+      // master and the render script live in public/icons/ for source
+      // control; they don't need to be in the extension bundle.
+      const iconsOut = resolve(outDir, "icons");
+      mkdirSync(iconsOut, { recursive: true });
+      for (const size of [16, 32, 48, 128]) {
+        const src = resolve(here, `public/icons/${size}.png`);
+        if (existsSync(src)) {
+          copyFileSync(src, resolve(iconsOut, `${size}.png`));
+        }
       }
     },
   };
@@ -45,6 +52,11 @@ export default defineConfig(({ mode }) => {
   const outDir = resolve(here, `dist/${browser}`);
   return {
     plugins: [react(), packageExtensionPlugin(browser)],
+    // Disable Vite's automatic public/ → dist root copy. The icon master
+    // and the render script live under public/icons/ for source control,
+    // but only the size-named PNGs should ship — the post-build plugin
+    // handles that copy explicitly.
+    publicDir: false,
     define: {
       // Inline the chosen browser so feature-detect callers can branch
       // without reading process.env at runtime.

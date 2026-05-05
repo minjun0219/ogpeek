@@ -26,6 +26,7 @@
     "@types/react-dom": "19.0.0",
     "@types/webextension-polyfill": "^0.12.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "sharp": "^0.34.5",
     "typescript": "5.9.2",
     "vite": "^5.4.21"
   }
