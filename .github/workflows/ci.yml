@@ -70,3 +70,36 @@ jobs:
 
       - name: Test
         run: pnpm -r --filter './packages/*' test
+
+  extension-bundle:
+    name: extension (chrome zip)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # `package:chrome` chains through `pnpm build` (which runs
+      # libs:build first), then runs the zip script. The artifact below
+      # makes the unpacked extension downloadable from the workflow run
+      # page so reviewers can side-load it without a local toolchain.
+      - name: Build + zip Chrome extension
+        run: pnpm -F ogpeek-extension package:chrome
+
+      - name: Upload Chrome zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ogpeek-chrome-${{ github.sha }}
+          path: packages/ogpeek-extension/dist/ogpeek-chrome.zip
+          if-no-files-found: error
+          retention-days: 30
