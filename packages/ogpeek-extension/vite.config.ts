@@ -34,13 +34,23 @@ function packageExtensionPlugin(browser: Browser): Plugin {
       copyFileSync(manifestSrc, resolve(outDir, "manifest.json"));
       // Only ship the size-named icons that manifests reference. The 1024
       // master and the render script live in public/icons/ for source
-      // control; they don't need to be in the extension bundle.
+      // control; they don't need to be in the extension bundle. Dark
+      // variants exist only for the toolbar sizes (16/32) — see
+      // `action.theme_icons` in the manifests.
       const iconsOut = resolve(outDir, "icons");
       mkdirSync(iconsOut, { recursive: true });
-      for (const size of [16, 32, 48, 128]) {
-        const src = resolve(here, `public/icons/${size}.png`);
+      const iconFiles = [
+        "16.png",
+        "32.png",
+        "48.png",
+        "128.png",
+        "16-dark.png",
+        "32-dark.png",
+      ];
+      for (const file of iconFiles) {
+        const src = resolve(here, `public/icons/${file}`);
         if (existsSync(src)) {
-          copyFileSync(src, resolve(iconsOut, `${size}.png`));
+          copyFileSync(src, resolve(iconsOut, file));
         }
       }
     },
