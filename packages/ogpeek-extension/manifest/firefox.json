@@ -21,7 +21,11 @@
     "default_icon": {
       "16": "icons/16.png",
       "32": "icons/32.png"
-    }
+    },
+    "theme_icons": [
+      { "size": 16, "light": "icons/16-dark.png", "dark": "icons/16.png" },
+      { "size": 32, "light": "icons/32-dark.png", "dark": "icons/32.png" }
+    ]
   },
   "background": {
     "scripts": ["background.js"],
