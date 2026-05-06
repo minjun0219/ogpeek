@@ -4,6 +4,7 @@
     "packages/ogpeek": {
       "release-type": "node",
       "package-name": "ogpeek",
+      "component": "ogpeek",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": false
     },
@@ -13,8 +14,22 @@
       "component": "ogpeek-react",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": true
+    },
+    "packages/ogpeek-extension": {
+      "release-type": "node",
+      "package-name": "ogpeek-extension",
+      "component": "ogpeek-extension",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true
     }
   },
+  "plugins": [
+    {
+      "type": "linked-versions",
+      "groupName": "ogpeek-engine",
+      "components": ["ogpeek", "ogpeek-extension"]
+    }
+  ],
   "separate-pull-requests": false,
   "pull-request-title-pattern": "chore: release ${branch}"
 }
