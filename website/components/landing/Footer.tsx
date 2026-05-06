@@ -6,7 +6,7 @@ export function Footer() {
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
           href="https://github.com/minjun0219/ogpeek"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
         >
           GitHub
         </a>
@@ -15,7 +15,7 @@ export function Footer() {
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
           href="https://github.com/minjun0219/ogpeek/blob/main/LICENSE"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
         >
           MIT License
         </a>
@@ -26,7 +26,7 @@ export function Footer() {
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
           href="https://minjun.kim"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
         >
           minjun.kim
         </a>

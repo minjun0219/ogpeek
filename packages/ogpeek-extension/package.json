@@ -1,0 +1,34 @@
+{
+  "name": "ogpeek-extension",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ogpeek as a cross-browser MV3 extension. v1 builds Chrome only; Firefox and Safari manifests are scaffolded for follow-up.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -w libs:build && pnpm build:chrome",
+    "build:chrome": "BROWSER=chrome vite build",
+    "build:firefox": "BROWSER=firefox vite build",
+    "build:safari": "BROWSER=safari vite build",
+    "package:chrome": "pnpm build && node ./scripts/zip.mjs chrome",
+    "dev": "BROWSER=chrome vite build --watch --mode development",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ogpeek/react": "workspace:*",
+    "ogpeek": "workspace:*",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "webextension-polyfill": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.40",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "@types/webextension-polyfill": "^0.12.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "sharp": "^0.34.5",
+    "typescript": "5.9.2",
+    "vite": "^5.4.21"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "jsx": "react-jsx",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "types": ["vite/client", "webextension-polyfill", "chrome"]
+  },
+  "include": ["src", "vite.config.ts", "scripts"]
+}

@@ -1,32 +1,22 @@
-import { Result } from "@ogpeek/react";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { LangToggle } from "@/components/LangToggle";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
-import { type Dict, format, getDict, hasLang, type Lang } from "@/lib/i18n";
-import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
-import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
+import { InstallCopy } from "@/components/landing/InstallCopy";
+import { PackageDetail } from "@/components/packages/PackageDetail";
+import { getDict, hasLang, type Lang } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ url?: string | string[] }>;
 type Params = Promise<{ lang: string }>;
-type PageOutcome =
-  | ServerParseOutcome
-  | {
-      ok: false;
-      target: string;
-      error: { code: "RATE_LIMITED"; status: 429; message: string };
-    };
 
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: Params;
-  searchParams: SearchParams;
-}) {
+const ENGINE_QUICK_START = `import { parse } from "ogpeek";
+import { fetchHtml } from "ogpeek/fetch";
+
+const { html, finalUrl } = await fetchHtml(url);
+const result = parse(html, finalUrl);`;
+
+export default async function Page({ params }: { params: Params }) {
   const { lang: rawLang } = await params;
   if (!hasLang(rawLang)) {
     notFound();
@@ -34,108 +24,71 @@ export default async function Page({
   const lang: Lang = rawLang;
   const dict = getDict(lang);
 
-  const { url } = await searchParams;
-  const target = Array.isArray(url) ? url[0] : url;
-  const outcome = target ? await runWithRateLimit(target, dict) : null;
-
-  return <PageLayout dict={dict} outcome={outcome} lang={lang} />;
-}
-
-async function runWithRateLimit(
-  target: string,
-  dict: Dict,
-): Promise<PageOutcome> {
-  // SSR page visits hit runParse directly, so they share the same per-IP
-  // limiter as /api/parse — otherwise /?url=... would bypass it.
-  const ip = clientIpFromHeaders(await headers());
-  const decision = rateLimit(ip);
-  if (!decision.ok) {
-    return {
-      ok: false,
-      target,
-      error: {
-        code: "RATE_LIMITED",
-        status: 429,
-        message: format(dict.page.rateLimitTemplate, {
-          sec: decision.retryAfterSec,
-        }),
-      },
-    };
-  }
-  return runParse(target);
-}
-
-function PageLayout({
-  dict,
-  outcome,
-  lang,
-}: {
-  dict: Dict;
-  outcome: PageOutcome | null;
-  lang: Lang;
-}) {
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-6">
+    <main className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-6">
       <div className="flex justify-end">
         <LangToggle />
       </div>
       <Hero />
 
-      {outcome ? (
-        <Results outcome={outcome} dict={dict} lang={lang} />
-      ) : (
-        <EmptyState dict={dict} />
-      )}
+      <PackageDetail
+        name="ogpeek"
+        pkg="ogpeek"
+        tagline={dict.packages.engine.tagline}
+        quickStartTitle={dict.packages.quickStartTitle}
+        quickStartCode={ENGINE_QUICK_START}
+        npmHref="https://www.npmjs.com/package/ogpeek"
+        readmeHref="https://github.com/minjun0219/ogpeek/tree/main/packages/ogpeek#readme"
+        npmLinkLabel={dict.packages.npmLink}
+        readmeLinkLabel={dict.packages.readmeLink}
+        badges={[
+          {
+            src: "https://img.shields.io/npm/v/ogpeek?style=flat-square&color=10b981",
+            alt: "npm version",
+          },
+          {
+            src: "https://img.shields.io/npm/dm/ogpeek?style=flat-square",
+            alt: "npm monthly downloads",
+          },
+          {
+            src: "https://img.shields.io/bundlephobia/minzip/ogpeek?style=flat-square&label=gzip",
+            alt: "minzipped size",
+          },
+        ]}
+      />
+
+      <aside className="flex flex-col gap-3 rounded-2xl border border-dashed border-[color:rgb(var(--border))] px-6 py-5">
+        <div className="flex flex-col gap-1">
+          <h2 className="font-mono text-base font-medium tracking-tight">
+            @ogpeek/react
+          </h2>
+          <p className="text-sm leading-relaxed text-[color:rgb(var(--muted))]">
+            {dict.packages.react.tagline}
+          </p>
+        </div>
+        <InstallCopy pkg="@ogpeek/react" />
+        <div className="flex flex-wrap gap-3 text-xs text-[color:rgb(var(--muted))]">
+          <a
+            className="hover:text-[color:rgb(var(--foreground))] hover:underline"
+            href="https://www.npmjs.com/package/@ogpeek/react"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {dict.packages.npmLink}
+          </a>
+          <span aria-hidden>·</span>
+          <a
+            className="hover:text-[color:rgb(var(--foreground))] hover:underline"
+            href="https://github.com/minjun0219/ogpeek/tree/main/packages/ogpeek-react#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {dict.packages.readmeLink}
+          </a>
+        </div>
+      </aside>
 
       <Footer />
     </main>
-  );
-}
-
-function EmptyState({ dict }: { dict: Dict }) {
-  return (
-    <section className="rounded-xl border border-dashed border-[color:rgb(var(--border))] px-6 py-10 text-center text-sm text-[color:rgb(var(--muted))]">
-      {dict.page.emptyState}
-    </section>
-  );
-}
-
-function Results({
-  outcome,
-  dict,
-  lang,
-}: {
-  outcome: PageOutcome;
-  dict: Dict;
-  lang: Lang;
-}) {
-  if (!outcome.ok) {
-    return (
-      <section className="rounded-xl border border-red-500/40 bg-red-500/5 px-5 py-4">
-        <h2 className="text-sm font-medium text-red-700 dark:text-red-300">
-          {outcome.error.code === "RATE_LIMITED"
-            ? dict.page.retryLater
-            : dict.page.fetchFailed}
-        </h2>
-        <p className="mt-1 text-xs text-[color:rgb(var(--muted))]">
-          <span className="font-mono">{outcome.error.code}</span> ·{" "}
-          {outcome.error.message}
-        </p>
-        <p className="mt-1 text-xs text-[color:rgb(var(--muted))]">
-          {dict.page.target}: {outcome.target}
-        </p>
-      </section>
-    );
-  }
-
-  return (
-    <Result
-      result={outcome.result}
-      finalUrl={outcome.finalUrl}
-      status={outcome.status}
-      redirects={outcome.redirects}
-      canonical={outcome.result.meta.canonical}
-      lang={lang}
-    />
   );
 }

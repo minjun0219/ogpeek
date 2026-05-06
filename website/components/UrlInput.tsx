@@ -1,13 +1,12 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import { useTranslate } from "@/lib/translate-context";
 
 export function UrlInput({ compact = false }: { compact?: boolean }) {
-  const { dict } = useTranslate();
+  const { lang, dict } = useTranslate();
   const router = useRouter();
-  const pathname = usePathname();
   const params = useSearchParams();
   const currentUrl = params.get("url") ?? "";
   const [value, setValue] = useState(currentUrl);
@@ -33,8 +32,7 @@ export function UrlInput({ compact = false }: { compact?: boolean }) {
     setPending(true);
     const next = new URLSearchParams();
     next.set("url", trimmed);
-    // Preserve the active language segment so submissions from /ko stay on /ko.
-    router.push(`${pathname}?${next.toString()}`);
+    router.push(`/${lang}/inspect?${next.toString()}`);
   }
 
   return (

@@ -10,8 +10,8 @@ const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
 
 export function LangToggle() {
   const { lang, dict } = useTranslate();
-  const searchParams = useSearchParams();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const query = searchParams.toString();
   const suffix = query ? `?${query}` : "";
   const base = stripLangPrefix(pathname);

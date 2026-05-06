@@ -38,6 +38,13 @@ export type Dict = {
     target: string;
     rateLimitTemplate: string;
   };
+  packages: {
+    quickStartTitle: string;
+    engine: { tagline: string };
+    react: { tagline: string };
+    npmLink: string;
+    readmeLink: string;
+  };
   toggle: { ariaLabel: string };
 };
 
@@ -91,6 +98,19 @@ const en: Dict = {
     target: "Target",
     rateLimitTemplate: "Too many requests. Please try again in {sec} seconds.",
   },
+  packages: {
+    quickStartTitle: "Quick start",
+    engine: {
+      tagline:
+        "ogpeek parses, fetches, and validates OpenGraph tags from any URL. The fetcher traces redirects with timeout and size caps, the parser is tolerant of real-world markup, and the validator catches common OGP spec violations. One external dependency, runs on Node and edge runtimes alike.",
+    },
+    react: {
+      tagline:
+        "If you render results in React, you can drop in the same Result, Preview, ValidationPanel, RedirectFlow, and TagTable components this site uses.",
+    },
+    npmLink: "View on npm",
+    readmeLink: "README",
+  },
   toggle: { ariaLabel: "Switch language" },
 };
 
@@ -142,6 +162,19 @@ const ko: Dict = {
     retryLater: "잠시 후 다시 시도해 주세요",
     target: "대상",
     rateLimitTemplate: "요청이 너무 많습니다. {sec}초 후 다시 시도해 주세요.",
+  },
+  packages: {
+    quickStartTitle: "Quick start",
+    engine: {
+      tagline:
+        "ogpeek은 임의의 URL에서 OpenGraph 메타태그를 파싱·페치·검증합니다. 페처는 타임아웃과 응답 크기 한도 안에서 리디렉션을 추적하고, 파서는 실제 웹의 어수선한 마크업을 잘 허용하며, 검증기는 흔한 OGP 스펙 위반을 잡아냅니다. 외부 의존성은 하나뿐이며 Node와 엣지 런타임에서 동일하게 동작합니다.",
+    },
+    react: {
+      tagline:
+        "React에서 결과를 렌더링한다면, 이 사이트가 쓰는 Result, Preview, ValidationPanel, RedirectFlow, TagTable 컴포넌트를 그대로 가져다 쓸 수 있습니다.",
+    },
+    npmLink: "npm에서 보기",
+    readmeLink: "README",
   },
   toggle: { ariaLabel: "언어 전환" },
 };
