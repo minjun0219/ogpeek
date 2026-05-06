@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { LANGS, type Lang } from "@/lib/i18n";
+import { LANGS, type Lang, stripLangPrefix } from "@/lib/i18n";
 import { useTranslate } from "@/lib/translate-context";
 
 const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
@@ -14,7 +14,11 @@ export function LangToggle() {
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const suffix = query ? `?${query}` : "";
-  const subPath = pathname.replace(/^\/(en|ko)(?=\/|$)/, "");
+  const base = stripLangPrefix(pathname);
+  const HREF: Record<Lang, string> = {
+    en: base === "/" ? "/en" : `/en${base}`,
+    ko: base === "/" ? "/ko" : `/ko${base}`,
+  };
 
   return (
     <nav
@@ -26,7 +30,7 @@ export function LangToggle() {
         return (
           <Link
             key={target}
-            href={`/${target}${subPath}${suffix}`}
+            href={`${HREF[target]}${suffix}`}
             aria-current={active ? "true" : undefined}
             prefetch={false}
             className={cn(

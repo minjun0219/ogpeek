@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Noto_Sans_KR } from "next/font/google";
+import { Inter, Noto_Sans_KR } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDict, hasLang, LANGS, type Lang } from "@/lib/i18n";
 import { TranslateProvider } from "@/lib/translate-context";
 import "../globals.css";
 import "@ogpeek/react/styles.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ["latin"],
@@ -33,9 +39,6 @@ export async function generateMetadata({
   return {
     title: dict.meta.title,
     description: dict.meta.description,
-    alternates: {
-      languages: { en: "/en", ko: "/ko" },
-    },
   };
 }
 
@@ -52,7 +55,7 @@ export default async function LangLayout({
   }
   const dict = getDict(lang);
   return (
-    <html lang={lang} className={notoSansKr.variable}>
+    <html lang={lang} className={`${inter.variable} ${notoSansKr.variable}`}>
       <body className="min-h-screen font-sans">
         <TranslateProvider value={{ lang, dict }}>{children}</TranslateProvider>
       </body>

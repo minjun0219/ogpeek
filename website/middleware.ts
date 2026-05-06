@@ -1,24 +1,26 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { pickLangFromAcceptLanguage } from "@/lib/i18n";
+import { LANGS, pickLangFromAcceptLanguage } from "@/lib/i18n";
 
-// Language resolution per page request:
-//   /en/*  → English passthrough.
-//   /ko/*  → Korean  passthrough.
-//   /      → pure redirector. Picks `/en` or `/ko` based on the visitor's
-//            Accept-Language (falling back to DEFAULT_LANG).
-// Because `/` always redirects and `/en` / `/ko` never do, redirect loops
-// are structurally impossible. No cookie or other persistence is needed —
-// the URL itself is the source of truth.
+// Mirrors the Next.js i18n-routing reference example: every page lives under
+// /<lang>/. Requests without a lang prefix are redirected to /<picked-lang>
+// based on Accept-Language; lang-prefixed paths pass through unchanged.
+//
+//   /                    → 307 /<lang>
+//   /inspect             → 307 /<lang>/inspect
+//   /<en|ko>(/...)?      → passthrough
 export function middleware(req: NextRequest): NextResponse {
-  if (req.nextUrl.pathname === "/") {
-    const target = pickLangFromAcceptLanguage(
-      req.headers.get("accept-language"),
-    );
-    const url = req.nextUrl.clone();
-    url.pathname = `/${target}`;
-    return NextResponse.redirect(url);
+  const { pathname } = req.nextUrl;
+  const hasPrefix = LANGS.some(
+    (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
+  );
+  if (hasPrefix) {
+    return NextResponse.next();
   }
-  return NextResponse.next();
+
+  const lang = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
+  const url = req.nextUrl.clone();
+  url.pathname = pathname === "/" ? `/${lang}` : `/${lang}${pathname}`;
+  return NextResponse.redirect(url);
 }
 
 export const config = {

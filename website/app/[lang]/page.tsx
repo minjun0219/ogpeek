@@ -58,10 +58,44 @@ export default async function Page({ params }: { params: Params }) {
       />
 
       <aside className="flex flex-col gap-3 rounded-2xl border border-dashed border-[color:rgb(var(--border))] px-6 py-5">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <h2 className="font-mono text-base font-medium tracking-tight">
             @ogpeek/react
           </h2>
+          <div className="flex flex-wrap gap-2">
+            {[
+              {
+                src: "https://img.shields.io/npm/v/@ogpeek/react?style=flat-square&color=10b981",
+                alt: "npm version",
+              },
+              {
+                src: "https://img.shields.io/npm/dm/@ogpeek/react?style=flat-square",
+                alt: "npm monthly downloads",
+              },
+              {
+                src: "https://img.shields.io/bundlephobia/minzip/@ogpeek/react?style=flat-square&label=gzip",
+                alt: "minzipped size",
+              },
+            ].map((badge) => (
+              <a
+                key={badge.src}
+                href="https://www.npmjs.com/package/@ogpeek/react"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex"
+              >
+                {/* biome-ignore lint/performance/noImgElement: external SVG badge from shields.io */}
+                <img
+                  src={badge.src}
+                  alt={badge.alt}
+                  height={20}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-5"
+                />
+              </a>
+            ))}
+          </div>
           <p className="text-sm leading-relaxed text-[color:rgb(var(--muted))]">
             {dict.packages.react.tagline}
           </p>

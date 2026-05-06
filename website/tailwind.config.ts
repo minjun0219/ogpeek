@@ -5,9 +5,15 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
+        // Inter covers Latin glyphs; the browser falls back to Noto Sans KR
+        // for Hangul via unicode-range, so a single font-sans class works
+        // for mixed-language UI.
         sans: [
+          "var(--font-sans)",
           "var(--font-sans-kr)",
+          "Inter",
           "Noto Sans KR",
+          "ui-sans-serif",
           "system-ui",
           "sans-serif",
         ],
