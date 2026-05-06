@@ -32,11 +32,13 @@ function packageExtensionPlugin(browser: Browser): Plugin {
       mkdirSync(outDir, { recursive: true });
       const manifestSrc = resolve(here, `manifest/${browser}.json`);
       copyFileSync(manifestSrc, resolve(outDir, "manifest.json"));
-      // Only ship the size-named icons that manifests reference. The 1024
-      // master and the render script live in public/icons/ for source
-      // control; they don't need to be in the extension bundle. Dark
-      // variants exist only for the toolbar sizes (16/32) — see
-      // `action.theme_icons` in the manifests.
+      // Only ship the size-named icons that manifests reference. The
+      // brand master lives at the repo root (`assets/logo.png`) and is
+      // resampled into `public/icons/` by `scripts/render-icons.mjs`;
+      // neither the master nor the script are needed in the extension
+      // bundle. Dark variants exist only for the toolbar sizes (16/32) —
+      // they're swapped in at runtime on Chrome via `chrome.action.setIcon`
+      // and via `action.theme_icons` on Firefox / Safari.
       const iconsOut = resolve(outDir, "icons");
       mkdirSync(iconsOut, { recursive: true });
       const iconFiles = [
@@ -81,6 +83,7 @@ export default defineConfig(({ mode }) => {
         input: {
           popup: resolve(here, "popup.html"),
           app: resolve(here, "app.html"),
+          offscreen: resolve(here, "offscreen.html"),
           background: resolve(here, "src/background/index.ts"),
         },
         output: {
