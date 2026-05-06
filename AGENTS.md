@@ -178,33 +178,55 @@ into the engine (`packages/ogpeek`).
 - CLI: out of scope for v1.
 - Auth / SSO: not needed for a tool of this shape.
 
-## npm publishing
+## Releases
 
-Two packages publish publicly to npm: the engine as `ogpeek`, and the
-React component layer as `@ogpeek/react`. Versioning is handled by
-[release-please](https://github.com/googleapis/release-please) — do **not**
-hand-edit either `package.json#version`.
+Two packages publish publicly to npm — the engine as `ogpeek` and the
+React component layer as `@ogpeek/react` — and one is shipped as a
+GitHub Release zip: `ogpeek-extension` (Chrome MV3). All three are
+versioned **in lockstep** as a single product through
+[release-please](https://github.com/googleapis/release-please) running
+in single-package mode. Do **not** hand-edit any `package.json#version`.
 
-- `.github/workflows/release-please.yml` runs on every push to `main`. It
-  reads commit messages since the last tag and opens (or updates) a
-  `chore: release main` PR that bumps each affected package's version and
-  updates `CHANGELOG.md`. Merging that PR creates a GitHub Release + tag
-  per package and publishes to npm in the same workflow run via separate
-  `publish-ogpeek` / `publish-ogpeek-react` jobs.
-- `release-please-config.json` + `.release-please-manifest.json` hold the
-  release-please configuration and the current version of record. The
-  manifest is the source of truth for "what was last released"; release-please
-  rewrites both `package.json#version` and the manifest in the release PR.
-  `ogpeek-react` carries `include-component-in-tag: true` so its tags
-  (`ogpeek-react-vX.Y.Z`) don't collide with `ogpeek`'s `vX.Y.Z` namespace.
+- `.github/workflows/release-please.yml` runs on every push to `main`.
+  It reads commit messages since the last tag and opens (or updates) a
+  single `chore: release vX.Y.Z` PR that bumps the root version and the
+  three workspace `package.json` files together (via `extra-files`) and
+  appends to the root `CHANGELOG.md`. Merging that PR creates **one**
+  `vX.Y.Z` git tag + **one** GitHub Release, and that single
+  `release_created` event drives three publish jobs in the same workflow
+  run: `publish-ogpeek` (npm), `publish-ogpeek-react` (npm), and
+  `publish-ogpeek-extension` (builds the Chrome zip and uploads it to
+  the GitHub Release).
+- `release-please-config.json` + `.release-please-manifest.json` hold
+  the release-please configuration and the current version of record.
+  The manifest is the source of truth for "what was last released";
+  release-please rewrites it plus every tracked `package.json#version`
+  in the release PR. The config tracks a single root `"."` package
+  (`package-name: "ogpeek"`, `include-component-in-tag: false`) — so
+  the tag is just `vX.Y.Z` with no component prefix.
 - Bump levels follow [Conventional Commits](https://www.conventionalcommits.org/)
-  on squash-merge titles: `fix:` → patch, `feat:` → minor, `feat!:` or a
-  `BREAKING CHANGE:` footer → major. To force a specific version, add a
-  `Release-As: 1.2.3` footer to a commit on `main`. There is intentionally
-  no `workflow_dispatch` manual fallback — if release-please ever jams
-  enough to need one, weigh the trade-offs first and add it back then.
-- Authentication uses npm Trusted Publisher (OIDC), so no secrets are
-  required. Both packages set `publishConfig.access: "public"` and
-  `publishConfig.provenance: true`, and only the build output ships
-  (`files: ["dist", "README.md", "LICENSE"]`). The `prepack` hook forces
-  a build right before publish.
+  on squash-merge titles: `fix:` → patch, `feat:` → minor, `feat!:` or
+  a `BREAKING CHANGE:` footer → major. Use the Conventional Commits
+  scope to indicate which package the change touches
+  (`feat(ogpeek-extension):`, `fix(ogpeek-react):`, `feat(ogpeek):`) —
+  scopes are informational here, not used for routing, since every
+  release ships all three packages anyway. To force a specific version,
+  add a `Release-As: 1.2.3` footer to a commit on `main`. There is
+  intentionally no `workflow_dispatch` manual fallback — if
+  release-please ever jams enough to need one, weigh the trade-offs
+  first and add it back then.
+- Authentication: the two npm publishes use npm Trusted Publisher
+  (OIDC) — no secrets needed. Both publish targets set
+  `publishConfig.access: "public"` + `publishConfig.provenance: true`,
+  and only the build output ships (`files: ["dist", "README.md",
+  "LICENSE"]`). The `prepack` hook forces a build right before publish.
+  The extension publish uses `GITHUB_TOKEN` only (no npm credentials —
+  it never touches npm) to run `gh release upload --clobber` against
+  the cut tag.
+- Lockstep trade-off: a `fix:` to `ogpeek` cuts a new version of
+  `@ogpeek/react` and `ogpeek-extension` too, even when their content
+  hasn't changed. Acceptable because the three move together in
+  practice and the umbrella tag/Release matches reality. Pre-lockstep
+  per-package CHANGELOG files (`packages/ogpeek/CHANGELOG.md`,
+  `packages/ogpeek-react/CHANGELOG.md`) are kept as historical records;
+  new entries go to the root `CHANGELOG.md` only.
