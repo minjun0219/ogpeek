@@ -1,45 +1,26 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { pickLangFromAcceptLanguage } from "@/lib/i18n";
+import { LANGS, pickLangFromAcceptLanguage } from "@/lib/i18n";
 
-const HAS_LANG_PREFIX = /^\/(en|ko)(\/|$)/;
-
-// Language resolution per page request:
-//   /en/*, /ko/* → passthrough. These are stable, never redirected and never
-//                  rewritten — the EN toggle relies on /en being reachable
-//                  even for visitors with a Korean Accept-Language.
-//   /<path>      + Korean Accept-Language → redirect to /ko<path>.
-//   /<path>      + everything else        → internal rewrite to /en<path>.
-//                  The browser URL stays unprefixed; only one [lang]/ tree
-//                  exists in the file system.
+// Mirrors the Next.js i18n-routing reference example: every page lives under
+// /<lang>/. Requests without a lang prefix are redirected to /<picked-lang>
+// based on Accept-Language; lang-prefixed paths pass through unchanged.
 //
-// Because lang-prefixed paths are passthrough, redirect loops are
-// structurally impossible.
+//   /                    → 307 /<lang>
+//   /inspect             → 307 /<lang>/inspect
+//   /<en|ko>(/...)?      → passthrough
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
-
-  // x-public-pathname carries the user-visible URL into server components so
-  // generateMetadata can build canonical/alternate URLs against the public
-  // path rather than the internal /en-prefixed one. We always overwrite it
-  // server-side — clients must not be able to spoof what we treat as the
-  // request's true path.
-  const headers = new Headers(req.headers);
-  headers.set("x-public-pathname", pathname);
-
-  if (HAS_LANG_PREFIX.test(pathname)) {
-    return NextResponse.next({ request: { headers } });
+  const hasPrefix = LANGS.some(
+    (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
+  );
+  if (hasPrefix) {
+    return NextResponse.next();
   }
 
   const lang = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
-
-  if (lang === "ko") {
-    const url = req.nextUrl.clone();
-    url.pathname = pathname === "/" ? "/ko" : `/ko${pathname}`;
-    return NextResponse.redirect(url);
-  }
-
   const url = req.nextUrl.clone();
-  url.pathname = pathname === "/" ? "/en" : `/en${pathname}`;
-  return NextResponse.rewrite(url, { request: { headers } });
+  url.pathname = pathname === "/" ? `/${lang}` : `/${lang}${pathname}`;
+  return NextResponse.redirect(url);
 }
 
 export const config = {

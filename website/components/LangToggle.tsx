@@ -15,11 +15,6 @@ export function LangToggle() {
   const query = searchParams.toString();
   const suffix = query ? `?${query}` : "";
   const base = stripLangPrefix(pathname);
-
-  // Both targets are lang-prefixed URLs that the middleware passes through
-  // unchanged. Sending EN to "/en" (rather than "/") keeps the toggle
-  // working even for visitors whose Accept-Language is Korean — otherwise
-  // hitting "/" would redirect them straight back to /ko.
   const HREF: Record<Lang, string> = {
     en: base === "/" ? "/en" : `/en${base}`,
     ko: base === "/" ? "/ko" : `/ko${base}`,
