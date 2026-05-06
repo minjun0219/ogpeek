@@ -1,20 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "packages": {
-    "packages/ogpeek": {
+    ".": {
       "release-type": "node",
       "package-name": "ogpeek",
+      "include-component-in-tag": false,
       "changelog-path": "CHANGELOG.md",
-      "include-component-in-tag": false
-    },
-    "packages/ogpeek-react": {
-      "release-type": "node",
-      "package-name": "@ogpeek/react",
-      "component": "ogpeek-react",
-      "changelog-path": "CHANGELOG.md",
-      "include-component-in-tag": true
+      "extra-files": [
+        "packages/ogpeek/package.json",
+        "packages/ogpeek-react/package.json",
+        "packages/ogpeek-extension/package.json"
+      ]
     }
   },
-  "separate-pull-requests": false,
-  "pull-request-title-pattern": "chore: release ${branch}"
+  "pull-request-title-pattern": "chore: release v${version}"
 }
