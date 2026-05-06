@@ -21,7 +21,7 @@ is what we need to inspect intranet pages.
 Pre-merge testing happens through CI artifacts.
 
 1. Open the latest **successful** CI run on the
-   [Actions tab for this branch](https://github.com/minjun0219/ogpeek/actions?query=branch%3Aclaude%2Fdesktop-app-alternatives-V2coN).
+   [Actions tab](https://github.com/minjun0219/ogpeek/actions/workflows/ci.yml?query=branch%3Amain+is%3Asuccess).
 2. Scroll to the **Artifacts** section and click `ogpeek-chrome-<sha>` to
    download the zip.
 3. Unzip it into a directory of your choice. Don't load the zip itself —

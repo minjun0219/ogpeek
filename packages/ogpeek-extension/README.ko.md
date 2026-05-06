@@ -20,7 +20,7 @@ MV3 확장입니다. 같은 소스가 Chrome / Firefox / Safari로 빌드되도�
 
 머지 전 테스트는 CI artifact로 받습니다.
 
-1. 이 브랜치의 [Actions 탭](https://github.com/minjun0219/ogpeek/actions?query=branch%3Aclaude%2Fdesktop-app-alternatives-V2coN)
+1. [Actions 탭](https://github.com/minjun0219/ogpeek/actions/workflows/ci.yml?query=branch%3Amain+is%3Asuccess)
    에서 가장 최근 **성공**한 CI run 클릭.
 2. 실행 페이지 하단 **Artifacts** 섹션의 `ogpeek-chrome-<sha>` 클릭 → zip
    다운로드.

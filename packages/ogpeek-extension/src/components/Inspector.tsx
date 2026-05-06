@@ -133,7 +133,10 @@ export function Inspector({
         url: response.result.finalUrl,
       });
       setData({ parsed, fetched: response.result });
-      onInspectedUrlChange?.(target);
+      // Mirror the post-redirect URL (not the originally-typed one) so
+      // the full page's location bar reflects what was actually
+      // inspected.
+      onInspectedUrlChange?.(response.result.finalUrl);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError({ code: "UNKNOWN", status: 500, message });

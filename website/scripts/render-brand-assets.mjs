@@ -49,9 +49,11 @@ await squarePadded(180, resolve(pkg, "app/apple-icon.png"));
 await squarePadded(256, resolve(pkg, "public/logo.png"));
 
 // Open Graph image: 1200×630 (Facebook-recommended 1.91:1) with the
-// logo centered on a transparent background. Square logos still render
+// logo centered on an opaque white canvas. Square logos still render
 // well — most consumers (Twitter, KakaoTalk, Slack) accept either, but
-// 1200×630 maximizes link-preview real estate.
+// 1200×630 maximizes link-preview real estate. We bake in a solid
+// background because some OG renderers fall back to black behind a
+// transparent PNG, which would make the logo's dark outlines vanish.
 const ogSize = { w: 1200, h: 630 };
 const ogLogo = Math.round(ogSize.h * 0.7);
 const logoBuf = await sharp(trimmed)

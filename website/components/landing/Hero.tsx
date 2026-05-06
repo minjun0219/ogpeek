@@ -8,7 +8,7 @@ export function Hero() {
         alt=""
         width={88}
         height={88}
-        className="h-22 w-22"
+        className="h-[88px] w-[88px]"
       />
       <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
         ogpeek
