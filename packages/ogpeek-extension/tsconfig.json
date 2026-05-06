@@ -5,7 +5,7 @@
     "jsx": "react-jsx",
     "moduleResolution": "Bundler",
     "noEmit": true,
-    "types": ["vite/client", "webextension-polyfill"]
+    "types": ["vite/client", "webextension-polyfill", "chrome"]
   },
   "include": ["src", "vite.config.ts", "scripts"]
 }
