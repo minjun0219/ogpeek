@@ -22,13 +22,34 @@ describe("middleware", () => {
       ["/en/a/b", "en"],
     ];
     for (const [path, accept] of cases) {
-      it(`${path} with accept-language=${accept ?? "(none)"} passes through`, () => {
+      it(`${path} with accept-language=${accept ?? "(none)"} passes through with x-public-pathname=${path}`, () => {
         const res = middleware(makeReq(path, accept));
         // NextResponse.next() carries an x-middleware-next header.
         expect(res.headers.get("x-middleware-next")).toBe("1");
         expect(res.headers.get("location")).toBeNull();
+        // The public path is forwarded so server components on nested
+        // routes (/en/inspect, /ko/inspect …) compute canonical URLs from
+        // the full path rather than the layout's "/${lang}" fallback.
+        expect(res.headers.get("x-middleware-override-headers")).toContain(
+          "x-public-pathname",
+        );
+        expect(res.headers.get("x-middleware-request-x-public-pathname")).toBe(
+          path,
+        );
       });
     }
+
+    it("ignores client-supplied x-public-pathname (spoofing guard)", () => {
+      const headers = new Headers();
+      headers.set("x-public-pathname", "/ko/anything");
+      const req = new NextRequest(new URL("/en", ORIGIN), { headers });
+      const res = middleware(req);
+      // The middleware overwrites the header with the actual request path;
+      // a spoofed value must not survive into server components.
+      expect(res.headers.get("x-middleware-request-x-public-pathname")).toBe(
+        "/en",
+      );
+    });
   });
 
   describe("Korean Accept-Language → redirect to /ko<path>", () => {

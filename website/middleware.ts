@@ -17,8 +17,16 @@ const HAS_LANG_PREFIX = /^\/(en|ko)(\/|$)/;
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
 
+  // x-public-pathname carries the user-visible URL into server components so
+  // generateMetadata can build canonical/alternate URLs against the public
+  // path rather than the internal /en-prefixed one. We always overwrite it
+  // server-side — clients must not be able to spoof what we treat as the
+  // request's true path.
+  const headers = new Headers(req.headers);
+  headers.set("x-public-pathname", pathname);
+
   if (HAS_LANG_PREFIX.test(pathname)) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers } });
   }
 
   const lang = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
@@ -31,12 +39,6 @@ export function middleware(req: NextRequest): NextResponse {
 
   const url = req.nextUrl.clone();
   url.pathname = pathname === "/" ? "/en" : `/en${pathname}`;
-
-  // Pass the user-visible pathname through so server components can build
-  // canonical URLs and lang-toggle hrefs against the public path, not the
-  // internal /en-prefixed one.
-  const headers = new Headers(req.headers);
-  headers.set("x-public-pathname", pathname);
   return NextResponse.rewrite(url, { request: { headers } });
 }
 
