@@ -30,8 +30,17 @@ MV3 확장입니다. 같은 소스가 Chrome / Firefox / Safari로 빌드되도�
    확장 프로그램을 로드합니다** 클릭 → 3단계에서 압축 해제한 폴더(=`manifest.json`이
    바로 들어 있는 폴더) 선택.
 
-사용법: 툴바의 ogpeek 액션 클릭 → URL 입력창은 현재 탭 주소로 자동
-채워집니다 → **검사**. 다른 절대 `http(s)://` URL을 직접 붙여 넣어도 됩니다.
+사용법:
+
+- **활성 탭 검사**: 툴바의 ogpeek 액션 클릭 — popup이
+  `chrome.scripting.executeScript`로 현재 탭의 살아있는 DOM을 그대로
+  추출(=두 번째 HTTP 요청 없음, 사용자의 인증 상태 그대로)해 결과를
+  표시합니다.
+- **다른 URL**: 입력창에 URL을 넣고 **검사** — background 서비스
+  워커의 `fetch()` 경로로 동작합니다.
+- **더 넓게 보기**: popup 헤더의 **전체 화면으로 열기** 클릭 → 탭 크기의
+  full page(`app.html?url=…`)가 새 탭에서 열립니다. URL이 공유/북마크
+  가능하고, 새로고침해도 같은 검사 결과가 유지됩니다.
 
 Artifact 보존 기간은 30일. 정식 prerelease/release는 PR 머지 후 같은 zip을
 첨부해 별도로 만들 예정입니다.
@@ -56,13 +65,15 @@ Artifact 보존 기간은 30일. 정식 prerelease/release는 PR 머지 후 같�
 
 `manifest/chrome.json`이 선언하는 권한:
 
-- `activeTab` — popup을 열 때 현재 탭의 URL을 읽어 입력창을 자동
-  채우는 용도로만 사용.
-- `host_permissions: <all_urls>` — 백그라운드 서비스 워커가 임의
-  호스트로 HTTP 요청을 보내기 위해 필요. 페이지 단 CORS를 우회해
-  사내망까지 검사할 수 있게 해주는 핵심 권한입니다. **검사** 버튼을
-  눌렀을 때만 요청이 발사되며, 백그라운드에서 자동으로 페이지를
-  수집하지는 않습니다.
+- `activeTab` — 툴바 액션을 클릭할 때 부여되어, popup이 현재 탭의 URL을
+  읽고 그 탭에서 DOM 추출용 단발성 스크립트를 실행할 수 있게 함.
+- `scripting` — `chrome.scripting.executeScript`에 필요. popup이 활성
+  탭의 HTML을 다시 fetch하지 않고 그대로 가져오기 위해 사용.
+- `host_permissions: <all_urls>` — 활성 탭이 아닌 다른 URL을 검사할 때
+  백그라운드 서비스 워커가 임의 호스트로 HTTP 요청을 보낼 수 있게 함.
+  사내 페이지까지 닿게 해주는 핵심 권한입니다. 활성 탭이 아닌 URL로
+  **검사**를 눌렀을 때만 요청이 발사되며, 백그라운드에서 자동으로
+  페이지를 수집하지는 않습니다.
 
 ## 레이아웃
 

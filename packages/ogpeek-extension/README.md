@@ -30,9 +30,16 @@ Pre-merge testing happens through CI artifacts.
    unpacked**, and pick the folder you just unzipped (the one that
    contains `manifest.json` directly).
 
-To use it: click the ogpeek action in the toolbar; the URL field is
-pre-filled with the active tab's URL — press **검사**. You can also paste
-any absolute `http(s)://` URL.
+To use it:
+
+- **Active tab**: click the ogpeek action — the popup grabs the live
+  DOM via `chrome.scripting.executeScript` (no second HTTP request,
+  matches your current auth state) and renders the result inline.
+- **Different URL**: edit the input and press **검사** — that path goes
+  through the background service worker's `fetch()`.
+- **More room**: click **전체 화면으로 열기** in the popup header to
+  open a tab-sized version (`app.html?url=…`). The full page is
+  shareable / bookmarkable; refreshing keeps the same inspection.
 
 Artifacts expire after 30 days. A real prerelease/release with the same
 zip will be cut once this PR merges.
@@ -57,13 +64,17 @@ zip will be cut once this PR merges.
 
 Declared in `manifest/chrome.json`:
 
-- `activeTab` — used only to read the current tab's URL when you open the
-  popup, so the input can be pre-filled.
+- `activeTab` — granted when you click the toolbar action, so the popup
+  can read the current tab's URL and run a one-shot script to extract
+  its live DOM.
+- `scripting` — required by `chrome.scripting.executeScript`, which is
+  how the popup pulls the active tab's HTML without re-fetching it.
 - `host_permissions: <all_urls>` — the background service worker uses
-  this to issue HTTP requests to arbitrary hosts. It's the key
-  permission that lets the extension bypass page-level CORS and reach
-  intranet hosts. Requests fire only when you click **검사**; the
-  extension does not silently scrape pages in the background.
+  this to issue HTTP requests to arbitrary hosts when you inspect a
+  URL that isn't the current tab. It's the key permission that lets
+  the extension reach intranet pages. Outbound requests fire only when
+  you click **검사** with a non-active-tab URL; the extension does not
+  silently scrape pages in the background.
 
 ## Layout
 

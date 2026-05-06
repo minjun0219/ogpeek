@@ -1,3 +1,8 @@
+/* Popup-only globals. The 480px width is mandated by the popup
+   surface; full-page mode picks up its own globals from app/styles.css.
+   Everything else (form, status, error blocks) lives in
+   inspector.css and is shared. */
+
 :root {
   color-scheme: light dark;
   font-family:
@@ -22,78 +27,4 @@ body {
 #root {
   display: block;
   padding: 12px;
-}
-
-.popup-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.popup-title {
-  font-weight: 600;
-  font-size: 15px;
-  margin: 0;
-}
-
-.popup-form {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.popup-input {
-  flex: 1;
-  min-width: 0;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in srgb, CanvasText 25%, Canvas);
-  border-radius: 6px;
-  background: Canvas;
-  color: CanvasText;
-  font: inherit;
-}
-
-.popup-input:focus {
-  outline: 2px solid color-mix(in srgb, CanvasText 35%, Canvas);
-  outline-offset: 1px;
-}
-
-.popup-button {
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 6px;
-  background: CanvasText;
-  color: Canvas;
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.popup-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.popup-status {
-  font-size: 13px;
-  color: color-mix(in srgb, CanvasText 75%, Canvas);
-  margin: 8px 0;
-}
-
-.popup-error {
-  border: 1px solid color-mix(in srgb, #d33 60%, Canvas);
-  background: color-mix(in srgb, #d33 12%, Canvas);
-  color: CanvasText;
-  border-radius: 6px;
-  padding: 10px 12px;
-  font-size: 13px;
-}
-
-.popup-error code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  background: color-mix(in srgb, CanvasText 8%, Canvas);
-  padding: 1px 4px;
-  border-radius: 3px;
 }
