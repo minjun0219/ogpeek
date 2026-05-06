@@ -1,0 +1,114 @@
+/* Inspector shell + form / status / error styles, shared between the
+   popup and the full-page entry. The compact modifier tightens spacing
+   for the 480px popup; the default layout breathes for the full page. */
+
+.ogp-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ogp-shell--compact {
+  gap: 10px;
+}
+
+.ogp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ogp-title {
+  font-weight: 600;
+  font-size: 18px;
+  margin: 0;
+}
+
+.ogp-shell--compact .ogp-title {
+  font-size: 15px;
+}
+
+.ogp-link-button {
+  background: none;
+  border: 0;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  font: inherit;
+  font-size: 13px;
+  color: color-mix(in srgb, CanvasText 70%, Canvas);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.ogp-link-button:hover {
+  background: color-mix(in srgb, CanvasText 8%, Canvas);
+  color: CanvasText;
+}
+
+.ogp-form {
+  display: flex;
+  gap: 8px;
+}
+
+.ogp-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, CanvasText 25%, Canvas);
+  border-radius: 6px;
+  background: Canvas;
+  color: CanvasText;
+  font: inherit;
+}
+
+.ogp-input:focus {
+  outline: 2px solid color-mix(in srgb, CanvasText 35%, Canvas);
+  outline-offset: 1px;
+}
+
+.ogp-button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: CanvasText;
+  color: Canvas;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ogp-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ogp-status {
+  font-size: 13px;
+  color: color-mix(in srgb, CanvasText 70%, Canvas);
+  margin: 4px 0;
+}
+
+.ogp-error {
+  border: 1px solid color-mix(in srgb, #d33 60%, Canvas);
+  background: color-mix(in srgb, #d33 12%, Canvas);
+  color: CanvasText;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.ogp-error__meta {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.ogp-error__meta code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: color-mix(in srgb, CanvasText 8%, Canvas);
+  padding: 1px 4px;
+  border-radius: 3px;
+}

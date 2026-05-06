@@ -1,0 +1,30 @@
+/* Full-page globals. Centered responsive container with breathing
+   room; the inspector itself takes a wider single column at this
+   width. Compact-only popup overrides live in popup/styles.css. */
+
+:root {
+  color-scheme: light dark;
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: Canvas;
+  color: CanvasText;
+}
+
+body {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+#root {
+  display: block;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
