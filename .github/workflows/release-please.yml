@@ -164,3 +164,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload --clobber "${{ needs.release-please.outputs.tag_name }}" packages/ogpeek-extension/dist/ogpeek-chrome.zip
+
+      # Chrome Web Store 자동 게시. 첫 수동 업로드로 익스텐션 ID 를 받고
+      # 4 개의 secrets 와 vars.CHROME_AUTOPUBLISH=true 를 채운 다음부터
+      # 동작한다 (자세한 절차는 AGENTS.md `## Releases` 참고). 변수가
+      # 비어 있으면 step 자체가 skip 되므로 첫 릴리스 사이클을 깨지 않는다.
+      # `--auto-publish` 는 업로드 직후 심사 제출까지 한 번에 수행한다 —
+      # 실제 공개 시점은 Google 심사 결과에 달려 있다.
+      - name: Upload and publish to Chrome Web Store
+        if: ${{ vars.CHROME_AUTOPUBLISH == 'true' }}
+        working-directory: packages/ogpeek-extension
+        env:
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: npx -y chrome-webstore-upload-cli@3 upload --source dist/ogpeek-chrome.zip --auto-publish

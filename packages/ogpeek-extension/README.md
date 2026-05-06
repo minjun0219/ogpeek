@@ -128,10 +128,21 @@ Output:
 
 ## Distribution
 
-No web store. Ship the zip via GitHub Releases and load unpacked, or push
-through Chrome enterprise policy (`ExtensionInstallForcelist` with a
-self-hosted update manifest) for managed environments. The crx packaging
-pipeline is intentionally out of scope for v1.
+Two channels share the same zip:
+
+- **GitHub Releases** — every release-please tag attaches
+  `ogpeek-chrome.zip` to the Release. Load it unpacked for testing, or
+  push it through Chrome enterprise policy
+  (`ExtensionInstallForcelist` + a self-hosted update manifest) in
+  managed environments.
+- **Chrome Web Store** — the same release job uploads the zip via the
+  Chrome Web Store API and submits it for review. The auto-publish
+  step is gated by `vars.CHROME_AUTOPUBLISH` and four `CHROME_*`
+  secrets; see the root `AGENTS.md` `## Releases` section for the
+  bootstrap procedure (the first upload + store listing must be done
+  manually in the developer dashboard).
+
+The crx packaging pipeline stays out of scope.
 
 ## Icons
 

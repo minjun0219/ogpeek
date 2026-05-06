@@ -128,10 +128,19 @@ pnpm -F ogpeek-extension package:chrome  # build + zip
 
 ## 배포
 
-웹 스토어 배포 안 함. zip을 GitHub Releases로 배포해 unpacked 로드하거나,
-관리형 환경에서는 Chrome enterprise policy(`ExtensionInstallForcelist` +
-사내 호스팅 update manifest)로 푸시할 수 있습니다. CRX 패키징 파이프라인은
-v1에서 의도적으로 out-of-scope.
+같은 zip이 두 채널로 나갑니다.
+
+- **GitHub Releases** — release-please 태그가 잘릴 때마다
+  `ogpeek-chrome.zip`이 Release에 업로드됩니다. 테스트는 unpacked
+  로드, 관리형 환경에서는 Chrome enterprise policy
+  (`ExtensionInstallForcelist` + 사내 호스팅 update manifest)로 푸시.
+- **Chrome Web Store** — 같은 릴리스 잡이 Chrome Web Store API로 zip을
+  업로드하고 심사 제출까지 자동으로 수행합니다. `vars.CHROME_AUTOPUBLISH`
+  와 4 개의 `CHROME_*` secrets로 게이트되며, 첫 업로드와 스토어 리스팅
+  작성은 수동입니다 — 자세한 부트스트랩 절차는 루트의 `AGENTS.md`
+  `## Releases` 섹션을 보세요.
+
+CRX 패키징 파이프라인은 의도적으로 out-of-scope.
 
 ## 아이콘
 
