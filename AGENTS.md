@@ -230,3 +230,43 @@ in single-package mode. Do **not** hand-edit any `package.json#version`.
   per-package CHANGELOG files (`packages/ogpeek/CHANGELOG.md`,
   `packages/ogpeek-react/CHANGELOG.md`) are kept as historical records;
   new entries go to the root `CHANGELOG.md` only.
+
+### Chrome Web Store auto-publish
+
+The same `publish-ogpeek-extension` job that uploads the zip to a GitHub
+Release also pushes the same zip to the Chrome Web Store via
+[`chrome-webstore-upload-cli`](https://github.com/fregante/chrome-webstore-upload-cli)
+and submits it for review (`--auto-publish`). The step is gated by
+`vars.CHROME_AUTOPUBLISH == 'true'`, so it stays a no-op until the
+auto-publish path is fully wired — releases keep working through the
+GitHub Release zip on their own.
+
+What the step needs:
+
+| Kind | Name | Purpose |
+| --- | --- | --- |
+| Variable | `CHROME_AUTOPUBLISH` | `'true'` to enable the step. Anything else (or unset) skips it. |
+| Secret | `CHROME_EXTENSION_ID` | Item ID assigned after the first manual upload. |
+| Secret | `CHROME_CLIENT_ID` | Google Cloud OAuth 2.0 *Desktop* client ID with the Chrome Web Store API enabled. |
+| Secret | `CHROME_CLIENT_SECRET` | Companion secret to `CHROME_CLIENT_ID`. |
+| Secret | `CHROME_REFRESH_TOKEN` | Long-lived OAuth refresh token. Generate once with `npx chrome-webstore-upload-keys` (or any equivalent flow that asks for `https://www.googleapis.com/auth/chromewebstore` scope) on a workstation, paste the result here. |
+
+Bootstrap (one-time, manual — the API can only update an existing item):
+
+1. Pay the one-time $5 developer registration fee at the
+   [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+2. Build a release-quality zip locally:
+   `pnpm -F ogpeek-extension package:chrome` →
+   `packages/ogpeek-extension/dist/ogpeek-chrome.zip`.
+3. In the dashboard, **New item** → upload the zip → fill the store
+   listing (description, screenshots, category, language, privacy
+   policy URL, single-purpose justification, host-permission
+   justification for `<all_urls>`) → submit for review.
+4. After Google approves the first version, copy the assigned item ID
+   into `CHROME_EXTENSION_ID` and create the OAuth client + refresh
+   token. Set `CHROME_AUTOPUBLISH=true` last, so the change is atomic.
+
+From that point on, every release-please tag triggers the step; only
+the listing copy / screenshots stay a dashboard task. Adding a new
+permission to `manifest/chrome.json` extends the review window but does
+not change the workflow.
