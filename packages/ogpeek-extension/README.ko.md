@@ -130,7 +130,7 @@ pnpm -F ogpeek-extension package:chrome  # build + zip
 
 같은 zip이 두 채널로 나갑니다.
 
-- **GitHub Releases** — release-please 태그가 잘릴 때마다
+- **GitHub Releases** — changesets 릴리스 태그가 잘릴 때마다
   `ogpeek-chrome.zip`이 Release에 업로드됩니다. 테스트는 unpacked
   로드, 관리형 환경에서는 Chrome enterprise policy
   (`ExtensionInstallForcelist` + 사내 호스팅 update manifest)로 푸시.

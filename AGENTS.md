@@ -169,7 +169,8 @@ into the engine (`packages/ogpeek`).
   fresh builds for npm provenance attestation, so a remote-cache layer
   has limited payoff. Trigger (a) (a 4th workspace appears) has now fired
   — revisit if any of these tightens further: **(b) a 3rd npm-published
-  package appears** (release-please grows a 3rd entry), **(c) `pnpm -F
+  package appears** (the changesets fixed group grows a 3rd npm entry),
+  **(c) `pnpm -F
   website dev` cold start exceeds ~15s**, or **(d) cross-job CI cache
   sharing becomes worth a remote cache**.
 - TypeScript project references (`composite: true` + `tsc -b`): not
@@ -184,37 +185,46 @@ Two packages publish publicly to npm — the engine as `ogpeek` and the
 React component layer as `@ogpeek/react` — and one is shipped as a
 GitHub Release zip: `ogpeek-extension` (Chrome MV3). All three are
 versioned **in lockstep** as a single product through
-[release-please](https://github.com/googleapis/release-please) running
-in single-package mode. Do **not** hand-edit any `package.json#version`.
+[changesets](https://github.com/changesets/changesets) with a single
+`fixed` group. Do **not** hand-edit any `package.json#version` or the
+extension `manifest/*.json` versions.
 
-- `.github/workflows/release-please.yml` runs on every push to `main`.
-  It reads commit messages since the last tag and opens (or updates) a
-  single `chore: release vX.Y.Z` PR that bumps the root version and the
-  three workspace `package.json` files together (via `extra-files`) and
-  appends to the root `CHANGELOG.md`. Merging that PR creates **one**
-  `vX.Y.Z` git tag + **one** GitHub Release, and that single
-  `release_created` event drives three publish jobs in the same workflow
-  run: `publish-ogpeek` (npm), `publish-ogpeek-react` (npm), and
-  `publish-ogpeek-extension` (builds the Chrome zip and uploads it to
-  the GitHub Release).
-- `release-please-config.json` + `.release-please-manifest.json` hold
-  the release-please configuration and the current version of record.
-  The manifest is the source of truth for "what was last released";
-  release-please rewrites it plus every tracked `package.json#version`
-  in the release PR. The config tracks a single root `"."` package
-  (`package-name: "ogpeek"`, `include-component-in-tag: false`) — so
-  the tag is just `vX.Y.Z` with no component prefix.
-- Bump levels follow [Conventional Commits](https://www.conventionalcommits.org/)
-  on squash-merge titles: `fix:` → patch, `feat:` → minor, `feat!:` or
-  a `BREAKING CHANGE:` footer → major. Use the Conventional Commits
-  scope to indicate which package the change touches
-  (`feat(ogpeek-extension):`, `fix(ogpeek-react):`, `feat(ogpeek):`) —
-  scopes are informational here, not used for routing, since every
-  release ships all three packages anyway. To force a specific version,
-  add a `Release-As: 1.2.3` footer to a commit on `main`. There is
-  intentionally no `workflow_dispatch` manual fallback — if
-  release-please ever jams enough to need one, weigh the trade-offs
-  first and add it back then.
+- A change that should ship needs a **changeset file** in the same PR:
+  run `pnpm changeset`, pick any of the three packages (the fixed group
+  bumps them together anyway), choose the bump level (patch / minor /
+  major), and describe the change — that description becomes the
+  CHANGELOG entry, so write it for release-note readers. Docs/CI-only
+  changes simply ship no changeset and trigger no release.
+- `.github/workflows/release.yml` runs on every push to `main`. While
+  changeset files exist, `changesets/action` opens (or updates) a
+  single `chore(release): Version Packages` PR whose `version` command
+  is `pnpm changeset:version` — `changeset version` bumps the three
+  workspace `package.json` files and per-package `CHANGELOG.md`s, then
+  `scripts/sync-versions.mjs` stamps the same version into the root
+  `package.json` and `packages/ogpeek-extension/manifest/*.json` (the
+  Chrome Web Store rejects re-uploads without a version increase, so
+  the manifest stamp is load-bearing). Merging that PR makes
+  `scripts/release-github.mjs` (idempotent — keyed on GitHub Release
+  existence, so a partial failure is retried on the next `main` push)
+  cut **one** `vX.Y.Z` tag + **one** GitHub Release whose notes are the
+  matching CHANGELOG sections, and its `release_created` output drives
+  three publish jobs in the same workflow run: `publish-ogpeek` (npm),
+  `publish-ogpeek-react` (npm), and `publish-ogpeek-extension` (builds
+  the Chrome zip and uploads it to the GitHub Release).
+- `.changeset/config.json` holds the changesets configuration: the
+  `fixed` group `["ogpeek", "@ogpeek/react", "ogpeek-extension"]` keeps
+  the lockstep, `website` is `ignore`d (deploy-only, never released),
+  and the changelog format is `@changesets/changelog-github` (needs
+  `GITHUB_TOKEN` when running `changeset version` locally). The version
+  of record is `packages/ogpeek/package.json#version`; git tags stay
+  plain `vX.Y.Z` with no component prefix.
+- Known trade-off of `changesets/action`: the Version PR is created
+  with the workflow's `GITHUB_TOKEN`, and PRs created by that token do
+  **not** trigger the CI workflow. The PR only touches version/CHANGELOG
+  files, so merge it on the strength of the `main` CI run it was cut
+  from. There is intentionally no `workflow_dispatch` manual fallback —
+  if the release flow ever jams enough to need one, weigh the
+  trade-offs first and add it back then.
 - Authentication: the two npm publishes use npm Trusted Publisher
   (OIDC) — no secrets needed. Both publish targets set
   `publishConfig.access: "public"` + `publishConfig.provenance: true`,
@@ -223,13 +233,13 @@ in single-package mode. Do **not** hand-edit any `package.json#version`.
   The extension publish uses `GITHUB_TOKEN` only (no npm credentials —
   it never touches npm) to run `gh release upload --clobber` against
   the cut tag.
-- Lockstep trade-off: a `fix:` to `ogpeek` cuts a new version of
-  `@ogpeek/react` and `ogpeek-extension` too, even when their content
-  hasn't changed. Acceptable because the three move together in
-  practice and the umbrella tag/Release matches reality. Pre-lockstep
-  per-package CHANGELOG files (`packages/ogpeek/CHANGELOG.md`,
-  `packages/ogpeek-react/CHANGELOG.md`) are kept as historical records;
-  new entries go to the root `CHANGELOG.md` only.
+- Lockstep trade-off: a patch changeset against `ogpeek` cuts a new
+  version of `@ogpeek/react` and `ogpeek-extension` too, even when
+  their content hasn't changed. Acceptable because the three move
+  together in practice and the umbrella tag/Release matches reality.
+  CHANGELOG entries live per package (`packages/*/CHANGELOG.md`, written
+  by changesets); the root `CHANGELOG.md` era under release-please
+  (≤ v0.5.0) is history in git only.
 
 ### Chrome Web Store auto-publish
 
@@ -266,7 +276,8 @@ Bootstrap (one-time, manual — the API can only update an existing item):
    into `CHROME_EXTENSION_ID` and create the OAuth client + refresh
    token. Set `CHROME_AUTOPUBLISH=true` last, so the change is atomic.
 
-From that point on, every release-please tag triggers the step; only
+From that point on, every release tag cut by `release.yml` triggers the
+step; only
 the listing copy / screenshots stay a dashboard task. Adding a new
 permission to `manifest/chrome.json` extends the review window but does
 not change the workflow.

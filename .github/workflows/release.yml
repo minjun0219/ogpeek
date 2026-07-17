@@ -1,0 +1,227 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# changesets/action must be able to push the Version PR branch and open the PR
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Version PR / cut release
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.gh_release.outputs.release_created }}
+      tag_name: ${{ steps.gh_release.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # No publish input → the action only creates/updates the Version PR;
+      # nothing is published from here (the publish jobs below handle that).
+      # The version command is overridden so the root package.json and the
+      # extension manifest/*.json versions are synced right after
+      # `changeset version`.
+      - name: Create Version Packages PR
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset:version
+          title: "chore(release): Version Packages"
+          commit: "chore(release): Version Packages (CHANGELOG + version sync)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Once the Version PR merges and the version on main goes up, create
+      # the v<version> tag + GitHub Release and emit release_created /
+      # tag_name (idempotent — skips when the Release already exists).
+      # Must be gated on hasChangesets == 'false': when changesets are
+      # still present, changesets/action leaves the checkout on the
+      # changeset-release/main branch with the bumped (unmerged) versions
+      # committed, so running the release script there would cut the
+      # release before the Version PR is reviewed and merged.
+      - name: Tag + GitHub Release on version bump
+        id: gh_release
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: node scripts/release-github.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-ogpeek:
+    name: Publish ogpeek to npm
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag_name }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm -F ogpeek typecheck
+
+      - name: Test
+        run: pnpm -F ogpeek test
+
+      - name: Build
+        run: pnpm -F ogpeek build
+
+      - name: Publish to npm
+        working-directory: packages/ogpeek
+        env:
+          # When secrets.NPM_AUTH_TOKEN is empty, the npm CLI falls back
+          # to OIDC (Trusted Publisher).
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        run: pnpm publish --access public --provenance --no-git-checks
+
+  publish-ogpeek-react:
+    name: Publish @ogpeek/react to npm
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag_name }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # @ogpeek/react references types from ogpeek/dist, so build ogpeek
+      # first.
+      - name: Build ogpeek
+        run: pnpm -F ogpeek build
+
+      - name: Typecheck
+        run: pnpm -F @ogpeek/react typecheck
+
+      - name: Test
+        run: pnpm -F @ogpeek/react test
+
+      - name: Build
+        run: pnpm -F @ogpeek/react build
+
+      - name: Publish to npm
+        working-directory: packages/ogpeek-react
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        run: pnpm publish --access public --provenance --no-git-checks
+
+  publish-ogpeek-extension:
+    name: Build and upload Chrome extension zip to GitHub Release
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag_name }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ogpeek-extension bundles the workspace ogpeek / @ogpeek/react
+      # packages, so build both libraries first. The root libs:build is
+      # tied to the website dependency graph (`--filter 'website^...'`)
+      # and could break if the dependency relationships change, so the two
+      # libraries are built explicitly here.
+      - name: Build ogpeek
+        run: pnpm -F ogpeek build
+
+      - name: Build @ogpeek/react
+        run: pnpm -F @ogpeek/react build
+
+      - name: Typecheck
+        run: pnpm -F ogpeek-extension typecheck
+
+      # package:chrome would call libs:build internally and rebuild the
+      # libraries already built above. To avoid the double build, call
+      # build:chrome only and then run the zip script directly.
+      - name: Build Chrome extension
+        run: pnpm -F ogpeek-extension build:chrome
+
+      - name: Package zip
+        working-directory: packages/ogpeek-extension
+        run: node ./scripts/zip.mjs chrome
+
+      - name: Upload zip to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload --clobber "${{ needs.release.outputs.tag_name }}" packages/ogpeek-extension/dist/ogpeek-chrome.zip
+
+      # Chrome Web Store auto-publish. Starts working once the extension
+      # ID from the first manual upload, the four secrets, and
+      # vars.CHROME_AUTOPUBLISH=true are filled in (see AGENTS.md
+      # `## Releases` for the full procedure). While the variable is empty
+      # the step itself is skipped, so the first release cycle is not
+      # broken. `--auto-publish` submits for review right after the upload
+      # — the actual publish time depends on Google's review.
+      - name: Upload and publish to Chrome Web Store
+        if: ${{ vars.CHROME_AUTOPUBLISH == 'true' }}
+        working-directory: packages/ogpeek-extension
+        env:
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: npx -y chrome-webstore-upload-cli@3 upload --source dist/ogpeek-chrome.zip --auto-publish
