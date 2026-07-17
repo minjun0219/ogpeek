@@ -28,6 +28,7 @@ than hand-maintained.
 | Coverage | Engine (`ogpeek`), React (`@ogpeek/react`), and the root project overview + validation rules. The **extension is excluded** (unpublished, product-not-API). |
 | Generation | Build-time script; READMEs are the single source of truth (no drift). |
 | Framework coupling | None. The generator writes static files into `public/`; static serving survives a future Hono migration unchanged. |
+| Package embedding | Ship a copy of the **map** (`llms.txt`) inside the published `ogpeek` npm tarball, so an agent inspecting `node_modules/ogpeek/llms.txt` finds it offline. Engine package only (the primary published artifact) — **not** `@ogpeek/react`. Website-root serving stays the primary discovery path; this is a low-cost bonus that reuses the same generator. |
 
 ## Architecture
 
@@ -36,15 +37,19 @@ than hand-maintained.
 - Outputs: `website/public/llms.txt`, `website/public/llms-full.txt`.
   Cloudflare Workers serves files under `public/` at the site root as
   `text/plain`.
-- Both files are **build artifacts** — added to `website/.gitignore`
-  (alongside `.next/` / `out/`), not committed. The READMEs are the source.
+- Both files are **build artifacts** — not committed (see gitignore note in
+  §C). The READMEs are the source.
 - **No middleware change.** `website/middleware.ts`'s matcher already excludes
   any dotted path (`.*\..*`) from the `[lang]` Accept-Language redirect, so
   `/llms.txt` and `/llms-full.txt` fall through to static serving. Verified
   against the current matcher:
   `["/((?!_next/|api/|favicon\\.ico|.*\\..*).*)"]`.
 
-### B. Generator — `website/scripts/gen-llms.mjs`
+### B. Generator — `scripts/gen-llms.mjs` (repo root)
+
+Lives at the **repo root**, not under `website/`, because it now writes into
+two workspaces (the website's `public/` and the `ogpeek` package). It is a
+monorepo-level tool, exposed as a root `gen:llms` script.
 
 - **Plain Node ESM.** Uses only `node:fs` / `node:path`. **No new
   dependency** (AGENTS.md principle 5). `.mjs` (not `.ts`) so it runs on the
@@ -54,6 +59,10 @@ than hand-maintained.
   - `README.md` (root overview + "Validation rules at a glance")
   - `packages/ogpeek/README.md`
   - `packages/ogpeek-react/README.md`
+- Writes **three** outputs: `website/public/llms.txt`,
+  `website/public/llms-full.txt`, and a copy of the map at
+  `packages/ogpeek/llms.txt` (the package-embedded copy — same content as the
+  website map).
 - Top-of-file constants: `REPO = "minjun0219/ogpeek"`, `BRANCH = "main"`,
   `SITE = "https://ogpeek.minjun.dev"`.
 - Composition logic is factored into **pure, exported functions** —
@@ -90,14 +99,33 @@ than hand-maintained.
 - The root README's centered logo block (`<p align="center"><img ...></p>`)
   is stripped; text content is preserved as-is.
 
-### C. Build wiring — `website/package.json`
+### C. Build wiring
 
-- Add script: `"gen:llms": "node scripts/gen-llms.mjs"`.
-- Insert `pnpm gen:llms` into the three chains so the files exist in
-  `public/` before Next collects static assets:
-  - `dev`: `pnpm -w libs:build && pnpm gen:llms && next dev -p 3000`
-  - `build`: `pnpm -w libs:build && pnpm gen:llms && next build`
-  - `cf:build`: `pnpm -w libs:build && pnpm gen:llms && opennextjs-cloudflare build`
+**Root `package.json`:** add `"gen:llms": "node scripts/gen-llms.mjs"`.
+
+**`website/package.json`** — insert `pnpm -w gen:llms` into the three chains
+so the files exist in `public/` before Next collects static assets:
+
+- `dev`: `pnpm -w libs:build && pnpm -w gen:llms && next dev -p 3000`
+- `build`: `pnpm -w libs:build && pnpm -w gen:llms && next build`
+- `cf:build`: `pnpm -w libs:build && pnpm -w gen:llms && opennextjs-cloudflare build`
+
+**`packages/ogpeek/package.json`** — the embedded map must exist at npm
+pack time (npm provenance publish runs a fresh build):
+
+- Add `"llms.txt"` to the `files` array (currently `["dist", "README.md",
+  "LICENSE"]`).
+- Chain generation into the existing `prepack` hook so a fresh copy is
+  produced right before publish. Current `prepack` is `pnpm run build`
+  (which runs `rimraf dist && tsc -p .`); change it to
+  `pnpm -w gen:llms && pnpm run build`. Note `rimraf dist` only clears
+  `dist/`, so the root-level `llms.txt` written just before survives the
+  build step.
+
+**Gitignore:** all three outputs are build artifacts —
+`website/public/llms.txt`, `website/public/llms-full.txt`, and
+`packages/ogpeek/llms.txt` are added to gitignore (mirroring how `dist/`
+is not committed).
 
 ### D. Test — `website/test/gen-llms.test.ts` (vitest)
 
@@ -107,6 +135,9 @@ than hand-maintained.
     `raw.githubusercontent.com` URLs.
   - `llms-full.txt` contains `@ogpeek/react` and the warning code
     `OG_TITLE_MISSING` (proves the engine + validation content made it in).
+- Assert all three outputs are written and that
+  `packages/ogpeek/llms.txt` is byte-identical to `website/public/llms.txt`
+  (the embedded copy is the same map).
 - A missing source README makes the generator throw → test fails = drift
   guard at test time as well as build time.
 
