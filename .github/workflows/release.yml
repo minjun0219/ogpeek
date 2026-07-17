@@ -1,34 +1,69 @@
-name: Release Please
+name: Release
 
 on:
   push:
     branches: [main]
 
+# changesets/action 이 Version PR 브랜치를 push 하고 PR 을 열 수 있어야 함
 permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  release-please:
-    name: Open release PR / cut release
+  release:
+    name: Version PR / cut release
     runs-on: ubuntu-latest
     outputs:
-      # release-please-action@v4 의 root path("." ) 의 output 키 표기가
-      # 모노레포 모드(<path>--<key>)와 다를 수 있음. 양쪽 형식을 모두 받아서
-      # 어느 쪽이든 publish job 이 skip 되지 않게 한다.
-      release_created: ${{ steps.release.outputs['.--release_created'] || steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs['.--tag_name'] || steps.release.outputs.tag_name }}
+      release_created: ${{ steps.gh_release.outputs.release_created }}
+      tag_name: ${{ steps.gh_release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
+      - uses: actions/checkout@v4
         with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # publish 입력을 지정하지 않음 → Version PR 생성/갱신만, 여기서 npm
+      # publish 없음 (게시는 아래 publish job 들이 담당). version 커맨드를
+      # 오버라이드해 changeset version 뒤 루트 package.json 과 확장
+      # manifest/*.json 버전을 sync 한다.
+      - name: Create Version Packages PR
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset:version
+          title: "chore(release): Version Packages"
+          commit: "chore(release): Version Packages (CHANGELOG + version sync)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Version PR 이 병합돼 main 버전이 오르면 v<version> 태그 + GitHub
+      # Release 를 생성하고 release_created / tag_name 을 출력한다 (멱등 —
+      # Release 가 이미 있으면 skip). changeset 이 남아 있는 push(=Version
+      # PR 생성 단계)에서는 버전이 아직 안 올랐으므로 skip 된다.
+      - name: Tag + GitHub Release on version bump
+        id: gh_release
+        run: node scripts/release-github.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-ogpeek:
     name: Publish ogpeek to npm
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release.outputs.tag_name }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -70,8 +105,8 @@ jobs:
 
   publish-ogpeek-react:
     name: Publish @ogpeek/react to npm
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -79,7 +114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release.outputs.tag_name }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -115,15 +150,15 @@ jobs:
 
   publish-ogpeek-extension:
     name: Build and upload Chrome extension zip to GitHub Release
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release.outputs.tag_name }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -163,7 +198,7 @@ jobs:
       - name: Upload zip to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload --clobber "${{ needs.release-please.outputs.tag_name }}" packages/ogpeek-extension/dist/ogpeek-chrome.zip
+        run: gh release upload --clobber "${{ needs.release.outputs.tag_name }}" packages/ogpeek-extension/dist/ogpeek-chrome.zip
 
       # Chrome Web Store 자동 게시. 첫 수동 업로드로 익스텐션 ID 를 받고
       # 4 개의 secrets 와 vars.CHROME_AUTOPUBLISH=true 를 채운 다음부터
