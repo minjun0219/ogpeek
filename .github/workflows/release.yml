@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
 
-# changesets/action 이 Version PR 브랜치를 push 하고 PR 을 열 수 있어야 함
+# changesets/action must be able to push the Version PR branch and open the PR
 permissions:
   contents: write
   pull-requests: write
@@ -37,11 +37,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # publish 입력을 지정하지 않음 → Version PR 생성/갱신만, 여기서 npm
-      # publish 없음 (게시는 아래 publish job 들이 담당). version 커맨드를
-      # 오버라이드해 changeset version 뒤 루트 package.json 과 확장
-      # manifest/*.json 버전을 sync 한다.
+      # No publish input → the action only creates/updates the Version PR;
+      # nothing is published from here (the publish jobs below handle that).
+      # The version command is overridden so the root package.json and the
+      # extension manifest/*.json versions are synced right after
+      # `changeset version`.
       - name: Create Version Packages PR
+        id: changesets
         uses: changesets/action@v1
         with:
           version: pnpm changeset:version
@@ -50,12 +52,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Version PR 이 병합돼 main 버전이 오르면 v<version> 태그 + GitHub
-      # Release 를 생성하고 release_created / tag_name 을 출력한다 (멱등 —
-      # Release 가 이미 있으면 skip). changeset 이 남아 있는 push(=Version
-      # PR 생성 단계)에서는 버전이 아직 안 올랐으므로 skip 된다.
+      # Once the Version PR merges and the version on main goes up, create
+      # the v<version> tag + GitHub Release and emit release_created /
+      # tag_name (idempotent — skips when the Release already exists).
+      # Must be gated on hasChangesets == 'false': when changesets are
+      # still present, changesets/action leaves the checkout on the
+      # changeset-release/main branch with the bumped (unmerged) versions
+      # committed, so running the release script there would cut the
+      # release before the Version PR is reviewed and merged.
       - name: Tag + GitHub Release on version bump
         id: gh_release
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: node scripts/release-github.mjs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -98,8 +105,8 @@ jobs:
       - name: Publish to npm
         working-directory: packages/ogpeek
         env:
-          # secrets.NPM_AUTH_TOKEN 이 비어있으면 npm CLI 가 OIDC(Trusted
-          # Publisher) 로 폴백한다.
+          # When secrets.NPM_AUTH_TOKEN is empty, the npm CLI falls back
+          # to OIDC (Trusted Publisher).
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: pnpm publish --access public --provenance --no-git-checks
 
@@ -129,7 +136,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # @ogpeek/react 는 ogpeek/dist 의 타입을 참조하므로 먼저 빌드해 둔다.
+      # @ogpeek/react references types from ogpeek/dist, so build ogpeek
+      # first.
       - name: Build ogpeek
         run: pnpm -F ogpeek build
 
@@ -172,10 +180,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # ogpeek-extension 는 workspace 의 ogpeek / @ogpeek/react 를 번들하므로
-      # 두 라이브러리를 먼저 빌드해 둔다. 루트의 libs:build 는 website 의존
-      # 그래프에 묶여 있어서 (`--filter 'website^...'`) 의존 관계가 바뀌면 깨질
-      # 수 있으므로, 여기서는 명시적으로 두 라이브러리를 직접 빌드한다.
+      # ogpeek-extension bundles the workspace ogpeek / @ogpeek/react
+      # packages, so build both libraries first. The root libs:build is
+      # tied to the website dependency graph (`--filter 'website^...'`)
+      # and could break if the dependency relationships change, so the two
+      # libraries are built explicitly here.
       - name: Build ogpeek
         run: pnpm -F ogpeek build
 
@@ -185,9 +194,9 @@ jobs:
       - name: Typecheck
         run: pnpm -F ogpeek-extension typecheck
 
-      # package:chrome 은 내부에서 다시 libs:build 를 호출하므로 위에서 이미
-      # 빌드한 라이브러리를 두 번 빌드하게 된다. 이를 피하려고 build:chrome 만
-      # 호출한 뒤 zip 스크립트를 직접 실행한다.
+      # package:chrome would call libs:build internally and rebuild the
+      # libraries already built above. To avoid the double build, call
+      # build:chrome only and then run the zip script directly.
       - name: Build Chrome extension
         run: pnpm -F ogpeek-extension build:chrome
 
@@ -200,12 +209,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload --clobber "${{ needs.release.outputs.tag_name }}" packages/ogpeek-extension/dist/ogpeek-chrome.zip
 
-      # Chrome Web Store 자동 게시. 첫 수동 업로드로 익스텐션 ID 를 받고
-      # 4 개의 secrets 와 vars.CHROME_AUTOPUBLISH=true 를 채운 다음부터
-      # 동작한다 (자세한 절차는 AGENTS.md `## Releases` 참고). 변수가
-      # 비어 있으면 step 자체가 skip 되므로 첫 릴리스 사이클을 깨지 않는다.
-      # `--auto-publish` 는 업로드 직후 심사 제출까지 한 번에 수행한다 —
-      # 실제 공개 시점은 Google 심사 결과에 달려 있다.
+      # Chrome Web Store auto-publish. Starts working once the extension
+      # ID from the first manual upload, the four secrets, and
+      # vars.CHROME_AUTOPUBLISH=true are filled in (see AGENTS.md
+      # `## Releases` for the full procedure). While the variable is empty
+      # the step itself is skipped, so the first release cycle is not
+      # broken. `--auto-publish` submits for review right after the upload
+      # — the actual publish time depends on Google's review.
       - name: Upload and publish to Chrome Web Store
         if: ${{ vars.CHROME_AUTOPUBLISH == 'true' }}
         working-directory: packages/ogpeek-extension

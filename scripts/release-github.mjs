@@ -1,21 +1,24 @@
 #!/usr/bin/env node
 /**
- * changesets Version PR 이 병합돼 main 의 버전이 오르면, 그 버전으로
- * `v<version>` GitHub Release(+태그)를 생성한다. 릴리스 노트는 fixed 그룹
- * 세 패키지의 CHANGELOG.md 에서 해당 버전 섹션을 모아 만든다.
- * npm publish 는 하지 않는다 — 태그 + GitHub Release 만. npm/zip 게시는
- * release.yml 의 후속 job 들이 이 스크립트의 output 을 보고 수행한다.
+ * When the changesets Version PR merges and the version on main goes up,
+ * create the `v<version>` GitHub Release (+ tag) for that version. The
+ * release notes are assembled from the matching version sections of the
+ * fixed group's three package CHANGELOG.md files.
+ * No npm publish happens here — tag + GitHub Release only. The npm/zip
+ * publishes are performed by the follow-up jobs in release.yml, keyed on
+ * this script's outputs.
  *
- * release.yml 의 스텝에서 매 main push 마다 실행되므로 멱등이어야 한다.
- * 멱등 기준은 **태그가 아니라 GitHub Release 존재**다 — 태그만 남고
- * release 생성이 실패한 부분 실패에서도 다음 실행이 복구할 수 있다.
+ * It runs from a release.yml step on every main push, so it must be
+ * idempotent. The idempotency key is **the GitHub Release existing, not
+ * the tag** — after a partial failure that left only the tag behind, the
+ * next run can still recover and create the release.
  *
- * 태그는 `gh release create` 가 직접 만든다(없으면 `--target` 커밋에 생성)
- * → git user identity 설정이 필요 없다. 전제: GitHub Actions 러너
- * (gh CLI + GH_TOKEN/GITHUB_TOKEN, contents:write).
+ * The tag is created by `gh release create` itself (at the `--target`
+ * commit when missing) → no git user identity setup is needed. Assumes a
+ * GitHub Actions runner (gh CLI + GH_TOKEN/GITHUB_TOKEN, contents:write).
  *
- * GITHUB_OUTPUT 에 release_created / tag_name 을 기록해 후속 publish job
- * 들의 조건으로 쓴다.
+ * Writes release_created / tag_name to GITHUB_OUTPUT as conditions for
+ * the follow-up publish jobs.
  */
 import { spawnSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
@@ -24,11 +27,16 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** CHANGELOG.md 텍스트에서 특정 버전 섹션의 본문만 추출한다. changesets
- * 형식(`## <version>` 헤딩 + 다음 `## ` 헤딩 전까지)을 가정한다. */
+/** Extract the body of one version's section from CHANGELOG.md text.
+ * changesets writes plain `## <version>` headings, while sections
+ * inherited from release-please look like `## [<version>](<link>)` or
+ * `## <version> (<date>)` — match all three forms. A section ends at the
+ * next `## ` heading. */
 function extractChangelogSection(changelog, version) {
+  const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const headingRe = new RegExp(`^##\\s+\\[?${escaped}\\]?(?:\\s|\\(|$)`);
   const lines = changelog.split(/\r?\n/);
-  const start = lines.findIndex((l) => l.trim() === `## ${version}`);
+  const start = lines.findIndex((l) => headingRe.test(l.trim()));
   if (start === -1) {
     return "";
   }
@@ -57,14 +65,14 @@ const { version } = JSON.parse(
   readFileSync(join(repoRoot, "packages", "ogpeek", "package.json"), "utf8"),
 );
 if (!version) {
-  throw new Error("packages/ogpeek/package.json 에 version 이 없다");
+  throw new Error("missing version in packages/ogpeek/package.json");
 }
 const tag = `v${version}`;
 setOutput("tag_name", tag);
 
-// 이미 GitHub Release 가 있으면 완전 완료 → skip (멱등)
+// A GitHub Release already exists → fully done, skip (idempotent).
 if (spawnSync("gh", ["release", "view", tag]).status === 0) {
-  console.log(`${tag} GitHub Release 이미 존재 — skip (멱등)`);
+  console.log(`${tag} GitHub Release already exists — skip (idempotent)`);
   setOutput("release_created", "false");
   process.exit(0);
 }
@@ -78,8 +86,8 @@ for (const dir of RELEASED_PACKAGES) {
       "utf8",
     );
   } catch {
-    // 해당 패키지에 이번 버전의 changeset 이 없으면 CHANGELOG 자체가 없을
-    // 수 있다 — 그냥 건너뛴다.
+    // A package with no changeset for this version may not have a
+    // CHANGELOG.md at all yet — just skip it.
   }
   const section = extractChangelogSection(changelog, version);
   if (section) {
@@ -88,14 +96,18 @@ for (const dir of RELEASED_PACKAGES) {
 }
 const notes = sections.join("\n\n") || tag;
 
-const sha = spawnSync("git", ["rev-parse", "HEAD"]).stdout.toString().trim();
+const gitRev = spawnSync("git", ["rev-parse", "HEAD"]);
+if (gitRev.status !== 0 || !gitRev.stdout) {
+  throw new Error("git rev-parse HEAD failed");
+}
+const sha = gitRev.stdout.toString().trim();
 const created = spawnSync(
   "gh",
   ["release", "create", tag, "--target", sha, "--title", tag, "--notes", notes],
   { stdio: ["ignore", "inherit", "inherit"] },
 );
 if (created.status !== 0) {
-  throw new Error(`gh release create 실패: ${tag}`);
+  throw new Error(`gh release create failed: ${tag}`);
 }
 setOutput("release_created", "true");
 console.log(`released ${tag}`);
