@@ -9,3 +9,6 @@ out/
 .DS_Store
 *.log
 *.tsbuildinfo
+website/public/llms.txt
+website/public/llms-full.txt
+packages/ogpeek/llms.txt

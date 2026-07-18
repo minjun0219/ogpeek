@@ -1,10 +1,15 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildFull,
   buildIndex,
   CONFIG,
   rawUrl,
+  readSources,
+  repoRoot,
   stripLogo,
+  writeAll,
 } from "../../scripts/gen-llms.mjs";
 
 describe("rawUrl", () => {
@@ -78,5 +83,41 @@ describe("buildFull", () => {
 
   it("credits the repository as the source of truth", () => {
     expect(out).toContain("github.com/minjun0219/ogpeek");
+  });
+});
+
+describe("readSources", () => {
+  it("reads all three READMEs from the real repo root", () => {
+    const s = readSources(repoRoot);
+    expect(s.root.length).toBeGreaterThan(0);
+    expect(s.engine.length).toBeGreaterThan(0);
+    expect(s.react.length).toBeGreaterThan(0);
+  });
+
+  it("throws when a source README is missing", () => {
+    expect(() => readSources("/no/such/repo")).toThrow();
+  });
+});
+
+describe("generated output from real READMEs", () => {
+  it("full inline carries engine + react content", () => {
+    const s = readSources(repoRoot);
+    const full = buildFull(s, CONFIG);
+    expect(full).toContain("@ogpeek/react");
+    expect(full).toContain("OG_TITLE_MISSING");
+  });
+});
+
+describe("writeAll", () => {
+  it("writes three files and the two maps are byte-identical", () => {
+    const { paths } = writeAll(repoRoot);
+    expect(paths).toHaveLength(3);
+    for (const p of paths) {
+      expect(existsSync(p)).toBe(true);
+    }
+
+    const webMap = readFileSync(join(repoRoot, "website/public/llms.txt"));
+    const pkgMap = readFileSync(join(repoRoot, "packages/ogpeek/llms.txt"));
+    expect(pkgMap.equals(webMap)).toBe(true);
   });
 });

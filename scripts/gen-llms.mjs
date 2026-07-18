@@ -52,3 +52,47 @@ export function buildFull(sources, config) {
   );
   return `${header}\n${sections.join("\n\n---\n\n")}\n`;
 }
+
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// scripts/gen-llms.mjs → repo root is one level up from scripts/.
+export const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+
+export function readSources(root) {
+  const read = (rel) => readFileSync(join(root, rel), "utf8");
+  return {
+    root: read("README.md"),
+    engine: read("packages/ogpeek/README.md"),
+    react: read("packages/ogpeek-react/README.md"),
+  };
+}
+
+export function writeAll(root) {
+  const sources = readSources(root);
+  const index = buildIndex(CONFIG);
+  const full = buildFull(sources, CONFIG);
+
+  const webMap = join(root, "website/public/llms.txt");
+  const webFull = join(root, "website/public/llms-full.txt");
+  const pkgMap = join(root, "packages/ogpeek/llms.txt");
+
+  for (const [path, content] of [
+    [webMap, index],
+    [webFull, full],
+    [pkgMap, index],
+  ]) {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, content);
+  }
+  return { index, full, paths: [webMap, webFull, pkgMap] };
+}
+
+// Run as a CLI: `node scripts/gen-llms.mjs`
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const { paths } = writeAll(repoRoot);
+  for (const p of paths) {
+    console.log(`wrote ${p}`);
+  }
+}
