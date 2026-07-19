@@ -18,6 +18,7 @@
     "lint": "biome lint",
     "check": "biome check",
     "check:fix": "biome check --write",
+    "gen:llms": "node scripts/gen-llms.mjs",
     "changeset": "changeset",
     "changeset:version": "changeset version && node scripts/sync-versions.mjs"
   },

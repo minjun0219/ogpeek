@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm -w libs:build && next dev -p 3000",
-    "build": "pnpm -w libs:build && next build",
+    "dev": "pnpm -w libs:build && pnpm -w gen:llms && next dev -p 3000",
+    "build": "pnpm -w libs:build && pnpm -w gen:llms && next build",
     "start": "next start -p 3000",
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -w libs:build && tsc --noEmit",
-    "cf:build": "pnpm -w libs:build && opennextjs-cloudflare build",
+    "cf:build": "pnpm -w libs:build && pnpm -w gen:llms && opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy"
   },

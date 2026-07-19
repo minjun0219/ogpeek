@@ -45,11 +45,12 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "llms.txt"
   ],
   "scripts": {
     "build": "rimraf dist && tsc -p .",
-    "prepack": "pnpm run build",
+    "prepack": "pnpm -w gen:llms && pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
