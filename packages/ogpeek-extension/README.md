@@ -130,7 +130,7 @@ Output:
 
 Two channels share the same zip:
 
-- **GitHub Releases** — every release-please tag attaches
+- **GitHub Releases** — every changesets release tag attaches
   `ogpeek-chrome.zip` to the Release. Load it unpacked for testing, or
   push it through Chrome enterprise policy
   (`ExtensionInstallForcelist` + a self-hosted update manifest) in
