@@ -20,7 +20,7 @@
     "ipaddr.js": "2.3.0",
     "next": "15.5.15",
     "ogpeek": "workspace:*",
-    "posthog-js": "^1.421.0",
+    "posthog-js": "1.421.0",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },

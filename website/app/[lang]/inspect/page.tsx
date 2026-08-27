@@ -45,8 +45,8 @@ export async function generateMetadata({
   searchParams: SearchParams;
 }): Promise<Metadata> {
   const { lang } = await params;
-  // ?url= 결과 페이지는 무한 생성되므로 canonical 은 항상 쿼리 없는
-  // /inspect 로 수렴시킨다.
+  // ?url= result pages are unbounded, so their canonical always collapses
+  // to the query-less /inspect.
   const alternates = hasLang(lang)
     ? langAlternates(lang, "/inspect")
     : undefined;

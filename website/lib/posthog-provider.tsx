@@ -9,14 +9,16 @@ const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
 
 /**
- * PostHog 초기화 래퍼.
+ * PostHog init wrapper.
  *
- * - 키가 없으면(로컬 개발·포크 빌드) 아무것도 하지 않고 children 만 통과시킨다.
- *   NEXT_PUBLIC_* 는 빌드 타임에 인라인되므로, 키 없이 빌드된 번들에는
- *   PostHog 가 아예 붙지 않는다.
- * - `defaults: "2025-05-24"` 가 App Router 의 history 기반 SPA 네비게이션을
- *   자동으로 $pageview / $pageleave 로 잡아주므로 수동 캡처가 필요 없다.
- * - `lang` 은 super property 로 등록해서 모든 이벤트가 /en · /ko 로 쪼개지게 한다.
+ * - Without a key (local dev, forks) it does nothing and passes children
+ *   through — no init call is made and no events are sent.
+ * - `defaults: "2025-05-24"` turns the App Router's history-based SPA
+ *   navigations into automatic $pageview / $pageleave capture, so no
+ *   manual capture calls are needed.
+ * - `lang` is registered as a super property synchronously after init —
+ *   before the automatic initial $pageview is flushed — so every event
+ *   splits by /en · /ko.
  */
 export function PostHogProvider({
   lang,
@@ -33,15 +35,20 @@ export function PostHogProvider({
     }
     posthog.init(KEY, {
       api_host: HOST,
-      // api_host 가 리버스 프록시일 때 toolbar 등 PostHog 앱 링크가
-      // 깨지지 않도록 실제 앱 호스트를 따로 알려준다.
+      // When api_host points at a reverse proxy, keep PostHog app links
+      // (toolbar etc.) working by naming the real app host.
       ui_host: "https://us.posthog.com",
       defaults: "2025-05-24",
       person_profiles: "identified_only",
     });
+    // Register before the automatic initial $pageview so the very first
+    // event already carries the language. Read from <html lang> (set by the
+    // layout) instead of the prop to keep this init effect dependency-free.
+    posthog.register({ lang: document.documentElement.lang });
     setReady(true);
   }, []);
 
+  // Keep the super property in sync when the user switches languages.
   useEffect(() => {
     if (ready) {
       posthog.register({ lang });

@@ -12,9 +12,10 @@ import { LEGACY_HOSTS, SITE_URL } from "@/lib/site";
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
 
-  // 과거 호스트로 들어온 요청은 정본 도메인으로 301 합친다 (SEO 신호 통합).
-  const host = req.headers.get("host");
-  if (host && LEGACY_HOSTS.includes(host)) {
+  // Fold requests on former hosts into the canonical domain with a 301 so
+  // search signals consolidate. nextUrl.hostname is port-free, unlike the
+  // raw Host header (e.g. "ogpeek.minjun.dev:443").
+  if (LEGACY_HOSTS.includes(req.nextUrl.hostname)) {
     return NextResponse.redirect(
       `${SITE_URL}${pathname}${req.nextUrl.search}`,
       301,

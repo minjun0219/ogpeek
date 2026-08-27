@@ -3,14 +3,18 @@ import { LANGS } from "@/lib/i18n";
 import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  // 언어별 정적 페이지 두 장이 전부다. inspect 의 ?url= 결과 페이지는
-  // 무한하므로 sitemap 에 올리지 않는다 (canonical 이 /inspect 로 수렴).
-  return ["", "/inspect"].map((path) => ({
-    url: `${SITE_URL}/en${path}`,
-    alternates: {
-      languages: Object.fromEntries(
-        LANGS.map((lang) => [lang, `${SITE_URL}/${lang}${path}`]),
-      ),
-    },
-  }));
+  // Two static pages per language. Every localized URL gets its own entry
+  // carrying the reciprocal alternate set — sitemap-based hreflang requires
+  // this symmetry. /inspect?url= result pages are unbounded, so they stay
+  // out of the sitemap (their canonical collapses to /inspect).
+  return ["", "/inspect"].flatMap((path) =>
+    LANGS.map((lang) => ({
+      url: `${SITE_URL}/${lang}${path}`,
+      alternates: {
+        languages: Object.fromEntries(
+          LANGS.map((l) => [l, `${SITE_URL}/${l}${path}`]),
+        ),
+      },
+    })),
+  );
 }
