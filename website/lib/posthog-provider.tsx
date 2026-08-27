@@ -33,6 +33,9 @@ export function PostHogProvider({
     }
     posthog.init(KEY, {
       api_host: HOST,
+      // api_host 가 리버스 프록시일 때 toolbar 등 PostHog 앱 링크가
+      // 깨지지 않도록 실제 앱 호스트를 따로 알려준다.
+      ui_host: "https://us.posthog.com",
       defaults: "2025-05-24",
       person_profiles: "identified_only",
     });
