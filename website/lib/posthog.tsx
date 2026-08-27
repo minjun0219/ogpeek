@@ -25,22 +25,28 @@ export function PostHogInit({ lang }: { lang: Lang }) {
       return;
     }
     let cancelled = false;
-    import("posthog-js").then(({ default: posthog }) => {
-      if (cancelled) {
-        return;
-      }
-      if (!posthog.__loaded) {
-        posthog.init(KEY, {
-          api_host: HOST,
-          // When api_host points at a reverse proxy, keep PostHog app links
-          // (toolbar etc.) working by naming the real app host.
-          ui_host: "https://us.posthog.com",
-          defaults: "2025-05-24",
-          person_profiles: "identified_only",
-        });
-      }
-      posthog.register({ lang });
-    });
+    import("posthog-js")
+      .then(({ default: posthog }) => {
+        if (cancelled) {
+          return;
+        }
+        if (!posthog.__loaded) {
+          posthog.init(KEY, {
+            api_host: HOST,
+            // When api_host points at a reverse proxy, keep PostHog app links
+            // (toolbar etc.) working by naming the real app host.
+            ui_host: "https://us.posthog.com",
+            defaults: "2025-05-24",
+            person_profiles: "identified_only",
+          });
+        }
+        posthog.register({ lang });
+      })
+      .catch(() => {
+        // Analytics is best-effort: if the chunk fails to load (offline,
+        // blocked request), stay silent instead of surfacing an unhandled
+        // rejection.
+      });
     return () => {
       cancelled = true;
     };
