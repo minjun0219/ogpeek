@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LangToggle } from "@/components/LangToggle";
 import { Footer } from "@/components/landing/Footer";
@@ -5,10 +6,23 @@ import { Hero } from "@/components/landing/Hero";
 import { InstallCopy } from "@/components/landing/InstallCopy";
 import { PackageDetail } from "@/components/packages/PackageDetail";
 import { getDict, hasLang, type Lang } from "@/lib/i18n";
+import { langAlternates } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ lang: string }>;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Params;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  if (!hasLang(lang)) {
+    return {};
+  }
+  return { alternates: langAlternates(lang, "") };
+}
 
 const ENGINE_QUICK_START = `import { parse } from "ogpeek";
 import { fetchHtml } from "ogpeek/fetch";

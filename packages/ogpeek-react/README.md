@@ -1,7 +1,7 @@
 # @ogpeek/react
 
 Drop-in React components for the [ogpeek](https://www.npmjs.com/package/ogpeek)
-OG-tag inspector. Renders the same panels the demo site (`ogpeek.minjun.dev`)
+OG-tag inspector. Renders the same panels the demo site (`ogpeek.dev`)
 uses — preview card, validation results, redirect flow, tag table — and ships a
 plain stylesheet so consumers don't need Tailwind.
 

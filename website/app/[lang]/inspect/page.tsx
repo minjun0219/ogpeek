@@ -8,6 +8,7 @@ import { Hero } from "@/components/landing/Hero";
 import { type Dict, format, getDict, hasLang, type Lang } from "@/lib/i18n";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
+import { langAlternates } from "@/lib/site";
 import { normalizeUrlInput } from "@/lib/url-normalize";
 
 export const dynamic = "force-dynamic";
@@ -37,17 +38,25 @@ function safeHost(value: string): string | null {
 }
 
 export async function generateMetadata({
+  params,
   searchParams,
 }: {
+  params: Params;
   searchParams: SearchParams;
 }): Promise<Metadata> {
+  const { lang } = await params;
+  // ?url= 결과 페이지는 무한 생성되므로 canonical 은 항상 쿼리 없는
+  // /inspect 로 수렴시킨다.
+  const alternates = hasLang(lang)
+    ? langAlternates(lang, "/inspect")
+    : undefined;
   const { url } = await searchParams;
   const target = pickTarget(url);
   if (!target) {
-    return {};
+    return { alternates };
   }
   const host = safeHost(target);
-  return host ? { title: `${host} — ogpeek` } : {};
+  return host ? { title: `${host} — ogpeek`, alternates } : { alternates };
 }
 
 export default async function InspectPage({

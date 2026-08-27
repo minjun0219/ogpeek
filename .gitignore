@@ -12,3 +12,6 @@ out/
 website/public/llms.txt
 website/public/llms-full.txt
 packages/ogpeek/llms.txt
+.env
+.env.*
+!.env.example
