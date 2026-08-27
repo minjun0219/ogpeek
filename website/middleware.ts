@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { LANGS, pickLangFromAcceptLanguage } from "@/lib/i18n";
+import { LEGACY_HOSTS, SITE_URL } from "@/lib/site";
 
 // Mirrors the Next.js i18n-routing reference example: every page lives under
 // /<lang>/. Requests without a lang prefix are redirected to /<picked-lang>
@@ -10,6 +11,16 @@ import { LANGS, pickLangFromAcceptLanguage } from "@/lib/i18n";
 //   /<en|ko>(/...)?      → passthrough
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
+
+  // Fold requests on former hosts into the canonical domain with a 301 so
+  // search signals consolidate. nextUrl.hostname is port-free, unlike the
+  // raw Host header (e.g. "ogpeek.minjun.dev:443").
+  if (LEGACY_HOSTS.includes(req.nextUrl.hostname)) {
+    return NextResponse.redirect(
+      `${SITE_URL}${pathname}${req.nextUrl.search}`,
+      301,
+    );
+  }
   const hasPrefix = LANGS.some(
     (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
   );

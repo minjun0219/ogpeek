@@ -3,6 +3,8 @@ import { Inter, Noto_Sans_KR } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDict, hasLang, LANGS, type Lang } from "@/lib/i18n";
+import { PostHogProvider } from "@/lib/posthog-provider";
+import { SITE_URL } from "@/lib/site";
 import { TranslateProvider } from "@/lib/translate-context";
 import "../globals.css";
 import "@ogpeek/react/styles.css";
@@ -37,8 +39,14 @@ export async function generateMetadata({
   }
   const dict = getDict(lang);
   return {
+    metadataBase: new URL(SITE_URL),
     title: dict.meta.title,
     description: dict.meta.description,
+    openGraph: {
+      siteName: "ogpeek",
+      type: "website",
+      locale: lang === "ko" ? "ko_KR" : "en_US",
+    },
   };
 }
 
@@ -57,7 +65,11 @@ export default async function LangLayout({
   return (
     <html lang={lang} className={`${inter.variable} ${notoSansKr.variable}`}>
       <body className="min-h-screen font-sans">
-        <TranslateProvider value={{ lang, dict }}>{children}</TranslateProvider>
+        <PostHogProvider lang={lang}>
+          <TranslateProvider value={{ lang, dict }}>
+            {children}
+          </TranslateProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
