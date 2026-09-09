@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -w libs:build && tsc --noEmit",
-    "cf:build": "pnpm -w libs:build && pnpm -w gen:llms && opennextjs-cloudflare build",
+    "cf:build": "node scripts/require-analytics-env.mjs && pnpm -w libs:build && pnpm -w gen:llms && opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy"
   },
@@ -25,6 +25,7 @@
     "react-dom": "19.0.0"
   },
   "devDependencies": {
+    "@next/env": "15.5.15",
     "@opennextjs/cloudflare": "^1.19.4",
     "@types/node": "22.7.5",
     "@types/react": "19.0.0",

@@ -71,7 +71,7 @@ pnpm -F website typecheck  # 데모 사이트 타입 체크 (ogpeek build 선행
 pnpm -F website dev        # 로컬 개발 서버 (Node 24, ogpeek build 선행)
 pnpm -F website cf:build   # OpenNext + Workers 번들 (ogpeek build 선행)
 pnpm -F website cf:preview # 로컬 wrangler 미리보기
-pnpm -F website cf:deploy  # Workers 배포
+pnpm -F website cf:deploy  # 수동 배포 (부트스트랩·긴급용)
 ```
 
 ## 디렉토리 약속
@@ -104,6 +104,20 @@ Docker / Vercel / 자체 호스팅 옵션은 모두 정리했다 — website 는
   필수. `compatibility_date`는 `2025-09-23`.
 - `website/open-next.config.ts` — OpenNext 어댑터 설정. 기본은 인메모리 캐시.
 - `website/package.json` 의 `cf:build` / `cf:preview` / `cf:deploy` 스크립트.
+
+**`main` 에 푸시하는 것이 곧 배포다.** 이 repo 에는 Workers Builds 가 연결돼
+있어 `main` 커밋마다 새 클론에서 빌드한다. 로컬 `cf:deploy` 는 부트스트랩·
+긴급용일 뿐이다 — 커밋 안 된 로컬 상태가 프로덕션에 올라가고, 다음 `main`
+푸시가 그것을 조용히 덮는다.
+
+Workers Builds 는 깨끗한 체크아웃에서 시작하므로 gitignore 된 것은 그곳에
+없다. `website/.env` 가 gitignore 대상이고 `NEXT_PUBLIC_*` 는 런타임에 읽는
+값이 아니라 **`next build` 가 인라인하는** 값이라, 브라우저 분석 키는 Workers
+Builds 의 환경변수에 있어야 한다 — Worker secret 은 번들에 닿지 않아 소용이
+없다. `cf:build` 앞에는 `website/scripts/require-analytics-env.mjs` 가 서서
+`NEXT_PUBLIC_POSTHOG_KEY` 가 없으면 빌드를 중단시킨다(의도적으로 분석 없이
+배포하려면 `OGPEEK_ALLOW_NO_ANALYTICS=1`). 이 가드가 생기기 전까지 ogpeek.dev
+는 이벤트를 한 건도 수집하지 못했다.
 
 ### SSRF 가드와 런타임
 

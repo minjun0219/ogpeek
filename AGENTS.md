@@ -99,7 +99,7 @@ pnpm -F website typecheck   # type-check the demo site (chains libs:build)
 pnpm -F website dev         # local dev server (Node 24, chains libs:build)
 pnpm -F website cf:build    # OpenNext + Workers bundle (chains libs:build)
 pnpm -F website cf:preview  # local wrangler preview
-pnpm -F website cf:deploy   # deploy to Workers
+pnpm -F website cf:deploy   # manual deploy (bootstrap/emergency only)
 pnpm check                  # biome format + lint check (CI runs `biome ci`)
 pnpm check:fix              # biome auto-fix (format + safe lint fixes)
 ```
@@ -139,6 +139,21 @@ Builds use `@opennextjs/cloudflare`. The configuration set:
   cache by default.
 - `website/package.json` — the `cf:build` / `cf:preview` / `cf:deploy`
   scripts.
+
+**Pushing to `main` is the deploy.** Workers Builds is connected to this repo
+and builds every `main` commit from a fresh clone, so `cf:deploy` from a
+laptop is a bootstrap / emergency path only — running it puts uncommitted
+local state into production and the next `main` push silently overwrites it.
+
+Because Workers Builds starts from a clean checkout, anything gitignored is
+absent there. `website/.env` is gitignored, and `NEXT_PUBLIC_*` values are
+**inlined by `next build`** rather than read at runtime, so the browser
+analytics key has to live in the Workers Builds environment variables — a
+Worker secret is the wrong tool, it never reaches the bundle. `cf:build` is
+fronted by `website/scripts/require-analytics-env.mjs`, which fails the build
+when `NEXT_PUBLIC_POSTHOG_KEY` is missing (set `OGPEEK_ALLOW_NO_ANALYTICS=1`
+to ship a deliberately analytics-free build). ogpeek.dev ran without a single
+event until that guard existed.
 
 ### SSRF guard and runtime
 
