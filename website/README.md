@@ -19,11 +19,20 @@ pnpm -F website typecheck
 Built and deployed via the `@opennextjs/cloudflare` adapter. `wrangler.json`
 keeps the `nodejs_compat` flag enabled.
 
+**Pushing to `main` is the deploy** — Workers Builds builds every `main`
+commit from a fresh clone. The commands below are for local verification;
+`cf:deploy` is a bootstrap / emergency path only.
+
 ```bash
 pnpm -F website cf:build    # OpenNext build → .open-next/worker.js
 pnpm -F website cf:preview  # local wrangler preview
-pnpm -F website cf:deploy   # actual deploy (requires wrangler login)
+pnpm -F website cf:deploy   # manual deploy (bootstrap/emergency, needs wrangler login)
 ```
+
+`NEXT_PUBLIC_*` values are inlined at build time, so the PostHog key belongs
+in the Workers Builds environment variables (not a Worker secret) — and in
+`website/.env` for local builds. `cf:build` refuses to run without it; set
+`OGPEEK_ALLOW_NO_ANALYTICS=1` to build without analytics on purpose.
 
 ## SSRF guard
 

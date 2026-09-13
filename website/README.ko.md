@@ -18,11 +18,20 @@ pnpm -F website typecheck
 `@opennextjs/cloudflare` 어댑터로 빌드/배포한다. `wrangler.json` 은
 `nodejs_compat` 플래그를 켜둔 상태.
 
+**`main` 에 푸시하는 것이 곧 배포다** — Workers Builds 가 `main` 커밋마다
+새 클론에서 빌드한다. 아래 명령은 로컬 확인용이고, `cf:deploy` 는 부트스트랩·
+긴급용 경로다.
+
 ```bash
 pnpm -F website cf:build    # OpenNext 빌드 → .open-next/worker.js
 pnpm -F website cf:preview  # 로컬 wrangler 미리보기
-pnpm -F website cf:deploy   # 실제 배포 (wrangler login 필요)
+pnpm -F website cf:deploy   # 수동 배포 (부트스트랩·긴급용, wrangler login 필요)
 ```
+
+`NEXT_PUBLIC_*` 는 빌드 타임에 인라인되므로 PostHog 키는 Workers Builds 의
+환경변수에 있어야 한다(Worker secret 은 번들에 닿지 않는다). 로컬 빌드는
+`website/.env`. 키가 없으면 `cf:build` 가 중단되고, 의도적으로 분석 없이
+빌드하려면 `OGPEEK_ALLOW_NO_ANALYTICS=1`.
 
 ## SSRF 가드
 

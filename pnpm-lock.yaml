@@ -137,6 +137,9 @@ importers:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
     devDependencies:
+      '@next/env':
+        specifier: 15.5.15
+        version: 15.5.15
       '@opennextjs/cloudflare':
         specifier: ^1.19.4
         version: 1.19.4(next@15.5.15(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(wrangler@4.84.1)
