@@ -10,17 +10,24 @@
 // So the key lives in the Workers Builds environment variables, and this guard
 // stands in front of cf:build to make its absence loud. Local dev / forks that
 // deliberately want an analytics-free deployment set OGPEEK_ALLOW_NO_ANALYTICS=1.
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 // @next/env is CJS — take the default export and destructure.
 import nextEnv from "@next/env";
 
 const { loadEnvConfig } = nextEnv;
+
+// The website directory, not process.cwd(): `next build` always resolves its
+// env files against this package, so anchoring here keeps the guard's verdict
+// and the build's verdict the same no matter where the script was invoked from.
+const WEBSITE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const OPT_OUT = "OGPEEK_ALLOW_NO_ANALYTICS";
 const KEY = "NEXT_PUBLIC_POSTHOG_KEY";
 
 // Resolve exactly the way next build will: real env first, then
 // .env.local / .env.<NODE_ENV> / .env from the website directory.
-loadEnvConfig(process.cwd(), false, { info: () => {}, error: console.error });
+loadEnvConfig(WEBSITE_DIR, false, { info: () => {}, error: console.error });
 
 if (process.env[OPT_OUT] === "1") {
   console.log(`[analytics] ${OPT_OUT}=1 — building without PostHog.`);
