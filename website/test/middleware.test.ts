@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
+import { LEGACY_HOSTS, SITE_URL } from "../lib/site";
 import { middleware } from "../middleware";
 
 const ORIGIN = "https://ogpeek.minjun.dev";
@@ -69,12 +70,15 @@ describe("middleware", () => {
   });
 
   describe("legacy hosts fold into the canonical origin", () => {
+    // The fold lands on the lang-prefixed path directly: "/" must never be
+    // the target, or a browser holding the previous swap's cached 301
+    // ("<canonical>/ → <legacy>/") bounces between the hosts forever.
     const cases: Array<[string, string]> = [
-      ["https://ogpeek.dev/", `${ORIGIN}/`],
+      ["https://ogpeek.dev/", `${ORIGIN}/en`],
       ["https://ogpeek.dev/en/inspect", `${ORIGIN}/en/inspect`],
       [
         "https://ogpeek.dev/inspect?url=https%3A%2F%2Fogp.me",
-        `${ORIGIN}/inspect?url=https%3A%2F%2Fogp.me`,
+        `${ORIGIN}/en/inspect?url=https%3A%2F%2Fogp.me`,
       ],
     ];
     for (const [from, to] of cases) {
@@ -84,6 +88,28 @@ describe("middleware", () => {
         expect(res.headers.get("location")).toBe(to);
       });
     }
+
+    it("honours Accept-Language when picking the folded prefix", () => {
+      const res = middleware(
+        new NextRequest(new URL("https://ogpeek.dev/inspect"), {
+          headers: new Headers({ "accept-language": "ko-KR,ko;q=0.9" }),
+        }),
+      );
+      expect(res.headers.get("location")).toBe(`${ORIGIN}/ko/inspect`);
+    });
+
+    it("bounds the 301 cache to the visitor's own browser", () => {
+      // Location depends on Accept-Language, so a shared cache must not reuse
+      // one visitor's answer for the next — hence private + Vary, not public.
+      const res = middleware(new NextRequest(new URL("https://ogpeek.dev/")));
+      expect(res.headers.get("cache-control")).toBe("private, max-age=3600");
+      expect(res.headers.get("vary")).toBe("accept-language");
+    });
+
+    it("never lists the canonical host as legacy", () => {
+      // The one way to get a genuine server-side loop: fold a host onto itself.
+      expect(LEGACY_HOSTS).not.toContain(new URL(SITE_URL).hostname);
+    });
   });
 
   it("does not loop on lang-prefixed paths even with mismatched Accept-Language", () => {

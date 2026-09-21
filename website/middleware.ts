@@ -11,26 +11,53 @@ import { LEGACY_HOSTS, SITE_URL } from "@/lib/site";
 //   /<en|ko>(/...)?      → passthrough
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
+  const hasPrefix = LANGS.some(
+    (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
+  );
+
+  // Resolve the lang prefix up front so the host fold below can reuse it.
+  const lang = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
+  const langPath = hasPrefix
+    ? pathname
+    : pathname === "/"
+      ? `/${lang}`
+      : `/${lang}${pathname}`;
 
   // Fold requests on former hosts into the canonical domain with a 301 so
   // search signals consolidate. nextUrl.hostname is port-free, unlike the
   // raw Host header (e.g. "ogpeek.dev:443").
+  //
+  // Two details are load-bearing, both about browsers caching a 301 with no
+  // expiry (RFC 9111 lets them keep it forever):
+  //
+  //   - Land on the lang-prefixed path in one hop. A browser that cached the
+  //     *previous* canonical swap still holds "ogpeek.minjun.dev/ → ogpeek.dev/",
+  //     so folding "/" onto "/" would bounce between the hosts forever. "/en"
+  //     was never a legacy source, so the chain terminates there.
+  //   - Bound the lifetime with Cache-Control. If the canonical ever moves
+  //     again, the stale entry expires instead of trapping the visitor.
+  //     Search engines treat the move as permanent regardless of this header.
+  //
+  // The cache entry is `private` and varies on Accept-Language because an
+  // unprefixed path resolves its Location from that header: a shared cache
+  // holding one visitor's "/en" answer would hand it to Korean visitors for
+  // the next hour. Only the visitor's own browser is meant to keep this.
   if (LEGACY_HOSTS.includes(req.nextUrl.hostname)) {
-    return NextResponse.redirect(
-      `${SITE_URL}${pathname}${req.nextUrl.search}`,
+    const res = NextResponse.redirect(
+      `${SITE_URL}${langPath}${req.nextUrl.search}`,
       301,
     );
+    res.headers.set("cache-control", "private, max-age=3600");
+    res.headers.set("vary", "accept-language");
+    return res;
   }
-  const hasPrefix = LANGS.some(
-    (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
-  );
+
   if (hasPrefix) {
     return NextResponse.next();
   }
 
-  const lang = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
   const url = req.nextUrl.clone();
-  url.pathname = pathname === "/" ? `/${lang}` : `/${lang}${pathname}`;
+  url.pathname = langPath;
   return NextResponse.redirect(url);
 }
 
