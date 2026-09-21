@@ -3,10 +3,10 @@
  * and robots all derive absolute URLs from this value — change it in one
  * place if the domain ever moves.
  */
-export const SITE_URL = "https://ogpeek.dev";
+export const SITE_URL = "https://ogpeek.minjun.dev";
 
 /** Former hosts that middleware folds into the canonical origin via 301. */
-export const LEGACY_HOSTS = ["ogpeek.minjun.dev"];
+export const LEGACY_HOSTS = ["ogpeek.dev"];
 
 /**
  * canonical + hreflang alternate metadata for an /en·/ko page pair.

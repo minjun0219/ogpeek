@@ -14,7 +14,7 @@ export function middleware(req: NextRequest): NextResponse {
 
   // Fold requests on former hosts into the canonical domain with a 301 so
   // search signals consolidate. nextUrl.hostname is port-free, unlike the
-  // raw Host header (e.g. "ogpeek.minjun.dev:443").
+  // raw Host header (e.g. "ogpeek.dev:443").
   if (LEGACY_HOSTS.includes(req.nextUrl.hostname)) {
     return NextResponse.redirect(
       `${SITE_URL}${pathname}${req.nextUrl.search}`,
