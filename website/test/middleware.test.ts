@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { middleware } from "../middleware";
 
-const ORIGIN = "https://ogpeek.dev";
+const ORIGIN = "https://ogpeek.minjun.dev";
 
 function makeReq(pathname: string, acceptLanguage: string | null): NextRequest {
   const headers = new Headers();
@@ -66,6 +66,24 @@ describe("middleware", () => {
     const u = new URL(loc);
     expect(u.pathname).toBe("/en/inspect");
     expect(u.searchParams.get("url")).toBe("https://ogp.me");
+  });
+
+  describe("legacy hosts fold into the canonical origin", () => {
+    const cases: Array<[string, string]> = [
+      ["https://ogpeek.dev/", `${ORIGIN}/`],
+      ["https://ogpeek.dev/en/inspect", `${ORIGIN}/en/inspect`],
+      [
+        "https://ogpeek.dev/inspect?url=https%3A%2F%2Fogp.me",
+        `${ORIGIN}/inspect?url=https%3A%2F%2Fogp.me`,
+      ],
+    ];
+    for (const [from, to] of cases) {
+      it(`${from} → 301 ${to}`, () => {
+        const res = middleware(new NextRequest(new URL(from)));
+        expect(res.status).toBe(301);
+        expect(res.headers.get("location")).toBe(to);
+      });
+    }
   });
 
   it("does not loop on lang-prefixed paths even with mismatched Accept-Language", () => {
