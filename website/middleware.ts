@@ -37,12 +37,18 @@ export function middleware(req: NextRequest): NextResponse {
   //   - Bound the lifetime with Cache-Control. If the canonical ever moves
   //     again, the stale entry expires instead of trapping the visitor.
   //     Search engines treat the move as permanent regardless of this header.
+  //
+  // The cache entry is `private` and varies on Accept-Language because an
+  // unprefixed path resolves its Location from that header: a shared cache
+  // holding one visitor's "/en" answer would hand it to Korean visitors for
+  // the next hour. Only the visitor's own browser is meant to keep this.
   if (LEGACY_HOSTS.includes(req.nextUrl.hostname)) {
     const res = NextResponse.redirect(
       `${SITE_URL}${langPath}${req.nextUrl.search}`,
       301,
     );
-    res.headers.set("cache-control", "public, max-age=3600");
+    res.headers.set("cache-control", "private, max-age=3600");
+    res.headers.set("vary", "accept-language");
     return res;
   }
 

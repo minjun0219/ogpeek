@@ -98,9 +98,12 @@ describe("middleware", () => {
       expect(res.headers.get("location")).toBe(`${ORIGIN}/ko/inspect`);
     });
 
-    it("bounds how long the 301 stays cached", () => {
+    it("bounds the 301 cache to the visitor's own browser", () => {
+      // Location depends on Accept-Language, so a shared cache must not reuse
+      // one visitor's answer for the next — hence private + Vary, not public.
       const res = middleware(new NextRequest(new URL("https://ogpeek.dev/")));
-      expect(res.headers.get("cache-control")).toBe("public, max-age=3600");
+      expect(res.headers.get("cache-control")).toBe("private, max-age=3600");
+      expect(res.headers.get("vary")).toBe("accept-language");
     });
 
     it("never lists the canonical host as legacy", () => {
