@@ -30,6 +30,12 @@ body {
   color: rgb(var(--foreground));
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 body {
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;

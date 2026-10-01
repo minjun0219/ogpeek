@@ -1,3 +1,5 @@
+import type { WarningCode } from "ogpeek";
+
 export type Lang = "en" | "ko";
 
 export const LANGS = ["en", "ko"] as const;
@@ -38,7 +40,33 @@ export type Dict = {
     target: string;
     rateLimitTemplate: string;
   };
+  nav: {
+    ariaLabel: string;
+    how: string;
+    checks: string;
+    packages: string;
+    extension: string;
+  };
+  hero: { title: string; subtitle: string; examplesLabel: string };
+  how: {
+    title: string;
+    lead: string;
+    steps: { fetch: Step; parse: Step; validate: Step };
+  };
+  checks: {
+    title: string;
+    lead: string;
+    rules: Record<WarningCode, string>;
+  };
+  extension: {
+    title: string;
+    body: string;
+    points: string[];
+    guideLink: string;
+  };
   packages: {
+    sectionTitle: string;
+    sectionLead: string;
     quickStartTitle: string;
     engine: { tagline: string };
     react: { tagline: string };
@@ -47,6 +75,8 @@ export type Dict = {
   };
   toggle: { ariaLabel: string };
 };
+
+type Step = { title: string; body: string };
 
 const en: Dict = {
   meta: {
@@ -98,7 +128,73 @@ const en: Dict = {
     target: "Target",
     rateLimitTemplate: "Too many requests. Please try again in {sec} seconds.",
   },
+  nav: {
+    ariaLabel: "Sections",
+    how: "How it works",
+    checks: "Checks",
+    packages: "Packages",
+    extension: "Extension",
+  },
+  hero: {
+    title: "Peek into any page's Open Graph tags",
+    subtitle:
+      "Paste a URL to see the card it renders, every meta tag it declares, and the OGP spec violations it ships with.",
+    examplesLabel: "Try",
+  },
+  how: {
+    title: "How it works",
+    lead: "One URL goes through three steps. The same engine runs on this site's Workers, in your own Node server, and inside the browser extension.",
+    steps: {
+      fetch: {
+        title: "Fetch",
+        body: "Follows redirects one hop at a time, within a timeout and a response-size cap. A guard hook runs before every hop, so the caller decides which hosts are reachable.",
+      },
+      parse: {
+        title: "Parse",
+        body: "Builds a normalized Open Graph tree from real-world markup — structured properties like og:image:width attach to their parent — and extracts favicons, JSON-LD, and theme-color alongside it.",
+      },
+      validate: {
+        title: "Validate",
+        body: "Flags missing required tags, relative URLs, duplicate declarations, and other common OGP spec violations as errors, warnings, or info.",
+      },
+    },
+  },
+  checks: {
+    title: "What it checks",
+    lead: "Every warning carries a stable code and a severity, so you can filter on them in your own tooling.",
+    rules: {
+      OG_TITLE_MISSING: "og:title is missing",
+      OG_TYPE_MISSING: "og:type is missing",
+      OG_IMAGE_MISSING: "og:image is missing",
+      OG_URL_MISSING: "og:url is missing",
+      OG_TITLE_TOO_LONG:
+        "og:title exceeds 60 characters — truncated by KakaoTalk",
+      OG_URL_MISMATCH: "og:url host/path disagrees with the actual request URL",
+      OG_TYPE_UNKNOWN: "og:type value is not in the OGP spec whitelist",
+      URL_NOT_ABSOLUTE: "A URL-typed property is not absolute",
+      DUPLICATE_SINGLETON:
+        "A single-valued property is declared more than once",
+      ORPHAN_STRUCTURED_PROPERTY:
+        "A structured property appears with no parent",
+      INVALID_DIMENSION: "width/height failed integer parsing",
+      JSONLD_PARSE_ERROR: "A JSON-LD block did not parse as JSON",
+      MISSING_PREFIX_ATTR: "<html prefix> is not declared",
+    },
+  },
+  extension: {
+    title: "Browser extension",
+    body: "This site fetches pages from Cloudflare Workers, so it can't reach anything behind a VPN or on an intranet. The extension runs the same engine inside your browser — the request leaves your machine, not a server.",
+    points: [
+      "Inspects the active tab's live DOM — no second request, same login state",
+      "Fetches any other URL through the browser's own network stack",
+      "Opens a full-tab view you can bookmark and share",
+    ],
+    guideLink: "Install guide",
+  },
   packages: {
+    sectionTitle: "Packages",
+    sectionLead:
+      "The engine and the React components this site is built from, both published on npm.",
     quickStartTitle: "Quick start",
     engine: {
       tagline:
@@ -163,7 +259,71 @@ const ko: Dict = {
     target: "대상",
     rateLimitTemplate: "요청이 너무 많습니다. {sec}초 후 다시 시도해 주세요.",
   },
+  nav: {
+    ariaLabel: "섹션",
+    how: "동작 방식",
+    checks: "검증 항목",
+    packages: "패키지",
+    extension: "확장 프로그램",
+  },
+  hero: {
+    title: "어느 페이지든 오픈그래프 메타태그를 바로 들여다봅니다",
+    subtitle:
+      "URL 하나만 넣으면 렌더링될 카드, 선언된 모든 메타 태그, OGP 스펙 위반 사항을 한 번에 보여 줍니다.",
+    examplesLabel: "예시",
+  },
+  how: {
+    title: "동작 방식",
+    lead: "URL 하나가 세 단계를 거칩니다. 이 사이트의 Workers, 여러분의 Node 서버, 브라우저 확장 프로그램에서 같은 엔진이 동작합니다.",
+    steps: {
+      fetch: {
+        title: "가져오기",
+        body: "타임아웃과 응답 크기 한도 안에서 리디렉션을 한 단계씩 따라갑니다. 매 요청 직전에 guard 훅이 실행되므로, 어떤 호스트에 접근할지는 호출하는 쪽이 결정합니다.",
+      },
+      parse: {
+        title: "파싱",
+        body: "실제 웹의 어수선한 마크업에서 정규화된 오픈그래프 트리를 만듭니다. og:image:width 같은 구조화 속성은 부모 속성에 붙고, 파비콘·JSON-LD·theme-color도 함께 추출합니다.",
+      },
+      validate: {
+        title: "검증",
+        body: "필수 태그 누락, 상대 URL, 중복 선언 같은 흔한 OGP 스펙 위반을 에러·경고·안내로 나눠 알려 줍니다.",
+      },
+    },
+  },
+  checks: {
+    title: "검증 항목",
+    lead: "모든 경고에는 고정된 코드와 심각도가 붙어 있어, 직접 만든 도구에서도 그대로 걸러 쓸 수 있습니다.",
+    rules: {
+      OG_TITLE_MISSING: "og:title이 없습니다",
+      OG_TYPE_MISSING: "og:type이 없습니다",
+      OG_IMAGE_MISSING: "og:image가 없습니다",
+      OG_URL_MISSING: "og:url이 없습니다",
+      OG_TITLE_TOO_LONG: "og:title이 60자를 넘습니다 — 카카오톡에서 잘립니다",
+      OG_URL_MISMATCH: "og:url의 호스트·경로가 실제 요청 URL과 다릅니다",
+      OG_TYPE_UNKNOWN: "og:type 값이 OGP 스펙 목록에 없습니다",
+      URL_NOT_ABSOLUTE: "URL 속성 값이 절대 URL이 아닙니다",
+      DUPLICATE_SINGLETON:
+        "한 번만 선언해야 하는 속성이 여러 번 선언되었습니다",
+      ORPHAN_STRUCTURED_PROPERTY: "구조화 속성이 부모 속성 없이 나타났습니다",
+      INVALID_DIMENSION: "width·height 값을 정수로 해석할 수 없습니다",
+      JSONLD_PARSE_ERROR: "JSON-LD 블록을 JSON으로 파싱할 수 없습니다",
+      MISSING_PREFIX_ATTR: "<html prefix>가 선언되지 않았습니다",
+    },
+  },
+  extension: {
+    title: "브라우저 확장 프로그램",
+    body: "이 사이트는 Cloudflare Workers에서 페이지를 가져오기 때문에 VPN 뒤나 사내망 페이지에는 닿지 않습니다. 확장 프로그램은 같은 엔진을 브라우저 안에서 실행하므로, 요청이 서버가 아니라 내 컴퓨터에서 나갑니다.",
+    points: [
+      "현재 탭의 실제 DOM을 바로 검사합니다 — 추가 요청 없이, 로그인 상태 그대로",
+      "다른 URL은 브라우저 자체의 네트워크 스택으로 가져옵니다",
+      "북마크하고 공유할 수 있는 전체 화면 보기를 제공합니다",
+    ],
+    guideLink: "설치 안내",
+  },
   packages: {
+    sectionTitle: "패키지",
+    sectionLead:
+      "이 사이트를 이루는 엔진과 React 컴포넌트를 npm에서 바로 설치할 수 있습니다.",
     quickStartTitle: "Quick start",
     engine: {
       tagline:

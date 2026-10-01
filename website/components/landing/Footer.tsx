@@ -19,6 +19,13 @@ export function Footer() {
         >
           MIT License
         </a>
+        <span aria-hidden>·</span>
+        <a
+          className="hover:text-[color:rgb(var(--foreground))] hover:underline"
+          href="/llms.txt"
+        >
+          llms.txt
+        </a>
       </div>
       <p className="text-xs">
         by{" "}
