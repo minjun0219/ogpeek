@@ -2,9 +2,9 @@ import { Result } from "@ogpeek/react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { LangToggle } from "@/components/LangToggle";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
+import { SiteHeader } from "@/components/landing/SiteHeader";
 import { type Dict, format, getDict, hasLang, type Lang } from "@/lib/i18n";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import { runParse, type ServerParseOutcome } from "@/lib/server-parse";
@@ -79,10 +79,10 @@ export default async function InspectPage({
 
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-6">
-      <div className="flex justify-end">
-        <LangToggle />
+      <div className="flex flex-col">
+        <SiteHeader lang={lang} dict={dict} />
+        <Hero lang={lang} dict={dict} />
       </div>
-      <Hero />
 
       {outcome ? (
         <Results outcome={outcome} dict={dict} lang={lang} />
