@@ -1,3 +1,7 @@
+// UTM tags let the personal site attribute visits that came from ogpeek.
+const AUTHOR_URL =
+  "https://minjun.kim/?utm_source=ogpeek&utm_medium=referral&utm_content=footer";
+
 export function Footer() {
   return (
     <footer className="mt-10 flex flex-col items-center gap-2 border-t border-[color:rgb(var(--border))] pt-10 text-sm text-[color:rgb(var(--muted))]">
@@ -31,7 +35,7 @@ export function Footer() {
         by{" "}
         <a
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
-          href="https://minjun.kim"
+          href={AUTHOR_URL}
           target="_blank"
           rel="noopener noreferrer"
         >
