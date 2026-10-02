@@ -138,7 +138,7 @@ pnpm -F ogpeek-extension package:chrome  # build + zip
   업로드하고 심사 제출까지 자동으로 수행합니다. `vars.CHROME_AUTOPUBLISH`
   와 4 개의 `CHROME_*` secrets로 게이트되며, 첫 업로드와 스토어 리스팅
   작성은 수동입니다 — 자세한 부트스트랩 절차는 루트의 `AGENTS.md`
-  `## Releases` 섹션을 보세요.
+  `## 릴리스` 섹션을 보세요.
 
 CRX 패키징 파이프라인은 의도적으로 out-of-scope.
 

@@ -17,4 +17,4 @@ pnpm changeset
   `package.json#version` or the `manifest/*.json` versions —
   `scripts/sync-versions.mjs` keeps them in lockstep.
 
-See `## Releases` in the root `AGENTS.md` for the full release flow.
+See `## 릴리스` in the root `AGENTS.md` for the full release flow.
