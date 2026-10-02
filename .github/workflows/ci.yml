@@ -34,6 +34,17 @@ jobs:
       - name: Biome check
         run: pnpm exec biome ci
 
+      # Context7 reads this file to serve ogpeek docs to coding agents. Past a
+      # limit (200-char description, 255-char rules, …) it rejects or truncates
+      # the file, so validate against the schema Context7 publishes right now.
+      # Context7 이 이 파일을 읽어 코딩 에이전트에게 ogpeek 문서를 준다. 한도(설명 200자,
+      # 규칙 255자 등)를 넘기면 거절되거나 잘리므로, Context7 이 지금 공개한 스키마로 검증한다.
+      - name: Validate context7.json
+        run: |
+          curl -sSfL --retry 3 https://context7.com/schema/context7.json -o "$RUNNER_TEMP/context7.schema.json"
+          npx -y -p ajv-cli@5 -p ajv-formats@3 ajv validate -c ajv-formats \
+            -s "$RUNNER_TEMP/context7.schema.json" -d context7.json
+
   build-test:
     name: typecheck + test + build
     runs-on: ubuntu-latest

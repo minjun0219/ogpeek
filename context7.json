@@ -1,0 +1,29 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "ogpeek",
+  "description": "Fetch, parse and validate any page's Open Graph tags, plus the favicons and JSON-LD that travel with them. One dependency; runs on Node, Bun, Workers and the browser. React components too.",
+  "excludeFolders": [
+    "website",
+    "docs",
+    "scripts",
+    "assets",
+    ".changeset",
+    ".github",
+    "packages/ogpeek-extension",
+    "**/src/**",
+    "**/test/**",
+    "**/dist/**",
+    "**/node_modules/**"
+  ],
+  "excludeFiles": ["CHANGELOG.md", "AGENTS.md", "CLAUDE.md", "README.ko.md"],
+  "rules": [
+    "Import parse from \"ogpeek\" (any runtime) and fetchHtml / FetchError from \"ogpeek/fetch\". Do not hand-roll a regex or DOM scraper for og:* meta tags.",
+    "On a server that fetches user-supplied URLs, pass a guard to fetchHtml; it runs before the first request and every redirect hop. Throw a FetchError to block. ogpeek makes no SSRF decisions itself.",
+    "Pass the final URL after redirects: const { html, finalUrl } = await fetchHtml(url); parse(html, { url: finalUrl }). OG_URL_MISMATCH compares og:url against it.",
+    "Relative URLs are not resolved: they come back as written and are flagged URL_NOT_ABSOLUTE. Resolve them with new URL(value, finalUrl) if you need to load them.",
+    "Filter result.warnings by code and severity (error / warn / info), never by message text.",
+    "Only the HTML response is read and no JavaScript runs. Tags are read from <head>; pass parse(html, { jsonldScope: \"document\" }) to include JSON-LD in <body>.",
+    "Images are in result.ogp.images as [{ url, secure_url, type, width, height, alt }]; structured og:image:* properties attach to the preceding og:image.",
+    "To render a result in React, use <Result> from @ogpeek/react and import \"@ogpeek/react/styles.css\". The components are SSR-safe and use no hooks."
+  ]
+}
