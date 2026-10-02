@@ -8,6 +8,7 @@ import {
   rawUrl,
   readSources,
   repoRoot,
+  stripFrontmatter,
   stripLogo,
   writeAll,
 } from "../../scripts/gen-llms.mjs";
@@ -32,6 +33,18 @@ describe("stripLogo", () => {
   });
 });
 
+describe("stripFrontmatter", () => {
+  it("removes a leading YAML frontmatter block", () => {
+    const md = "---\nname: ogpeek\ndescription: x\n---\n\n# ogpeek\n";
+    expect(stripFrontmatter(md)).toBe("# ogpeek\n");
+  });
+
+  it("leaves markdown without frontmatter untouched", () => {
+    const md = "# ogpeek\n\n---\n\ntext\n";
+    expect(stripFrontmatter(md)).toBe(md);
+  });
+});
+
 describe("buildIndex", () => {
   const out = buildIndex(CONFIG);
 
@@ -53,6 +66,19 @@ describe("buildIndex", () => {
     );
   });
 
+  it("tells agents when to pick ogpeek and what is easy to get wrong", () => {
+    expect(out).toContain("Use ogpeek when:");
+    expect(out).toContain("Things that are easy to get wrong:");
+  });
+
+  it("links the agent skill and the plugin install under For agents", () => {
+    expect(out).toContain("## For agents");
+    expect(out).toContain(
+      "https://raw.githubusercontent.com/minjun0219/ogpeek/main/skills/ogpeek/SKILL.md",
+    );
+    expect(out).toContain("/plugin marketplace add minjun0219/ogpeek");
+  });
+
   it("points at the inlined full docs under Optional", () => {
     expect(out).toContain("## Optional");
     expect(out).toContain("https://ogpeek.minjun.dev/llms-full.txt");
@@ -64,6 +90,7 @@ describe("buildFull", () => {
     root: '<p align="center"><img src="x"></p>\n\n# ogpeek\nroot-body\n',
     engine: "# ogpeek engine\nengine-body\n",
     react: "# @ogpeek/react\nreact-body\n",
+    skill: "---\nname: ogpeek\n---\n\n# ogpeek skill\nskill-body\n",
   };
   const out = buildFull(sources, CONFIG);
 
@@ -71,6 +98,11 @@ describe("buildFull", () => {
     expect(out).toContain("root-body");
     expect(out).toContain("engine-body");
     expect(out).toContain("react-body");
+    expect(out).toContain("skill-body");
+  });
+
+  it("drops the skill frontmatter", () => {
+    expect(out).not.toContain("name: ogpeek");
   });
 
   it("strips the root logo block", () => {
@@ -87,11 +119,12 @@ describe("buildFull", () => {
 });
 
 describe("readSources", () => {
-  it("reads all three READMEs from the real repo root", () => {
+  it("reads every source from the real repo root", () => {
     const s = readSources(repoRoot);
     expect(s.root.length).toBeGreaterThan(0);
     expect(s.engine.length).toBeGreaterThan(0);
     expect(s.react.length).toBeGreaterThan(0);
+    expect(s.skill.length).toBeGreaterThan(0);
   });
 
   it("throws when a source README is missing", () => {

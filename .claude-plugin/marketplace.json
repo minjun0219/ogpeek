@@ -1,0 +1,12 @@
+{
+  "name": "ogpeek",
+  "description": "ogpeek — peek into any page's Open Graph tags.",
+  "owner": { "name": "minjun0219", "url": "https://github.com/minjun0219" },
+  "plugins": [
+    {
+      "name": "ogpeek",
+      "source": "./",
+      "description": "Skill: fetch, parse and validate a page's Open Graph tags (plus favicons and JSON-LD) instead of hand-rolling a meta-tag scraper; debug broken link previews."
+    }
+  ]
+}

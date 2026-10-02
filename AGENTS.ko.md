@@ -19,6 +19,11 @@ ogpeek는 "어느 페이지든 오픈그래프 메타태그를 바로 들여다�
 - `website` — Next.js 15 App Router + TypeScript strict + Tailwind. 엔진의
   **예제 / 소개용 데모 사이트**다. 운영 도구가 아니라 "패키지 어떻게 쓰는지
   보여주는 자리". Cloudflare Workers 한 곳에만 배포한다.
+- `skills/ogpeek/SKILL.md` + `.claude-plugin/` — 코딩 에이전트에게 언제
+  ogpeek 을 고르고 어떻게 쓰는지 알려 주는 Agent Skill. Claude Code 플러그인
+  (`/plugin marketplace add minjun0219/ogpeek`)으로 설치된다. 엔진 동작(진입점,
+  `fetchHtml` 기본값, 주의점)을 다시 적어 둔 문서라, 그 동작을 바꾸는 PR 에서
+  함께 고쳐라. `scripts/gen-llms.mjs` 가 `llms-full.txt` 에도 넣는다.
 - workspace 내부에서는 `ogpeek`을 `workspace:*`로 참조한다. exports는
   `dist/*.js` / `dist/*.d.ts`를 가리키므로 website 스크립트(`dev`/`typecheck`/
   `cf:build`)는 `pnpm --filter ogpeek run build`를 선행 체인한다. ogpeek 소스를

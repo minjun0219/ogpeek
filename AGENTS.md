@@ -31,6 +31,12 @@ it.
   engine's **example / introductory demo site**. It's not a production tool —
   it's a place to show how the package is used. Deployed only to Cloudflare
   Workers.
+- `skills/ogpeek/SKILL.md` + `.claude-plugin/` — the Agent Skill that tells
+  coding agents when to pick ogpeek and how to use it, installable as a Claude
+  Code plugin (`/plugin marketplace add minjun0219/ogpeek`). It restates
+  engine behaviour (entry points, `fetchHtml` defaults, gotchas), so update
+  it in the same PR as any change to those. It is also inlined into
+  `llms-full.txt` by `scripts/gen-llms.mjs`.
 - Inside the workspace, both libraries are referenced as `workspace:*`.
   Their exports point at `dist/*.js` / `dist/*.d.ts`, so any consumer
   (the website, or `@ogpeek/react` consuming `ogpeek`) needs the upstream

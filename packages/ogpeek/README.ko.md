@@ -55,8 +55,10 @@ for (const w of result.warnings) {
 ### `parse(html: string, options?: ParseOptions): OgDebugResult`
 
 - `html` — 원문 HTML 문자열.
-- `options.url` — 상대 URL을 절대 URL로 해석할 때 기준이 되는 base. 없으면
-  원문에 선언된 `og:url` 을 base로 사용한다.
+- `options.url` — HTML을 가져온 URL (`fetchHtml` 의 `finalUrl` 을 넘긴다).
+  `og:url` 이 페이지의 실제 위치와 맞는지 확인하는 데 쓰인다
+  (`OG_URL_MISMATCH`). 상대 URL 값은 해석하지 않고 원문 그대로 반환하며
+  `URL_NOT_ABSOLUTE` 로 표시한다.
 - `options.jsonldScope` — `"head" | "document"`. JSON-LD 블록을 어디까지
   훑을지. 기본은 `"head"` 로 비용을 예측 가능한 범위에 두고, JSON-LD 가
   `<body>` 에 있는 페이지를 포함하려면 `"document"` 를 넘긴다.
@@ -199,6 +201,13 @@ Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forger
 | `INVALID_DIMENSION` | warn | width/height 정수 파싱 실패 |
 | `MISSING_PREFIX_ATTR` | info | `<html prefix>` 선언 없음 |
 | `JSONLD_PARSE_ERROR` | warn | `<script type="application/ld+json">` 블록이 JSON 으로 파싱 안됨 |
+
+## 에이전트용
+
+[Agent Skill](https://github.com/minjun0219/ogpeek/blob/main/skills/ogpeek/SKILL.md) 은 코딩 에이전트에게 ogpeek 을 써야 할 때, 어떤 진입점을
+고를지, 주의할 점(SSRF guard, 정적 HTML만 읽음, 상대 URL)을 알려 준다.
+Claude Code 에서는 `/plugin marketplace add minjun0219/ogpeek` 다음
+`/plugin install ogpeek@ogpeek`. 패키지에는 `llms.txt` 도 함께 들어 있다.
 
 ## 관련 프로젝트
 

@@ -56,8 +56,10 @@ for (const w of result.warnings) {
 ### `parse(html: string, options?: ParseOptions): OgDebugResult`
 
 - `html` — the raw HTML string.
-- `options.url` — the base used to resolve relative URLs to absolute URLs.
-  If omitted, the `og:url` declared in the document is used as the base.
+- `options.url` — the URL the HTML was fetched from (pass `finalUrl` from
+  `fetchHtml`). Used to check `og:url` against the page's real location
+  (`OG_URL_MISMATCH`). Relative URL values are not resolved — they are
+  returned as written and flagged `URL_NOT_ABSOLUTE`.
 - `options.jsonldScope` — `"head" | "document"`. Where to harvest
   `<script type="application/ld+json">` blocks from. Default is `"head"`
   to keep the scan cost predictable; pass `"document"` to also walk
@@ -210,6 +212,13 @@ Workers-compatible DoH guard.
 | `INVALID_DIMENSION` | warn | width/height failed integer parsing |
 | `MISSING_PREFIX_ATTR` | info | `<html prefix>` is not declared |
 | `JSONLD_PARSE_ERROR` | warn | a `<script type="application/ld+json">` block did not parse as JSON |
+
+## For agents
+
+An [Agent Skill](https://github.com/minjun0219/ogpeek/blob/main/skills/ogpeek/SKILL.md) tells coding agents when to use ogpeek, which entry
+point to pick, and the gotchas (SSRF guard, static HTML only, relative URLs).
+In Claude Code: `/plugin marketplace add minjun0219/ogpeek`, then
+`/plugin install ogpeek@ogpeek`. The package also ships `llms.txt`.
 
 ## Related projects
 

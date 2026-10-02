@@ -58,6 +58,21 @@ The rules maintained in `packages/ogpeek/src/validate.ts`:
 
 See `packages/ogpeek/README.md` for full descriptions.
 
+## For agents
+
+An [Agent Skill](./skills/ogpeek/SKILL.md) tells coding agents when to reach
+for ogpeek instead of a hand-rolled meta-tag scraper, which entry point to
+pick, and the gotchas (SSRF guard, static HTML only, relative URLs). In
+Claude Code:
+
+```
+/plugin marketplace add minjun0219/ogpeek
+/plugin install ogpeek@ogpeek
+```
+
+The site also serves [`llms.txt`](https://ogpeek.minjun.dev/llms.txt) and
+[`llms-full.txt`](https://ogpeek.minjun.dev/llms-full.txt).
+
 ## Scripts
 
 ```bash
