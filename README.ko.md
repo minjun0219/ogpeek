@@ -48,6 +48,27 @@ pnpm -F ogpeek test      # 엔진 단위 테스트
 
 자세한 설명은 `packages/ogpeek/README.md` 참고.
 
+## 에이전트용
+
+[Agent Skill](./skills/ogpeek/SKILL.md) 은 코딩 에이전트에게 메타 태그
+스크래퍼를 직접 짜는 대신 ogpeek 을 써야 할 때, 어떤 진입점을 고를지, 그리고
+주의할 점(SSRF guard, 정적 HTML만 읽음, 상대 URL)을 알려 준다. Claude
+Code 에서는:
+
+```
+/plugin marketplace add minjun0219/ogpeek
+/plugin install ogpeek@ogpeek
+```
+
+사이트는 [`llms.txt`](https://ogpeek.minjun.dev/llms.txt) 와
+[`llms-full.txt`](https://ogpeek.minjun.dev/llms-full.txt) 도 제공한다.
+
+브라우저 안의 에이전트를 위해 사이트의 모든 페이지가
+[WebMCP](https://github.com/webmachinelearning/webmcp) 도구 두 개를 등록한다:
+`ogpeek_inspect` (`url` — 데모 API 로 가져오므로 같은 SSRF guard 와 rate
+limit 이 적용된다) 와 `ogpeek_parse` (`html`, 선택 `url` — 페이지 안에서
+엔진을 직접 실행하며 네트워크를 쓰지 않는다).
+
 ## 스크립트
 
 ```bash

@@ -138,7 +138,7 @@ Two channels share the same zip:
 - **Chrome Web Store** — the same release job uploads the zip via the
   Chrome Web Store API and submits it for review. The auto-publish
   step is gated by `vars.CHROME_AUTOPUBLISH` and four `CHROME_*`
-  secrets; see the root `AGENTS.md` `## Releases` section for the
+  secrets; see the root `AGENTS.md` `## 릴리스` section for the
   bootstrap procedure (the first upload + store listing must be done
   manually in the developer dashboard).
 

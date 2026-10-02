@@ -212,7 +212,7 @@ jobs:
       # Chrome Web Store auto-publish. Starts working once the extension
       # ID from the first manual upload, the four secrets, and
       # vars.CHROME_AUTOPUBLISH=true are filled in (see AGENTS.md
-      # `## Releases` for the full procedure). While the variable is empty
+      # `## 릴리스` for the full procedure). While the variable is empty
       # the step itself is skipped, so the first release cycle is not
       # broken. `--auto-publish` submits for review right after the upload
       # — the actual publish time depends on Google's review.

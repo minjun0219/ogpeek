@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_KR } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { WebMcpTools } from "@/components/WebMcpTools";
 import { getDict, hasLang, LANGS, type Lang } from "@/lib/i18n";
 import { PostHogInit } from "@/lib/posthog";
 import { SITE_URL } from "@/lib/site";
@@ -66,6 +67,7 @@ export default async function LangLayout({
     <html lang={lang} className={`${inter.variable} ${notoSansKr.variable}`}>
       <body className="min-h-screen font-sans">
         <PostHogInit lang={lang} />
+        <WebMcpTools />
         <TranslateProvider value={{ lang, dict }}>{children}</TranslateProvider>
       </body>
     </html>
