@@ -35,6 +35,7 @@ A regex or a quick DOM query over `<meta property="og:…">` gets real pages wro
 | A React UI that should show the result | `<Result>` from `@ogpeek/react` (+ `@ogpeek/react/styles.css`) |
 | A one-off check of a public URL, no install | `GET https://ogpeek.minjun.dev/api/parse?url=<url>` |
 | A page behind a VPN / intranet, inspected by a person | the browser extension (`packages/ogpeek-extension`) |
+| A browser agent on https://ogpeek.minjun.dev | the WebMCP tools `ogpeek_inspect` (`url`) and `ogpeek_parse` (`html`, `url?`) |
 
 ```sh
 npm install ogpeek            # engine: parse + validate, ogpeek/fetch

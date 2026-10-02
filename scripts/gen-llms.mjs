@@ -58,6 +58,7 @@ Things that are easy to get wrong:
 
 - [Agent skill](${doc("skills/ogpeek/SKILL.md")}): when to use ogpeek, which entry point to pick, copyable code and gotchas (Agent Skills format). In Claude Code: \`/plugin marketplace add ${config.repo}\`, then \`/plugin install ogpeek@ogpeek\`
 - Demo API: \`GET ${config.site}/api/parse?url=<url>\` returns \`{ ok, finalUrl, status, redirects, result }\` as JSON (the same \`result\` as \`parse\`). Rate-limited per IP and public hosts only — install the package for repeated use.
+- WebMCP: pages on ${config.site} register two tools for in-browser agents — \`ogpeek_inspect\` (\`url\`; fetches through the demo API) and \`ogpeek_parse\` (\`html\`, optional \`url\`; runs ogpeek locally in the page, no network)
 
 ## Packages
 

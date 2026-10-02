@@ -79,6 +79,11 @@ describe("buildIndex", () => {
     expect(out).toContain("/plugin marketplace add minjun0219/ogpeek");
   });
 
+  it("names the WebMCP tools the site registers", () => {
+    expect(out).toContain("`ogpeek_inspect`");
+    expect(out).toContain("`ogpeek_parse`");
+  });
+
   it("points at the inlined full docs under Optional", () => {
     expect(out).toContain("## Optional");
     expect(out).toContain("https://ogpeek.minjun.dev/llms-full.txt");

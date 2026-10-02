@@ -63,6 +63,12 @@ Code 에서는:
 사이트는 [`llms.txt`](https://ogpeek.minjun.dev/llms.txt) 와
 [`llms-full.txt`](https://ogpeek.minjun.dev/llms-full.txt) 도 제공한다.
 
+브라우저 안의 에이전트를 위해 사이트의 모든 페이지가
+[WebMCP](https://github.com/webmachinelearning/webmcp) 도구 두 개를 등록한다:
+`ogpeek_inspect` (`url` — 데모 API 로 가져오므로 같은 SSRF guard 와 rate
+limit 이 적용된다) 와 `ogpeek_parse` (`html`, 선택 `url` — 페이지 안에서
+엔진을 직접 실행하며 네트워크를 쓰지 않는다).
+
 ## 스크립트
 
 ```bash

@@ -73,6 +73,12 @@ Claude Code:
 The site also serves [`llms.txt`](https://ogpeek.minjun.dev/llms.txt) and
 [`llms-full.txt`](https://ogpeek.minjun.dev/llms-full.txt).
 
+For agents in the browser, every page on the site registers two
+[WebMCP](https://github.com/webmachinelearning/webmcp) tools:
+`ogpeek_inspect` (`url` — fetches through the demo API, so the same SSRF
+guard and rate limit apply) and `ogpeek_parse` (`html`, optional `url` —
+runs the engine locally in the page, no network).
+
 ## Scripts
 
 ```bash

@@ -94,6 +94,10 @@ pnpm -F website cf:deploy  # 수동 배포 (부트스트랩·긴급용)
   PR로 받지 않는다.
 - 공개 모드 SSR(`/{lang}/inspect?url=...`) 역시 `/api/parse`와 동일한 per-IP rate limiter를
   공유해야 한다. 우회 경로를 만들지 마라.
+- `website/components/WebMcpTools.tsx` 가 브라우저 에이전트용 WebMCP 도구
+  (`ogpeek_inspect`, `ogpeek_parse`)를 등록한다. `ogpeek_inspect` 는 반드시
+  `/api/parse` 를 거쳐 같은 가드와 rate limiter 를 공유해야 하고,
+  `ogpeek_parse` 는 넘겨받은 HTML 만 파싱할 뿐 절대 fetch 하지 않는다.
 
 ## 배포
 

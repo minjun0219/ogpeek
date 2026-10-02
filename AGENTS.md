@@ -127,6 +127,10 @@ pnpm check:fix              # biome auto-fix (format + safe lint fixes)
   Missing any one of the four means the PR will not be accepted.
 - SSR page visits (`/{lang}/inspect?url=...`) must share the same per-IP rate
   limiter as `/api/parse`. Do not build a bypass path.
+- `website/components/WebMcpTools.tsx` registers the WebMCP tools
+  (`ogpeek_inspect`, `ogpeek_parse`) for in-browser agents. `ogpeek_inspect`
+  must keep going through `/api/parse` so it shares the guard and the rate
+  limiter; `ogpeek_parse` only ever parses HTML it is handed, never fetches.
 
 ## Deployment
 
