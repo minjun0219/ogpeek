@@ -55,8 +55,10 @@ msapplication 타일, `application-name` / `theme-color`, JSON-LD 블록)도 같
    - `AGENTS.md` 는 한국어로만 쓴다.
    - 커밋 메시지와 PR 제목은 Conventional Commits 접두어 뒤에 한국어 요약을 해라체 현재형으로 쓴다.
      예: `fix(website): 좁은 화면에서 헤더 메뉴가 꺾이지 않게 한다`. PR 본문도 한국어로 쓴다.
-   - 코드 주석과 README 는 영어로 쓴다. README 는 영어(`README.md`)와 한국어(`README.ko.md`) 두 벌을
-     같은 커밋에서 함께 고친다. changeset 설명은 CHANGELOG 에 그대로 실리므로 영어로 쓴다.
+   - 새로 쓰는 코드 주석은 한국어로 쓴다. 이미 영어로 쓴 주석은 그대로 두고, 코드를 고칠 때도 일부러
+     옮기지 않는다.
+   - README 는 영어(`README.md`)와 한국어(`README.ko.md`) 두 벌을 같은 커밋에서 함께 고친다.
+     changeset 설명은 CHANGELOG 에 그대로 실리므로 영어로 쓴다.
    - 한국어 글은 [korean-writing 스킬](https://github.com/minjun0219/skills/tree/main/skills/korean-writing)
      을 따른다. 영문이나 코드 뒤 조사는 띄어 쓴다(`ogpeek 을`, `` `parse` 가 ``).
    - PR 을 연 뒤에는 채팅에서 짧게 한국어로 정리해 알린다.
