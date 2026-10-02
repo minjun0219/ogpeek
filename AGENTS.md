@@ -26,6 +26,9 @@ msapplication 타일, `application-name` / `theme-color`, JSON-LD 블록)도 같
   쓰는지 알려 주는 Agent Skill 이다. Claude Code 플러그인(`/plugin marketplace add minjun0219/ogpeek`)
   으로 설치한다. 엔진 동작(진입점, `fetchHtml` 기본값, 주의점)을 다시 적어 둔 문서라서, 그 동작을 바꾸는
   PR 에서 함께 고쳐라. `scripts/gen-llms.mjs` 가 이 스킬을 `llms-full.txt` 에도 넣는다.
+- `context7.json` 은 Context7 이 이 레포를 색인할 때 쓰는 설정이다. `rules` 에 엔진 사용 규칙을
+  적어 두었으므로 공개 API 나 엔진 동작이 바뀌면 스킬과 함께 고쳐라. CI(`biome` job)가 Context7 이
+  공개한 스키마로 검증한다(설명 200자, 규칙 하나당 255자 등).
 - workspace 안에서 두 라이브러리는 `workspace:*` 로 참조한다. exports 가 `dist/*.js` 와
   `dist/*.d.ts` 를 가리키므로 소비하는 쪽(website, 또는 `ogpeek` 을 쓰는 `@ogpeek/react`)보다 상류를
   먼저 빌드해야 한다. 루트의 `pnpm libs:build` 가 위상 순서대로 빌드하고, website 의 `dev`, `build`,
