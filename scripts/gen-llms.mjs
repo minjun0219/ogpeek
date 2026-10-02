@@ -73,6 +73,7 @@ Things that are easy to get wrong:
 }
 
 // Drop a leading YAML frontmatter block (--- … ---), as in SKILL.md.
+// 맨 앞의 YAML frontmatter 블록(--- … ---)을 지운다. SKILL.md 가 이 형식이다.
 export function stripFrontmatter(md) {
   return md.replace(/^---\n[\s\S]*?\n---\n+/, "");
 }
