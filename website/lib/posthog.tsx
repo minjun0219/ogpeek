@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import type { Lang } from "./i18n";
 
-const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
+const KEY = process.env.POSTHOG_KEY;
+const HOST = process.env.POSTHOG_HOST ?? "https://us.i.posthog.com";
 
 /**
  * PostHog bootstrap.

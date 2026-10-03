@@ -28,7 +28,7 @@ const text = (value: string, isError = false): ToolResult => ({
 });
 
 function trackToolCall(tool: string, ok: boolean) {
-  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (!process.env.POSTHOG_KEY) {
     return;
   }
   import("posthog-js")
