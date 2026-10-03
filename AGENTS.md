@@ -138,10 +138,12 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
 커밋하지 않은 상태가 프로덕션에 올라가고, 다음 `main` 푸시가 그 상태를 말없이 덮어쓴다.
 
 Workers Builds 는 깨끗한 체크아웃에서 시작하므로 gitignore 된 파일은 그곳에 없다. `website/.env` 는
-gitignore 대상이다. `NEXT_PUBLIC_*` 값은 런타임에 읽지 않고 **`next build` 가 번들에 인라인**한다.
-그래서 브라우저 분석 키는 Workers Builds 환경변수에 넣어야 한다. Worker secret 은 번들에 들어가지
+gitignore 대상이다. `POSTHOG_KEY` · `POSTHOG_HOST` 는 런타임에 읽지 않고 `next.config.ts` 의 `env` 를 거쳐
+**`next build` 가 번들에 인라인**한다.
+그래서 브라우저 분석 키는 Workers Builds **프로덕션 트리거**의 빌드 변수에만 넣는다. 프리뷰 트리거와
+로컬에는 넣지 않고, 키가 없으면 PostHog 를 초기화하지 않는다. Worker secret 은 번들에 들어가지
 않으므로 쓸 수 없다. `cf:build` 는 먼저 `website/scripts/require-analytics-env.mjs` 를 실행해서
-`NEXT_PUBLIC_POSTHOG_KEY` 가 없으면 빌드를 실패시킨다. 일부러 분석 없이 배포하려면
+프로덕션 빌드(`WORKERS_CI_BRANCH=main`)에서 `POSTHOG_KEY` 가 없으면 빌드를 실패시킨다. 일부러 분석 없이 배포하려면
 `OGPEEK_ALLOW_NO_ANALYTICS=1` 을 설정한다. 이 가드를 넣기 전까지 ogpeek.dev 는 이벤트를 한 건도
 수집하지 못했다.
 

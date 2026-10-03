@@ -29,10 +29,12 @@ pnpm -F website cf:preview  # local wrangler preview
 pnpm -F website cf:deploy   # manual deploy (bootstrap/emergency, needs wrangler login)
 ```
 
-`NEXT_PUBLIC_*` values are inlined at build time, so the PostHog key belongs
-in the Workers Builds environment variables (not a Worker secret) — and in
-`website/.env` for local builds. `cf:build` refuses to run without it; set
-`OGPEEK_ALLOW_NO_ANALYTICS=1` to build without analytics on purpose.
+`POSTHOG_KEY` / `POSTHOG_HOST` are inlined at build time (via `env` in
+`next.config.ts`) and set only on production: they live in the Workers Builds
+production trigger's build variables (not a Worker secret, not a repo file).
+Without the key the app skips PostHog init. `cf:build` refuses to run without
+it only on the production build (`WORKERS_CI_BRANCH=main`); set
+`OGPEEK_ALLOW_NO_ANALYTICS=1` to ship without analytics on purpose.
 
 ## SSRF guard
 
