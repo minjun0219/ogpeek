@@ -1,7 +1,7 @@
 // Fails the Cloudflare build when the PostHog key is missing.
 //
-// POSTHOG_KEY is inlined by `next build` (listed under `env` in next.config.ts);
-// a build that runs without the key emits a bundle where `process.env.POSTHOG_KEY` survives
+// NEXT_PUBLIC_* values are inlined by `next build`; a build that runs without
+// the key emits a bundle where `process.env.NEXT_PUBLIC_POSTHOG_KEY` survives
 // as a live lookup, resolves to undefined in the browser, and PostHogInit
 // returns before init(). Nothing errors — analytics is simply never installed.
 // That is exactly how ogpeek.dev shipped with zero events: Workers Builds
@@ -30,7 +30,7 @@ const { loadEnvConfig } = nextEnv;
 const WEBSITE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const OPT_OUT = "OGPEEK_ALLOW_NO_ANALYTICS";
-const KEY = "POSTHOG_KEY";
+const KEY = "NEXT_PUBLIC_POSTHOG_KEY";
 const PRODUCTION_BRANCH = "main";
 
 // Resolve exactly the way next build will: real env first, then
