@@ -13,6 +13,10 @@
 // triggers, local builds and forks carry no key by design and pass silently.
 // A deliberately analytics-free production build sets
 // OGPEEK_ALLOW_NO_ANALYTICS=1.
+// 그래서 키는 Workers Builds 프로덕션 트리거의 빌드 변수에 두고, 이 가드가
+// cf:build 앞에서 키가 빠진 것을 드러낸다. 프로덕션 빌드(WORKERS_CI_BRANCH=main)만
+// 검사한다. 프리뷰 트리거·로컬 빌드·포크는 원래 키가 없으니 조용히 통과한다.
+// 분석 없이 프로덕션에 내보내려면 OGPEEK_ALLOW_NO_ANALYTICS=1 을 설정한다.
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 // @next/env is CJS — take the default export and destructure.
@@ -35,6 +39,7 @@ loadEnvConfig(WEBSITE_DIR, false, { info: () => {}, error: console.error });
 
 if (process.env.WORKERS_CI_BRANCH !== PRODUCTION_BRANCH) {
   // Not a production build — no key expected, nothing to say.
+  // 프로덕션 빌드가 아니다 — 키가 없는 게 정상이라 아무것도 출력하지 않는다.
 } else if (process.env[OPT_OUT] === "1") {
   console.log(`[analytics] ${OPT_OUT}=1 — building without PostHog.`);
 } else if (!process.env[KEY]) {
