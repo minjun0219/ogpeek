@@ -28,7 +28,7 @@ pnpm -F website cf:preview  # 로컬 wrangler 미리보기
 pnpm -F website cf:deploy   # 수동 배포 (부트스트랩·긴급용, wrangler login 필요)
 ```
 
-`POSTHOG_KEY` · `POSTHOG_HOST` 는 `next.config.ts` 의 `env` 로 빌드 타임에
+`NEXT_PUBLIC_POSTHOG_KEY` · `NEXT_PUBLIC_POSTHOG_HOST` 는 `NEXT_PUBLIC_*` 라서 빌드 타임에
 인라인되고, 프로덕션에만 넣는다. 값은 Workers Builds 프로덕션 트리거의 빌드
 변수에 둔다(Worker secret 은 번들에 닿지 않고, 저장소 파일에도 두지 않는다).
 키가 없으면 PostHog 를 초기화하지 않는다. `cf:build` 는 프로덕션 빌드

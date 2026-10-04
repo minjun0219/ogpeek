@@ -29,8 +29,7 @@ pnpm -F website cf:preview  # local wrangler preview
 pnpm -F website cf:deploy   # manual deploy (bootstrap/emergency, needs wrangler login)
 ```
 
-`POSTHOG_KEY` / `POSTHOG_HOST` are inlined at build time (via `env` in
-`next.config.ts`) and set only on production: they live in the Workers Builds
+`NEXT_PUBLIC_POSTHOG_KEY` / `NEXT_PUBLIC_POSTHOG_HOST` are inlined at build time (`NEXT_PUBLIC_*`) and set only on production: they live in the Workers Builds
 production trigger's build variables (not a Worker secret, not a repo file).
 Without the key the app skips PostHog init. `cf:build` refuses to run without
 it only on the production build (`WORKERS_CI_BRANCH=main`); set
