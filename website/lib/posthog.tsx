@@ -17,7 +17,7 @@ const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
  *   navigations into automatic $pageview / $pageleave capture.
  * - `lang` is registered as a super property right after init — before the
  *   automatic initial $pageview is flushed — and re-registered whenever the
- *   user switches languages, so every event splits by /en · /ko.
+ *   user switches languages, so every event splits by en · ko.
  */
 export function PostHogInit({ lang }: { lang: Lang }) {
   useEffect(() => {

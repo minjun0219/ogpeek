@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { UrlInput } from "@/components/UrlInput";
-import type { Dict, Lang } from "@/lib/i18n";
+import { type Dict, type Lang, langPath } from "@/lib/i18n";
 import { withBase } from "@/lib/site";
 
 // Pages with well-formed OG markup, so a first click shows a full result.
@@ -56,7 +56,7 @@ export function Hero({
           {EXAMPLES.map((example) => (
             <Link
               key={example}
-              href={`/${lang}/inspect?url=${encodeURIComponent(example)}`}
+              href={`${langPath(lang, "/inspect")}?url=${encodeURIComponent(example)}`}
               prefetch={false}
               className="rounded-full border border-[color:rgb(var(--border))] px-2.5 py-0.5 font-mono transition hover:border-[color:rgb(var(--accent))] hover:text-[color:rgb(var(--foreground))]"
             >
