@@ -39,7 +39,7 @@ export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
         {sections.map((s) => (
           <a
             key={s.id}
-            href={`/${lang}#${s.id}`}
+            href={withBase(`/${lang}#${s.id}`)}
             className="transition hover:text-[color:rgb(var(--foreground))]"
           >
             {s.label}
