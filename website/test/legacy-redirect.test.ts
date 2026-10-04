@@ -20,6 +20,12 @@ describe("legacyRedirect", () => {
       "https://ogpeek.minjun.dev/ko/inspect",
       "https://minjun.kim/ogpeek/ko/inspect",
     ],
+    ["https://ogpeek.minjun.dev/en/", "https://minjun.kim/ogpeek/"],
+    // pages below the root land on the no-slash form in one hop
+    ["https://ogpeek.minjun.dev/ko/", "https://minjun.kim/ogpeek/ko"],
+    ["https://ogpeek.dev/en/inspect/", "https://minjun.kim/ogpeek/inspect"],
+    ["https://ogpeek.minjun.dev/ogpeek/", "https://minjun.kim/ogpeek/"],
+    ["https://ogpeek.minjun.dev/ogpeek/ko/", "https://minjun.kim/ogpeek/ko"],
     // parallel-serving era
     ["https://ogpeek.minjun.dev/ogpeek", "https://minjun.kim/ogpeek/"],
     ["https://ogpeek.minjun.dev/ogpeek/ko", "https://minjun.kim/ogpeek/ko"],

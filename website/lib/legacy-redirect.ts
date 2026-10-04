@@ -7,13 +7,13 @@ import { BASE_PATH, LEGACY_HOSTS, SITE_ORIGIN } from "./site";
  * - "/ogpeek/…" from the period both hosts served the app → same path.
  * - "/en", "/en/…" from the lang-prefixed era → the unprefixed English page.
  * - anything else ("/", "/ko/…", "/inspect", "/api/…", files) → under the base.
- * The app root keeps its trailing slash ("/ogpeek/").
+ * The app root keeps its trailing slash ("/ogpeek/"); pages below it have none.
  * 옛 호스트의 경로를 minjun.kim/ogpeek/ 아래 주소로 옮긴다. 옛 호스트에는 세 세대의
  * URL 이 있었고, 어느 것이든 한 번에 지금 페이지로 간다.
  * - 두 호스트가 함께 서빙하던 때의 "/ogpeek/…" → 같은 경로.
  * - 언어 접두사 시절의 "/en", "/en/…" → 접두사 없는 영어 페이지.
  * - 그 밖("/", "/ko/…", "/inspect", "/api/…", 파일) → base 아래로.
- * 앱 루트는 끝 슬래시("/ogpeek/")를 유지한다.
+ * 앱 루트는 끝 슬래시("/ogpeek/")를 유지하고, 그 아래 페이지는 슬래시가 없다.
  */
 export function legacyTarget(pathname: string): string {
   let path = pathname;
@@ -22,6 +22,12 @@ export function legacyTarget(pathname: string): string {
   }
   if (path === "/en" || path.startsWith("/en/")) {
     path = path.slice("/en".length);
+  }
+  // Pages below the root drop a trailing slash ("/ko/" → "/ko") so the visitor
+  // does not take Next's 308 as a second hop.
+  // 루트 아래 페이지는 끝 슬래시를 뗀다("/ko/" → "/ko"). Next 의 308 을 한 번 더 거치지 않게 한다.
+  if (path.length > 1 && path.endsWith("/")) {
+    path = path.replace(/\/+$/, "");
   }
   return `${BASE_PATH}${path === "" ? "/" : path}`;
 }
