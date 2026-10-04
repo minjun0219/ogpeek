@@ -1,5 +1,13 @@
 # ogpeek-extension
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [[`5ac4480`](https://github.com/minjun0219/ogpeek/commit/5ac4480d679467c33a78cd99df89bf6462b04a9b)]:
+  - ogpeek@0.5.2
+  - @ogpeek/react@0.5.2
+
 ## 0.5.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "ogpeek",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Fetch, parse and validate any page's Open Graph tags — plus the favicons and JSON-LD that travel with them. One dependency; runs on Node, Bun, Workers and the browser.",
   "keywords": [
     "open-graph",
