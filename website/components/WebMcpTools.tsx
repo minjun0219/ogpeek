@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { withBase } from "@/lib/site";
 
 // WebMCP: pages can hand tools to an in-browser agent through
 // `navigator.modelContext.registerTool`. The API is still a proposal, so it is
@@ -52,7 +53,9 @@ async function inspect(input: Record<string, unknown>): Promise<ToolResult> {
   // limiter with every other way into the site.
   // 같은 출처의 API route 를 거치므로 사이트의 다른 경로와 같은 SSRF 가드와
   // IP 별 rate limiter 를 쓴다.
-  const res = await fetch(`/api/parse?url=${encodeURIComponent(url.trim())}`);
+  const res = await fetch(
+    withBase(`/api/parse?url=${encodeURIComponent(url.trim())}`),
+  );
   const body = await res.text();
   return text(body, !res.ok);
 }

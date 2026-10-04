@@ -1,3 +1,5 @@
+import { withBase } from "@/lib/site";
+
 // UTM tags let the personal site attribute visits that came from ogpeek.
 const AUTHOR_URL =
   "https://minjun.kim/?utm_source=ogpeek&utm_medium=referral&utm_content=footer";
@@ -26,7 +28,7 @@ export function Footer() {
         <span aria-hidden>·</span>
         <a
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
-          href="/llms.txt"
+          href={withBase("/llms.txt")}
         >
           llms.txt
         </a>

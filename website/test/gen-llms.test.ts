@@ -86,7 +86,7 @@ describe("buildIndex", () => {
 
   it("points at the inlined full docs under Optional", () => {
     expect(out).toContain("## Optional");
-    expect(out).toContain("https://ogpeek.minjun.dev/llms-full.txt");
+    expect(out).toContain("https://minjun.kim/ogpeek/llms-full.txt");
   });
 });
 

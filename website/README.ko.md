@@ -16,7 +16,10 @@ pnpm -F website typecheck
 ## 배포 — Cloudflare Workers 전용
 
 `@opennextjs/cloudflare` 어댑터로 빌드/배포한다. `wrangler.json` 은
-`nodejs_compat` 플래그를 켜둔 상태.
+`nodejs_compat` 플래그를 켜둔 상태이고, zone route 로 사이트를 `minjun.kim/ogpeek/`
+(Next `basePath`)에 붙인다. `worker.ts` 가 OpenNext 결과를 감싸서 옛 호스트
+(`ogpeek.minjun.dev`, `ogpeek.dev`)에서도 `/ogpeek` 아래로 같은 앱을 서빙한다.
+canonical 은 새 주소를 가리킨다.
 
 **`main` 에 푸시하는 것이 곧 배포다** — Workers Builds 가 `main` 커밋마다
 새 클론에서 빌드한다. 아래 명령은 로컬 확인용이고, `cf:deploy` 는 부트스트랩·

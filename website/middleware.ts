@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { LANGS, pickLangFromAcceptLanguage } from "@/lib/i18n";
-import { LEGACY_HOSTS, SITE_URL } from "@/lib/site";
 
 // Mirrors the Next.js i18n-routing reference example: every page lives under
 // /<lang>/. Requests without a lang prefix are redirected to /<picked-lang>
@@ -15,53 +14,21 @@ export function middleware(req: NextRequest): NextResponse {
     (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
   );
 
-  // Resolve the lang prefix up front so the host fold below can reuse it.
-  const lang = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
-  const langPath = hasPrefix
-    ? pathname
-    : pathname === "/"
-      ? `/${lang}`
-      : `/${lang}${pathname}`;
-
-  // Fold requests on former hosts into the canonical domain with a 301 so
-  // search signals consolidate. nextUrl.hostname is port-free, unlike the
-  // raw Host header (e.g. "ogpeek.dev:443").
-  //
-  // Two details are load-bearing, both about browsers caching a 301 with no
-  // expiry (RFC 9111 lets them keep it forever):
-  //
-  //   - Land on the lang-prefixed path in one hop. A browser that cached the
-  //     *previous* canonical swap still holds "ogpeek.minjun.dev/ → ogpeek.dev/",
-  //     so folding "/" onto "/" would bounce between the hosts forever. "/en"
-  //     was never a legacy source, so the chain terminates there.
-  //   - Bound the lifetime with Cache-Control. If the canonical ever moves
-  //     again, the stale entry expires instead of trapping the visitor.
-  //     Search engines treat the move as permanent regardless of this header.
-  //
-  // The cache entry is `private` and varies on Accept-Language because an
-  // unprefixed path resolves its Location from that header: a shared cache
-  // holding one visitor's "/en" answer would hand it to Korean visitors for
-  // the next hour. Only the visitor's own browser is meant to keep this.
-  if (LEGACY_HOSTS.includes(req.nextUrl.hostname)) {
-    const res = NextResponse.redirect(
-      `${SITE_URL}${langPath}${req.nextUrl.search}`,
-      301,
-    );
-    res.headers.set("cache-control", "private, max-age=3600");
-    res.headers.set("vary", "accept-language");
-    return res;
-  }
-
   if (hasPrefix) {
     return NextResponse.next();
   }
 
+  const lang = pickLangFromAcceptLanguage(req.headers.get("accept-language"));
   const url = req.nextUrl.clone();
-  url.pathname = langPath;
+  url.pathname = pathname === "/" ? `/${lang}` : `/${lang}${pathname}`;
   return NextResponse.redirect(url);
 }
 
 export const config = {
-  // Skip Next internals, the API route, and any static asset path.
-  matcher: ["/((?!_next/|api/|favicon\\.ico|.*\\..*).*)"],
+  // Skip Next internals, the API route, and any static asset path. "/" is
+  // listed on its own because with basePath the bare base ("/ogpeek") does
+  // not match the pattern below and would 404 instead of picking a language.
+  // Next 내부, API route, 정적 파일은 건너뛴다. basePath 를 켜면 base 그 자체
+  // ("/ogpeek")가 아래 패턴에 걸리지 않아 언어를 고르지 못하고 404 가 나므로 "/" 를 따로 둔다.
+  matcher: ["/", "/((?!_next/|api/|favicon\\.ico|.*\\..*).*)"],
 };

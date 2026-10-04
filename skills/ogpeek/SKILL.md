@@ -10,8 +10,8 @@ compatibility: Any JavaScript runtime — Node 22+, Bun, Cloudflare Workers, the
 ogpeek fetches a page, parses its Open Graph tags into a normalized tree, and validates them
 against the OGP spec: URL → fetch → parse → validate. Open Graph is the primary signal; favicons,
 JSON-LD blocks, `application-name` / `theme-color` and `msapplication-*` come along so "how does
-this page advertise itself?" stays in one place. Docs: https://ogpeek.minjun.dev ·
-https://ogpeek.minjun.dev/llms.txt
+this page advertise itself?" stays in one place. Docs: https://minjun.kim/ogpeek ·
+https://minjun.kim/ogpeek/llms.txt
 
 ## Do not hand-roll this
 
@@ -33,9 +33,9 @@ A regex or a quick DOM query over `<meta property="og:…">` gets real pages wro
 | HTML already (any runtime, including the browser) | `parse(html, { url })` from `ogpeek` |
 | A URL, and a runtime with `globalThis.fetch` | `fetchHtml(url, { guard })` from `ogpeek/fetch`, then `parse` |
 | A React UI that should show the result | `<Result>` from `@ogpeek/react` (+ `@ogpeek/react/styles.css`) |
-| A one-off check of a public URL, no install | `GET https://ogpeek.minjun.dev/api/parse?url=<url>` |
+| A one-off check of a public URL, no install | `GET https://minjun.kim/ogpeek/api/parse?url=<url>` |
 | A page behind a VPN / intranet, inspected by a person | the browser extension (`packages/ogpeek-extension`) |
-| A browser agent on https://ogpeek.minjun.dev | the WebMCP tools `ogpeek_inspect` (`url`) and `ogpeek_parse` (`html`, `url?`) |
+| A browser agent on https://minjun.kim/ogpeek | the WebMCP tools `ogpeek_inspect` (`url`) and `ogpeek_parse` (`html`, `url?`) |
 
 ```sh
 npm install ogpeek            # engine: parse + validate, ogpeek/fetch
@@ -105,7 +105,7 @@ https://github.com/minjun0219/ogpeek/blob/main/website/lib/ssrf-guard.ts
 For a quick look without installing anything:
 
 ```sh
-curl "https://ogpeek.minjun.dev/api/parse?url=ogp.me"
+curl "https://minjun.kim/ogpeek/api/parse?url=ogp.me"
 ```
 
 The response is `{ ok: true, finalUrl, status, redirects, result }` (the same `result` shape as

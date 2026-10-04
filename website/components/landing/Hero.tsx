@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { UrlInput } from "@/components/UrlInput";
 import type { Dict, Lang } from "@/lib/i18n";
+import { withBase } from "@/lib/site";
 
 // Pages with well-formed OG markup, so a first click shows a full result.
 const EXAMPLES = ["ogp.me", "github.com/minjun0219/ogpeek", "nextjs.org"];
@@ -27,7 +28,7 @@ export function Hero({
       {intro ? (
         <>
           <img
-            src="/logo.png"
+            src={withBase("/logo.png")}
             alt=""
             width={88}
             height={88}

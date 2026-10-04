@@ -70,8 +70,8 @@ Claude Code:
 /plugin install ogpeek@ogpeek
 ```
 
-The site also serves [`llms.txt`](https://ogpeek.minjun.dev/llms.txt) and
-[`llms-full.txt`](https://ogpeek.minjun.dev/llms-full.txt).
+The site also serves [`llms.txt`](https://minjun.kim/ogpeek/llms.txt) and
+[`llms-full.txt`](https://minjun.kim/ogpeek/llms-full.txt).
 
 For agents in the browser, every page on the site registers two
 [WebMCP](https://github.com/webmachinelearning/webmcp) tools:
