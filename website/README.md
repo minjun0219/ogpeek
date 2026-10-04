@@ -19,9 +19,9 @@ pnpm -F website typecheck
 Built and deployed via the `@opennextjs/cloudflare` adapter. `wrangler.json`
 keeps the `nodejs_compat` flag enabled and mounts the site at
 `minjun.kim/ogpeek/` (Next `basePath`) through zone routes. `worker.ts` wraps
-the OpenNext output so the former hosts (`ogpeek.minjun.dev`, `ogpeek.dev`)
-keep serving the same app under `/ogpeek`; canonical URLs point at the new
-address.
+the OpenNext output: it 301s the former hosts (`ogpeek.minjun.dev`,
+`ogpeek.dev`) to `minjun.kim/ogpeek/` and gives the app root its trailing
+slash.
 
 **Pushing to `main` is the deploy** — Workers Builds builds every `main`
 commit from a fresh clone. The commands below are for local verification;
