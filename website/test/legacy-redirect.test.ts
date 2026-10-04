@@ -47,6 +47,19 @@ describe("legacyRedirect", () => {
     });
   }
 
+  it("uses 308 for POST so the method and body survive", () => {
+    const res = legacyRedirect(
+      new Request("https://ogpeek.minjun.dev/api/parse", {
+        method: "POST",
+        body: '{"url":"ogp.me"}',
+      }),
+    );
+    expect(res?.status).toBe(308);
+    expect(res?.headers.get("location")).toBe(
+      "https://minjun.kim/ogpeek/api/parse",
+    );
+  });
+
   it("bounds the 301 cache", () => {
     const res = legacyRedirect(new Request("https://ogpeek.dev/"));
     expect(res?.headers.get("cache-control")).toBe("max-age=3600");

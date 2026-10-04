@@ -46,8 +46,13 @@ export function legacyRedirect(req: Request): Response | null {
   if (!LEGACY_HOSTS.includes(url.hostname)) {
     return null;
   }
+  // A 301 lets clients turn POST into GET and drop the body, which breaks
+  // `POST /api/parse`; 308 keeps the method and body for anything but GET/HEAD.
+  // 301 은 클라이언트가 POST 를 GET 으로 바꾸고 본문을 버리게 둔다(`POST /api/parse` 가
+  // 깨진다). GET/HEAD 가 아니면 메서드와 본문을 지키는 308 을 쓴다.
+  const safe = req.method === "GET" || req.method === "HEAD";
   return new Response(null, {
-    status: 301,
+    status: safe ? 301 : 308,
     headers: {
       location: `${SITE_ORIGIN}${legacyTarget(url.pathname)}${url.search}`,
       "cache-control": "max-age=3600",
