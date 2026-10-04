@@ -45,6 +45,9 @@ export function withBase(path: string): string {
  * canonical + hreflang alternate metadata for an en·ko page pair.
  * `path` is the route without the lang prefix ("" or "/inspect").
  * x-default is en, the unprefixed default language.
+ * en·ko 페이지 쌍의 canonical 과 hreflang alternate 메타데이터다. `path` 는
+ * 언어 접두사를 뺀 라우트("" 또는 "/inspect")이고, x-default 는 접두사 없는
+ * 기본 언어인 en 이다.
  */
 export function langAlternates(lang: Lang, path: "" | "/inspect") {
   return {

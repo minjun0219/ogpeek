@@ -9,6 +9,8 @@ export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
   // Section anchors point at the landing page (langPath + #id) so they work
   // from /inspect too; on the landing page the browser treats them as
   // same-document jumps.
+  // 섹션 앵커는 랜딩 페이지(langPath + #id)를 가리키므로 /inspect 에서도 동작하고,
+  // 랜딩 페이지에서는 브라우저가 같은 문서 안 이동으로 처리한다.
   const sections = [
     { id: "how", label: dict.nav.how },
     { id: "checks", label: dict.nav.checks },
