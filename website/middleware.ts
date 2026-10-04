@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { BASE_PATH } from "@/lib/site";
 
 // Every page lives under app/[lang]/, but only Korean shows its prefix in
 // the URL — English is the unprefixed default, the same layout as mdwire on
@@ -19,8 +20,18 @@ export function middleware(req: NextRequest): NextResponse {
   }
 
   const url = req.nextUrl.clone();
-  if (pathname === "/en" || pathname.startsWith("/en/")) {
-    url.pathname = pathname.slice("/en".length) || "/";
+  if (pathname === "/en") {
+    // Straight to the app root's trailing-slash form; a "/" pathname here
+    // would come out as "/ogpeek" and cost another hop (lib/root-slash.ts).
+    // 앱 루트의 끝 슬래시 형태로 바로 보낸다. 여기서 pathname 을 "/" 로 두면
+    // "/ogpeek" 이 되어 한 번 더 이동한다(lib/root-slash.ts).
+    return NextResponse.redirect(
+      new URL(`${BASE_PATH}/${req.nextUrl.search}`, req.url),
+      308,
+    );
+  }
+  if (pathname.startsWith("/en/")) {
+    url.pathname = pathname.slice("/en".length);
     return NextResponse.redirect(url, 308);
   }
 

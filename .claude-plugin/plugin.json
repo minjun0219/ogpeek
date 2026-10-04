@@ -2,7 +2,7 @@
   "name": "ogpeek",
   "description": "Inspect and validate any page's Open Graph tags — with the favicons and JSON-LD that travel with them — from Node, Bun, Workers or the browser.",
   "author": { "name": "minjun0219", "url": "https://github.com/minjun0219" },
-  "homepage": "https://minjun.kim/ogpeek",
+  "homepage": "https://minjun.kim/ogpeek/",
   "repository": "https://github.com/minjun0219/ogpeek",
   "license": "MIT",
   "keywords": [

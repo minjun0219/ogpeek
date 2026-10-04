@@ -56,7 +56,7 @@ describe("middleware", () => {
 
   describe("old /en URLs move to the unprefixed form", () => {
     const cases: Array<[string, string]> = [
-      ["/en", "/"],
+      ["/en", "/ogpeek/"],
       ["/en/inspect", "/inspect"],
       ["/en/inspect?url=ogp.me", "/inspect?url=ogp.me"],
     ];
