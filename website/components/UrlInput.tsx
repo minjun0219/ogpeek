@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
+import { langPath } from "@/lib/i18n";
 import { useTranslate } from "@/lib/translate-context";
 
 export function UrlInput({ compact = false }: { compact?: boolean }) {
@@ -32,7 +33,7 @@ export function UrlInput({ compact = false }: { compact?: boolean }) {
     setPending(true);
     const next = new URLSearchParams();
     next.set("url", trimmed);
-    router.push(`/${lang}/inspect?${next.toString()}`);
+    router.push(`${langPath(lang, "/inspect")}?${next.toString()}`);
   }
 
   return (

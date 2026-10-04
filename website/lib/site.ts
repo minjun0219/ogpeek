@@ -1,3 +1,5 @@
+import { type Lang, langPath } from "./i18n";
+
 /**
  * Path prefix the site is mounted under on the shared minjun.kim origin.
  * next.config.ts reads it as `basePath`. Next/Link, router.push and metadata
@@ -29,23 +31,28 @@ export const SITE_URL = `${SITE_ORIGIN}${BASE_PATH}`;
 /** Former hosts the worker entry keeps serving under BASE_PATH (lib/legacy-host.ts). */
 export const LEGACY_HOSTS = ["ogpeek.minjun.dev", "ogpeek.dev"];
 
-/** Prefixes a root-relative path with BASE_PATH. */
+/**
+ * Prefixes a root-relative path with BASE_PATH. The root maps to the bare
+ * base ("/ogpeek"), the canonical form without a trailing slash.
+ * 루트 기준 경로 앞에 BASE_PATH 를 붙인다. 루트는 끝 슬래시 없는 정본 형태인
+ * base 그 자체("/ogpeek")가 된다.
+ */
 export function withBase(path: string): string {
-  return `${BASE_PATH}${path}`;
+  return path === "/" ? BASE_PATH : `${BASE_PATH}${path}`;
 }
 
 /**
- * canonical + hreflang alternate metadata for an /en·/ko page pair.
+ * canonical + hreflang alternate metadata for an en·ko page pair.
  * `path` is the route without the lang prefix ("" or "/inspect").
- * x-default is en — the fallback the Accept-Language middleware picks.
+ * x-default is en, the unprefixed default language.
  */
-export function langAlternates(lang: string, path: "" | "/inspect") {
+export function langAlternates(lang: Lang, path: "" | "/inspect") {
   return {
-    canonical: withBase(`/${lang}${path}`),
+    canonical: withBase(langPath(lang, path)),
     languages: {
-      en: withBase(`/en${path}`),
-      ko: withBase(`/ko${path}`),
-      "x-default": withBase(`/en${path}`),
+      en: withBase(langPath("en", path)),
+      ko: withBase(langPath("ko", path)),
+      "x-default": withBase(langPath("en", path)),
     },
   };
 }

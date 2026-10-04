@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { LangToggle } from "@/components/LangToggle";
-import type { Dict, Lang } from "@/lib/i18n";
+import { type Dict, type Lang, langPath } from "@/lib/i18n";
 import { withBase } from "@/lib/site";
 
 const REPO_URL = "https://github.com/minjun0219/ogpeek";
 
 export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
-  // Section anchors are absolute (/{lang}#id) so they work from /inspect too;
-  // on the landing page the browser treats them as same-document jumps.
+  // Section anchors point at the landing page (langPath + #id) so they work
+  // from /inspect too; on the landing page the browser treats them as
+  // same-document jumps.
   const sections = [
     { id: "how", label: dict.nav.how },
     { id: "checks", label: dict.nav.checks },
@@ -18,7 +19,7 @@ export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
   return (
     <header className="flex items-center gap-4 border-b border-[color:rgb(var(--border))] pb-4">
       <Link
-        href={`/${lang}`}
+        href={langPath(lang)}
         prefetch={false}
         className="flex shrink-0 items-center gap-2 font-semibold tracking-tight"
       >
@@ -39,7 +40,7 @@ export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
         {sections.map((s) => (
           <a
             key={s.id}
-            href={withBase(`/${lang}#${s.id}`)}
+            href={`${withBase(langPath(lang))}#${s.id}`}
             className="transition hover:text-[color:rgb(var(--foreground))]"
           >
             {s.label}

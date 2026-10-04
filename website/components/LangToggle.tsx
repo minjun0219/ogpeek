@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { LANGS, type Lang, stripLangPrefix } from "@/lib/i18n";
+import { LANGS, type Lang, langPath, stripLangPrefix } from "@/lib/i18n";
 import { useTranslate } from "@/lib/translate-context";
 
 const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
@@ -15,9 +15,10 @@ export function LangToggle() {
   const query = searchParams.toString();
   const suffix = query ? `?${query}` : "";
   const base = stripLangPrefix(pathname);
+  const path = base === "/" ? "" : base;
   const HREF: Record<Lang, string> = {
-    en: base === "/" ? "/en" : `/en${base}`,
-    ko: base === "/" ? "/ko" : `/ko${base}`,
+    en: langPath("en", path),
+    ko: langPath("ko", path),
   };
 
   return (

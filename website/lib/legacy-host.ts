@@ -6,8 +6,8 @@ import { BASE_PATH, LEGACY_HOSTS } from "./site";
  *
  * The former hosts stay open next to minjun.kim/ogpeek/ until they are
  * merged later (hail-mary D-065). There is one build with `basePath`, and
- * Next never routes a path outside the base, so a bare "/en" on a former host
- * has to become "/ogpeek/en" before Next sees it. Paths already under the base
+ * Next never routes a path outside the base, so a bare "/inspect" on a former host
+ * has to become "/ogpeek/inspect" before Next sees it. Paths already under the base
  * — every link, asset and redirect the app emits — pass through unchanged, so
  * after the first navigation the address bar reads "<host>/ogpeek/…".
  *
@@ -15,7 +15,7 @@ import { BASE_PATH, LEGACY_HOSTS } from "./site";
  * 바꾼 요청을 돌려주고, 바꿀 것이 없으면 null 을 돌려준다.
  * 옛 호스트는 나중에 합칠 때까지 minjun.kim/ogpeek/ 와 함께 열어 둔다(hail-mary D-065).
  * 빌드는 `basePath` 하나이고 Next 는 base 밖 경로를 라우팅하지 않으므로, 옛 호스트의
- * "/en" 은 Next 에 닿기 전에 "/ogpeek/en" 이 되어야 한다. 앱이 내보내는 링크·에셋·
+ * "/inspect" 는 Next 에 닿기 전에 "/ogpeek/inspect" 가 되어야 한다. 앱이 내보내는 링크·에셋·
  * 리다이렉트처럼 이미 base 아래인 경로는 그대로 두므로, 한 번 이동하면 주소창은
  * "<host>/ogpeek/…" 가 된다.
  */

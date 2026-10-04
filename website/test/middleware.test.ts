@@ -4,74 +4,76 @@ import { middleware } from "../middleware";
 
 const ORIGIN = "https://minjun.kim";
 
-function makeReq(pathname: string, acceptLanguage: string | null): NextRequest {
+function run(pathname: string, acceptLanguage?: string) {
   const headers = new Headers();
-  if (acceptLanguage !== null) {
+  if (acceptLanguage) {
     headers.set("accept-language", acceptLanguage);
   }
-  return new NextRequest(new URL(pathname, ORIGIN), { headers });
+  return middleware(new NextRequest(new URL(pathname, ORIGIN), { headers }));
 }
 
 describe("middleware", () => {
-  describe("passthrough for lang-prefixed paths", () => {
-    const cases: Array<[string, string | null]> = [
-      ["/en", "ko-KR"],
-      ["/en/inspect", "ko"],
-      ["/ko", "en-US"],
-      ["/ko/inspect", null],
-      ["/en/a/b", "en"],
+  describe("unprefixed paths render English in place", () => {
+    const cases: Array<[string, string]> = [
+      ["/", "/en"],
+      ["/inspect", "/en/inspect"],
+      ["/a/b", "/en/a/b"],
     ];
-    for (const [path, accept] of cases) {
-      it(`${path} with accept-language=${accept ?? "(none)"} passes through`, () => {
-        const res = middleware(makeReq(path, accept));
-        // NextResponse.next() carries an x-middleware-next header.
-        expect(res.headers.get("x-middleware-next")).toBe("1");
+    for (const [path, target] of cases) {
+      it(`${path} rewrites to ${target}`, () => {
+        const res = run(path);
         expect(res.headers.get("location")).toBeNull();
+        const rewrite = res.headers.get("x-middleware-rewrite");
+        expect(rewrite && new URL(rewrite).pathname).toBe(target);
+      });
+    }
+
+    it("ignores Accept-Language — the URL alone picks the language", () => {
+      const res = run("/", "ko-KR,ko;q=0.9");
+      expect(res.headers.get("location")).toBeNull();
+      const rewrite = res.headers.get("x-middleware-rewrite");
+      expect(rewrite && new URL(rewrite).pathname).toBe("/en");
+    });
+
+    it("keeps the query string", () => {
+      const res = run("/inspect?url=https%3A%2F%2Fogp.me");
+      const rewrite = res.headers.get("x-middleware-rewrite");
+      expect(rewrite && new URL(rewrite).searchParams.get("url")).toBe(
+        "https://ogp.me",
+      );
+    });
+  });
+
+  describe("Korean passes through", () => {
+    for (const path of ["/ko", "/ko/inspect"]) {
+      it(`${path} passes through`, () => {
+        const res = run(path, "en-US");
+        expect(res.headers.get("location")).toBeNull();
+        expect(res.headers.get("x-middleware-next")).toBe("1");
       });
     }
   });
 
-  describe("non-prefixed paths redirect to /<picked-lang><path>", () => {
-    const cases: Array<[string, string | null, string]> = [
-      ["/", "ko-KR,ko;q=0.9", "/ko"],
-      ["/inspect", "ko", "/ko/inspect"],
-      ["/", "en-US", "/en"],
-      ["/inspect", "en", "/en/inspect"],
-      ["/", null, "/en"],
-      ["/a/b", "fr-FR", "/en/a/b"],
+  describe("old /en URLs move to the unprefixed form", () => {
+    const cases: Array<[string, string]> = [
+      ["/en", "/"],
+      ["/en/inspect", "/inspect"],
+      ["/en/inspect?url=ogp.me", "/inspect?url=ogp.me"],
     ];
-    for (const [path, accept, expected] of cases) {
-      it(`${path} (accept=${accept ?? "(none)"}) → ${expected}`, () => {
-        const res = middleware(makeReq(path, accept));
-        expect(res.status).toBe(307);
-        const loc = res.headers.get("location");
-        if (loc === null) {
-          throw new Error("expected redirect Location");
-        }
-        expect(new URL(loc).pathname).toBe(expected);
+    for (const [from, to] of cases) {
+      it(`${from} → 308 ${to}`, () => {
+        const res = run(from);
+        expect(res.status).toBe(308);
+        const loc = new URL(res.headers.get("location") ?? "");
+        expect(`${loc.pathname}${loc.search}`).toBe(to);
       });
     }
   });
 
-  it("preserves the query string when redirecting", () => {
-    const req = new NextRequest(
-      new URL("/inspect?url=https%3A%2F%2Fogp.me", ORIGIN),
-      { headers: new Headers({ "accept-language": "en" }) },
-    );
-    const res = middleware(req);
-    const loc = res.headers.get("location");
-    if (loc === null) {
-      throw new Error("expected redirect Location");
-    }
-    const u = new URL(loc);
-    expect(u.pathname).toBe("/en/inspect");
-    expect(u.searchParams.get("url")).toBe("https://ogp.me");
-  });
-
-  it("does not loop on lang-prefixed paths even with mismatched Accept-Language", () => {
-    // /en + Korean Accept-Language must pass through (no redirect to /ko/en).
-    const res = middleware(makeReq("/en", "ko-KR"));
-    expect(res.headers.get("location")).toBeNull();
-    expect(res.headers.get("x-middleware-next")).toBe("1");
+  it("does not treat /enable or /koala as a language prefix", () => {
+    const res = run("/enable");
+    const rewrite = res.headers.get("x-middleware-rewrite");
+    expect(rewrite && new URL(rewrite).pathname).toBe("/en/enable");
+    expect(run("/koala").headers.get("x-middleware-next")).toBeNull();
   });
 });

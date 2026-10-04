@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { LANGS } from "@/lib/i18n";
-import { SITE_URL } from "@/lib/site";
+import { LANGS, langPath } from "@/lib/i18n";
+import { SITE_ORIGIN, withBase } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Two static pages per language. Every localized URL gets its own entry
@@ -9,10 +9,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // out of the sitemap (their canonical collapses to /inspect).
   return ["", "/inspect"].flatMap((path) =>
     LANGS.map((lang) => ({
-      url: `${SITE_URL}/${lang}${path}`,
+      url: `${SITE_ORIGIN}${withBase(langPath(lang, path))}`,
       alternates: {
         languages: Object.fromEntries(
-          LANGS.map((l) => [l, `${SITE_URL}/${l}${path}`]),
+          LANGS.map((l) => [l, `${SITE_ORIGIN}${withBase(langPath(l, path))}`]),
         ),
       },
     })),

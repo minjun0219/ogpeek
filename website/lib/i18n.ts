@@ -349,34 +349,17 @@ export function hasLang(value: string): value is Lang {
   return value === "en" || value === "ko";
 }
 
-// Returns the first language we support that the browser explicitly prefers.
-// Falls back to DEFAULT_LANG when nothing matches. Only the language
-// subtag is used (so "ko-KR" matches "ko").
-export function pickLangFromAcceptLanguage(header: string | null): Lang {
-  if (!header) {
-    return DEFAULT_LANG;
+/**
+ * App path for a language. English, the default, carries no prefix; Korean
+ * lives under /ko. `path` is the language-agnostic part ("", "/inspect").
+ * 언어별 앱 경로다. 기본 언어인 영어는 접두사가 없고 한국어는 /ko 아래에 있다.
+ * `path` 는 언어와 무관한 부분("", "/inspect")이다.
+ */
+export function langPath(lang: Lang, path = ""): string {
+  if (lang === DEFAULT_LANG) {
+    return path === "" ? "/" : path;
   }
-  const tags = header
-    .split(",")
-    .map((entry) => {
-      const parts = entry.trim().split(";");
-      const tag = (parts[0] ?? "").toLowerCase();
-      const q = parts
-        .slice(1)
-        .map((p) => p.trim())
-        .find((p) => p.startsWith("q="));
-      const quality = q ? Number(q.slice(2)) : 1;
-      return { tag, quality: Number.isFinite(quality) ? quality : 0 };
-    })
-    .filter((t) => t.tag && t.quality > 0)
-    .sort((a, b) => b.quality - a.quality);
-  for (const { tag } of tags) {
-    const primary = tag.split("-")[0] ?? "";
-    if (hasLang(primary)) {
-      return primary;
-    }
-  }
-  return DEFAULT_LANG;
+  return `/${lang}${path}`;
 }
 
 export function format(
