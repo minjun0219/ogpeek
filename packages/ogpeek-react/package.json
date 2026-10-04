@@ -1,6 +1,6 @@
 {
   "name": "@ogpeek/react",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Drop-in React components that render ogpeek results — Open Graph preview card, validation panel, redirect flow and tag table. SSR-safe.",
   "keywords": [
     "open-graph",
