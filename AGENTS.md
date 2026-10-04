@@ -139,9 +139,10 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
 
 - Next `basePath` 는 `lib/site.ts` 의 `BASE_PATH` 하나에서 나온다. `Link`, `router.push`, 메타데이터 파일
   라우트는 base 를 알아서 붙이지만 날 `<a href>` · `<img src>` · `fetch()` 경로는 `withBase()` 로 붙인다.
-- 옛 호스트(`ogpeek.minjun.dev`, `ogpeek.dev`)의 301 은 `website/worker.ts`(OpenNext 를 감싸는 워커
-  엔트리)가 `lib/legacy-redirect.ts` 로 처리한다. basePath 밖 경로는 Next 가 라우팅하지 않으므로
-  middleware 로 옮기지 마라.
+- 옛 호스트(`ogpeek.minjun.dev`, `ogpeek.dev`)도 나중에 합칠 때까지 열어 둔다. `website/worker.ts`(OpenNext
+  를 감싸는 워커 엔트리)가 `lib/legacy-host.ts` 로 요청 경로 앞에 base 를 붙여 같은 앱을 서빙한다.
+  basePath 밖 경로는 Next 가 라우팅하지 않으므로 middleware 로 옮기지 마라. canonical · sitemap · OG URL 은
+  새 주소 기준이다.
 - localStorage 나 쿠키를 새로 쓰면 키에 `ogpeek` 접두사를 붙인다. 같은 origin 을 다른 사이트와 함께 쓴다.
 
 **`main` 에 푸시하면 그대로 배포된다.** 이 레포에 Workers Builds 가 연결되어 있어서 `main` 커밋마다

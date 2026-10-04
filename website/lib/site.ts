@@ -26,7 +26,7 @@ export const SITE_ORIGIN = "https://minjun.kim";
  */
 export const SITE_URL = `${SITE_ORIGIN}${BASE_PATH}`;
 
-/** Former hosts that the worker entry folds into SITE_URL via 301. */
+/** Former hosts the worker entry keeps serving under BASE_PATH (lib/legacy-host.ts). */
 export const LEGACY_HOSTS = ["ogpeek.minjun.dev", "ogpeek.dev"];
 
 /** Prefixes a root-relative path with BASE_PATH. */
