@@ -9,6 +9,7 @@
 // wrangler 가 그 빌드 다음에 번들한다.
 import { default as handler } from "./.open-next/worker.js";
 import { legacyRewrite } from "./lib/legacy-host";
+import { rootSlash } from "./lib/root-slash";
 
 export {
   BucketCachePurge,
@@ -19,7 +20,14 @@ export {
 type Env = { ASSETS: { fetch(request: Request): Promise<Response> } };
 
 export default {
-  async fetch(request: Request, env: Env, ctx: unknown) {
+  async fetch(incoming: Request, env: Env, ctx: unknown) {
+    // The app root ends in a slash ("/ogpeek/"); see lib/root-slash.ts.
+    // 앱 루트는 끝 슬래시("/ogpeek/")다. lib/root-slash.ts 참고.
+    const root = rootSlash(incoming);
+    if (root instanceof Response) {
+      return root;
+    }
+    const request = root ?? incoming;
     const rewritten = legacyRewrite(request);
     if (rewritten) {
       // Static files are served by the assets layer before this worker runs,

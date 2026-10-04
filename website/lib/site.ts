@@ -32,13 +32,14 @@ export const SITE_URL = `${SITE_ORIGIN}${BASE_PATH}`;
 export const LEGACY_HOSTS = ["ogpeek.minjun.dev", "ogpeek.dev"];
 
 /**
- * Prefixes a root-relative path with BASE_PATH. The root maps to the bare
- * base ("/ogpeek"), the canonical form without a trailing slash.
- * 루트 기준 경로 앞에 BASE_PATH 를 붙인다. 루트는 끝 슬래시 없는 정본 형태인
- * base 그 자체("/ogpeek")가 된다.
+ * Prefixes a root-relative path with BASE_PATH. The app root keeps its
+ * trailing slash ("/ogpeek/", hail-mary D-065); pages below follow Next's
+ * default of no slash.
+ * 루트 기준 경로 앞에 BASE_PATH 를 붙인다. 앱 루트는 끝 슬래시를 유지하고
+ * ("/ogpeek/", hail-mary D-065) 하위 페이지는 Next 기본대로 슬래시가 없다.
  */
 export function withBase(path: string): string {
-  return path === "/" ? BASE_PATH : `${BASE_PATH}${path}`;
+  return `${BASE_PATH}${path}`;
 }
 
 /**

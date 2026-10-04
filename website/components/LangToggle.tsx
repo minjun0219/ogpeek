@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { LANGS, type Lang, langPath, stripLangPrefix } from "@/lib/i18n";
+import { withBase } from "@/lib/site";
 import { useTranslate } from "@/lib/translate-context";
 
 const LABELS: Record<Lang, string> = { en: "EN", ko: "KO" };
@@ -29,11 +29,13 @@ export function LangToggle() {
       {LANGS.map((target) => {
         const active = target === lang;
         return (
-          <Link
+          // A plain <a>: next/link would render the English root as "/ogpeek"
+          // without the app root's trailing slash.
+          // 일반 <a> 다. next/link 는 영어 루트를 앱 루트의 끝 슬래시 없이 "/ogpeek" 으로 만든다.
+          <a
             key={target}
-            href={`${HREF[target]}${suffix}`}
+            href={`${withBase(HREF[target])}${suffix}`}
             aria-current={active ? "true" : undefined}
-            prefetch={false}
             className={cn(
               "rounded-full px-2.5 py-1 transition",
               active
@@ -42,7 +44,7 @@ export function LangToggle() {
             )}
           >
             {LABELS[target]}
-          </Link>
+          </a>
         );
       })}
     </nav>

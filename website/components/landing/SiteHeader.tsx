@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { LangToggle } from "@/components/LangToggle";
 import { type Dict, type Lang, langPath } from "@/lib/i18n";
 import { withBase } from "@/lib/site";
@@ -20,9 +19,11 @@ export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
 
   return (
     <header className="flex items-center gap-4 border-b border-[color:rgb(var(--border))] pb-4">
-      <Link
-        href={langPath(lang)}
-        prefetch={false}
+      {/* A plain <a>: next/link would render the root as "/ogpeek" without
+          the trailing slash. 일반 <a> 다. next/link 는 루트를 끝 슬래시 없는
+          "/ogpeek" 으로 만든다. */}
+      <a
+        href={withBase(langPath(lang))}
         className="flex shrink-0 items-center gap-2 font-semibold tracking-tight"
       >
         {/* biome-ignore lint/performance/noImgElement: 24px static logo, next/image adds nothing here */}
@@ -34,7 +35,7 @@ export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
           className="h-6 w-6"
         />
         ogpeek
-      </Link>
+      </a>
       <nav
         aria-label={dict.nav.ariaLabel}
         className="hidden flex-1 items-center gap-5 text-sm text-[color:rgb(var(--muted))] md:flex"
