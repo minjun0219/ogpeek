@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LangToggle } from "@/components/LangToggle";
 import type { Dict, Lang } from "@/lib/i18n";
+import { withBase } from "@/lib/site";
 
 const REPO_URL = "https://github.com/minjun0219/ogpeek";
 
@@ -23,7 +24,7 @@ export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
       >
         {/* biome-ignore lint/performance/noImgElement: 24px static logo, next/image adds nothing here */}
         <img
-          src="/logo.png"
+          src={withBase("/logo.png")}
           alt=""
           width={24}
           height={24}

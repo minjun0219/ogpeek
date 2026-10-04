@@ -5,7 +5,7 @@
 export const CONFIG = {
   repo: "minjun0219/ogpeek",
   branch: "main",
-  site: "https://ogpeek.minjun.dev",
+  site: "https://minjun.kim/ogpeek",
 };
 
 export function rawUrl(config, path) {

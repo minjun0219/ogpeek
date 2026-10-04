@@ -60,8 +60,8 @@ Code 에서는:
 /plugin install ogpeek@ogpeek
 ```
 
-사이트는 [`llms.txt`](https://ogpeek.minjun.dev/llms.txt) 와
-[`llms-full.txt`](https://ogpeek.minjun.dev/llms-full.txt) 도 제공한다.
+사이트는 [`llms.txt`](https://minjun.kim/ogpeek/llms.txt) 와
+[`llms-full.txt`](https://minjun.kim/ogpeek/llms-full.txt) 도 제공한다.
 
 브라우저 안의 에이전트를 위해 사이트의 모든 페이지가
 [WebMCP](https://github.com/webmachinelearning/webmcp) 도구 두 개를 등록한다:

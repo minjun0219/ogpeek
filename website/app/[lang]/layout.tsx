@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { WebMcpTools } from "@/components/WebMcpTools";
 import { getDict, hasLang, LANGS, type Lang } from "@/lib/i18n";
 import { PostHogInit } from "@/lib/posthog";
-import { SITE_URL } from "@/lib/site";
+import { SITE_ORIGIN } from "@/lib/site";
 import { TranslateProvider } from "@/lib/translate-context";
 import "../globals.css";
 import "@ogpeek/react/styles.css";
@@ -40,7 +40,7 @@ export async function generateMetadata({
   }
   const dict = getDict(lang);
   return {
-    metadataBase: new URL(SITE_URL),
+    metadataBase: new URL(SITE_ORIGIN),
     title: dict.meta.title,
     description: dict.meta.description,
     openGraph: {

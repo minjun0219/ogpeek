@@ -17,7 +17,10 @@ pnpm -F website typecheck
 ## Deployment — Cloudflare Workers only
 
 Built and deployed via the `@opennextjs/cloudflare` adapter. `wrangler.json`
-keeps the `nodejs_compat` flag enabled.
+keeps the `nodejs_compat` flag enabled and mounts the site at
+`minjun.kim/ogpeek/` (Next `basePath`) through zone routes. `worker.ts` wraps
+the OpenNext output and 301s the former hosts (`ogpeek.minjun.dev`,
+`ogpeek.dev`) to the new URL.
 
 **Pushing to `main` is the deploy** — Workers Builds builds every `main`
 commit from a fresh clone. The commands below are for local verification;

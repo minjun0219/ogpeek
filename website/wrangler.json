@@ -1,9 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ogpeek",
-  "main": ".open-next/worker.js",
+  "main": "worker.ts",
   "compatibility_date": "2025-09-23",
   "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "minjun.kim/ogpeek", "zone_name": "minjun.kim" },
+    { "pattern": "minjun.kim/ogpeek/*", "zone_name": "minjun.kim" },
+    { "pattern": "ogpeek.minjun.dev", "custom_domain": true },
+    { "pattern": "ogpeek.dev", "custom_domain": true }
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
