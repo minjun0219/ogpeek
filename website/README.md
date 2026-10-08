@@ -35,9 +35,13 @@ pnpm -F website cf:deploy   # manual deploy (bootstrap/emergency, needs wrangler
 
 `NEXT_PUBLIC_POSTHOG_KEY` / `NEXT_PUBLIC_POSTHOG_HOST` are inlined at build time (`NEXT_PUBLIC_*`) and set only on production: they live in the Workers Builds
 production trigger's build variables (not a Worker secret, not a repo file).
-Without the key the app skips PostHog init. `cf:build` refuses to run without
-it only on the production build (`WORKERS_CI_BRANCH=main`); set
-`OGPEEK_ALLOW_NO_ANALYTICS=1` to ship without analytics on purpose.
+Without both the app skips PostHog init — the host has no fallback, so a build
+never silently bypasses the reverse proxy. `cf:build` refuses to run without
+them only on the production build (`WORKERS_CI_BRANCH=main`); set
+`OGPEEK_ALLOW_NO_ANALYTICS=1` to ship without analytics on purpose. PostHog
+collects pageviews only (plus the `webmcp_tool_called` custom event): click
+autocapture, heatmaps, web vitals, exceptions, session replay and surveys are
+off in code, like the other apps on the minjun.kim origin.
 
 ## SSRF guard
 

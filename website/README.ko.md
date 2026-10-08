@@ -34,9 +34,12 @@ pnpm -F website cf:deploy   # 수동 배포 (부트스트랩·긴급용, wrangle
 `NEXT_PUBLIC_POSTHOG_KEY` · `NEXT_PUBLIC_POSTHOG_HOST` 는 `NEXT_PUBLIC_*` 라서 빌드 타임에
 인라인되고, 프로덕션에만 넣는다. 값은 Workers Builds 프로덕션 트리거의 빌드
 변수에 둔다(Worker secret 은 번들에 닿지 않고, 저장소 파일에도 두지 않는다).
-키가 없으면 PostHog 를 초기화하지 않는다. `cf:build` 는 프로덕션 빌드
-(`WORKERS_CI_BRANCH=main`)에서만 키가 없을 때 중단되고, 의도적으로 분석 없이
-배포하려면 `OGPEEK_ALLOW_NO_ANALYTICS=1`.
+둘 중 하나라도 없으면 PostHog 를 초기화하지 않는다. 호스트에는 폴백이 없어서
+리버스 프록시를 조용히 우회하는 빌드가 나가지 않는다. `cf:build` 는 프로덕션 빌드
+(`WORKERS_CI_BRANCH=main`)에서만 둘이 없을 때 중단되고, 의도적으로 분석 없이
+배포하려면 `OGPEEK_ALLOW_NO_ANALYTICS=1`. PostHog 는 페이지뷰(와 커스텀 이벤트
+`webmcp_tool_called`)만 모은다 — 클릭 자동 수집·히트맵·Web Vitals·예외·세션 녹화·설문은
+minjun.kim origin 의 다른 앱처럼 코드에서 끈다.
 
 ## SSRF 가드
 

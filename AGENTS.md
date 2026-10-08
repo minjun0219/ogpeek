@@ -154,11 +154,17 @@ Workers Builds 는 깨끗한 체크아웃에서 시작하므로 gitignore 된 �
 gitignore 대상이다. `NEXT_PUBLIC_POSTHOG_KEY` · `NEXT_PUBLIC_POSTHOG_HOST` 는 `NEXT_PUBLIC_*` 라서 런타임에 읽지 않고
 **`next build` 가 번들에 인라인**한다.
 그래서 브라우저 분석 키는 Workers Builds **프로덕션 트리거**의 빌드 변수에만 넣는다. 프리뷰 트리거와
-로컬에는 넣지 않고, 키가 없으면 PostHog 를 초기화하지 않는다. Worker secret 은 번들에 들어가지
-않으므로 쓸 수 없다. `cf:build` 는 먼저 `website/scripts/require-analytics-env.mjs` 를 실행해서
-프로덕션 빌드(`WORKERS_CI_BRANCH=main`)에서 `NEXT_PUBLIC_POSTHOG_KEY` 가 없으면 빌드를 실패시킨다. 일부러 분석 없이 배포하려면
-`OGPEEK_ALLOW_NO_ANALYTICS=1` 을 설정한다. 이 가드를 넣기 전까지 ogpeek.dev 는 이벤트를 한 건도
-수집하지 못했다.
+로컬에는 넣지 않고, 키나 호스트가 없으면 PostHog 를 초기화하지 않는다. 호스트에는 폴백을 두지 않는다 —
+posthog-js 기본값(`us.i.posthog.com`)으로 리버스 프록시를 조용히 우회하는 빌드를 막기 위해서다. Worker secret 은
+번들에 들어가지 않으므로 쓸 수 없다. `cf:build` 는 먼저 `website/scripts/require-analytics-env.mjs` 를 실행해서
+프로덕션 빌드(`WORKERS_CI_BRANCH=main`)에서 `NEXT_PUBLIC_POSTHOG_KEY` 나 `NEXT_PUBLIC_POSTHOG_HOST` 가 없으면
+빌드를 실패시킨다. 일부러 분석 없이 배포하려면 `OGPEEK_ALLOW_NO_ANALYTICS=1` 을 설정한다. 이 가드를 넣기
+전까지 ogpeek.dev 는 이벤트를 한 건도 수집하지 못했다.
+
+PostHog 는 minjun.kim origin 의 다른 앱(사이트·mdwire)과 같은 프로젝트·쿠키를 쓰고, 수집 범위도 같게 맞춘다.
+페이지뷰·떠남과 커스텀 이벤트 `webmcp_tool_called` 만 모으고, 클릭 자동 수집·히트맵·dead click·Web Vitals·예외·
+세션 녹화·설문은 `lib/posthog.tsx` 에서 명시적으로 끈다. full 번들이라 끄지 않으면 프로젝트 설정만으로 다시
+켜진다. 크롤러는 코드가 아니라 PostHog 프로젝트의 "내부·테스트 사용자 제외" 필터로 뺀다.
 
 ### SSRF 가드와 런타임
 
