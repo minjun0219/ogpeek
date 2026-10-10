@@ -102,12 +102,10 @@ jobs:
       - name: Build
         run: pnpm -F ogpeek build
 
+      # Auth is npm Trusted Publisher (OIDC) only, bound to this file name.
+      # npm 인증은 Trusted Publisher(OIDC)뿐이고, 이 파일 이름에 묶여 있다.
       - name: Publish to npm
         working-directory: packages/ogpeek
-        env:
-          # When secrets.NPM_AUTH_TOKEN is empty, the npm CLI falls back
-          # to OIDC (Trusted Publisher).
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: pnpm publish --access public --provenance --no-git-checks
 
   publish-ogpeek-react:
@@ -152,8 +150,6 @@ jobs:
 
       - name: Publish to npm
         working-directory: packages/ogpeek-react
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: pnpm publish --access public --provenance --no-git-checks
 
   publish-ogpeek-extension:
