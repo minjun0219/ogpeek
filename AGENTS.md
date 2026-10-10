@@ -231,6 +231,10 @@ npm 에는 두 패키지를 공개 배포한다. 엔진 `ogpeek` 과 React 컴�
   (`files: ["dist", "README.md", "LICENSE"]`). `prepack` 훅이 퍼블리시 직전에 빌드를 강제한다. 확장
   퍼블리시는 `GITHUB_TOKEN` 만 쓴다. npm 에는 접근하지 않고, 만든 태그에 `gh release upload --clobber`
   를 실행한다.
+- Trusted Publisher 연결은 워크플로 **파일 이름**(`release.yml`)에 묶이고 수정할 수 없다. 파일 이름을
+  바꾸면 npmjs.com 에서 두 패키지의 연결을 지우고 새 이름으로 다시 만든다. 이걸 빠뜨리면 npm 이
+  `E404 Not Found - PUT` 로 퍼블리시를 거부한다. `release-please.yml` 을 `release.yml` 로 바꾼 뒤
+  0.5.1 · 0.5.2 퍼블리시가 이 이유로 실패했다.
 - 버전을 묶는 trade-off: `ogpeek` 에 patch changeset 하나만 넣어도 내용이 바뀌지 않은 `@ogpeek/react` 와
   `ogpeek-extension` 의 새 버전이 함께 나간다. 세 패키지는 실제로 함께 움직이고, 묶음 태그와 Release 가
   현실과 맞으므로 받아들인다. CHANGELOG 항목은 패키지별 파일(`packages/*/CHANGELOG.md`, changesets 가
