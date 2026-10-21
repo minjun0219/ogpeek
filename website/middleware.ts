@@ -1,3 +1,13 @@
+// Next 16 deprecates the `middleware` file name in favor of `proxy`, but the
+// name stays on purpose. `proxy.ts` always runs on the Node.js runtime, which
+// OpenNext supports on Workers only as an experiment. As `middleware.ts` this
+// file runs on the edge runtime that OpenNext supports. That is why the build
+// prints a deprecation warning.
+// Next 16 은 `middleware` 파일 이름을 deprecated 로 두고 `proxy` 를 권하지만 이 파일은 일부러
+// 이름을 유지한다. `proxy.ts` 는 언제나 Node.js 런타임에서 실행되는데 OpenNext 는 Workers 에서
+// 이 런타임을 실험 기능으로만 지원한다. `middleware.ts` 로 두면 OpenNext 가 지원하는 edge
+// 런타임에서 실행된다. 빌드할 때 나오는 deprecated 경고는 이 때문이다.
+
 import { type NextRequest, NextResponse } from "next/server";
 import { BASE_PATH } from "@/lib/site";
 

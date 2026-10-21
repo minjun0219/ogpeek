@@ -28,7 +28,7 @@ debugging stays in one place.
   engine in the user's own browser, so it can inspect intranet hosts that
   the public demo can't reach. v1 builds Chrome only; Firefox / Safari
   manifests are scaffolded for follow-up.
-- `website` — a **demo site** built on Next.js 15 (App Router). It exists as
+- `website` — a **demo site** built on Next.js 16 (App Router). It exists as
   a usage example for the engine and as a landing page. Deployed only to
   Cloudflare Workers (via OpenNext).
 

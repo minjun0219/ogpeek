@@ -3,7 +3,7 @@
 > Korean: [README.ko.md](./README.ko.md)
 
 The **example / introductory demo site** for the `packages/ogpeek` engine.
-Built on Next.js 15 (App Router) and deployed only to Cloudflare Workers.
+Built on Next.js 16 (App Router) and deployed only to Cloudflare Workers.
 This is not a production tool — it is a place to show how the package is
 used.
 
