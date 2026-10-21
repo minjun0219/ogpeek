@@ -12,17 +12,19 @@ import {
   RULES,
   STEP_CODES,
 } from "./landing";
+import { prefersMarkdown } from "./prefers-markdown";
 import { SITE_ORIGIN, withBase } from "./site";
 
 // The landing page as Markdown, so an agent reads the page's own text
 // instead of HTML converted on its side. It is built from the dictionary and
 // constants the page renders (lib/i18n.ts, lib/landing.ts); a section added
-// to the page goes here too. The worker entry serves it, and the page points
+// to the page goes here too. The worker entry serves it at its own address
+// and, for an Accept that prefers Markdown, at the page URL; the page points
 // at it with rel="alternate".
 // 랜딩 페이지의 마크다운 사본이다. 에이전트가 자기 쪽에서 HTML 을 변환한 결과 대신 페이지의
 // 글을 그대로 읽는다. 페이지가 그리는 사전과 상수(lib/i18n.ts, lib/landing.ts)로 만들고,
-// 페이지에 섹션을 더하면 여기에도 더한다. 워커 엔트리가 응답하고, 페이지는
-// rel="alternate" 로 이 사본을 알린다.
+// 페이지에 섹션을 더하면 여기에도 더한다. 워커 엔트리가 사본 주소에서 응답하고, 마크다운을
+// 원하는 Accept 에는 페이지 주소에서도 응답한다. 페이지는 rel="alternate" 로 이 사본을 알린다.
 
 /**
  * Copy address per language, below BASE_PATH. Same rule as mdwire on the
@@ -168,25 +170,57 @@ function copyAt(pathname: string): Lang | null {
   );
 }
 
+// The language of the landing page at `pathname` ("/ogpeek/", "/ogpeek/ko"),
+// or null. Only the canonical address: Next 308s "/ogpeek/ko/".
+// `pathname` 이 랜딩 페이지("/ogpeek/", "/ogpeek/ko")인 언어이고, 아니면 null 이다. 정식
+// 주소만 본다. "/ogpeek/ko/" 는 Next 가 308 한다.
+function pageAt(pathname: string): Lang | null {
+  return LANGS.find((lang) => pathname === withBase(langPath(lang))) ?? null;
+}
+
 function markdownResponse(request: Request, lang: Lang): Response {
   const body = request.method === "HEAD" ? null : landingMarkdown(lang);
   return new Response(body, { headers: MARKDOWN_HEADERS });
 }
 
+// A page URL answers in two forms, so both carry `Vary: Accept`; a cache then
+// never hands one form to a request for the other. Next's own Vary (rsc, …)
+// stays.
+// 페이지 주소는 두 형태로 응답하므로 둘 다 `Vary: Accept` 를 단다. 그래야 캐시가 HTML 을
+// 원한 요청에 마크다운을 주거나 그 반대로 주지 않는다. Next 가 단 Vary(rsc, …)는 그대로 둔다.
+function varyAccept(response: Response): Response {
+  const out = new Response(response.body, response);
+  out.headers.append("vary", "Accept");
+  return out;
+}
+
 /**
- * Answers GET and HEAD at a copy address with the landing page's Markdown and
- * leaves every other request to `next` (the OpenNext handler).
- * 사본 주소로 온 GET·HEAD 에는 랜딩 페이지의 마크다운으로 응답하고, 나머지 요청은
+ * Answers GET and HEAD with the landing page's Markdown at a copy address,
+ * and at the page URL when the Accept header prefers Markdown
+ * (lib/prefers-markdown.ts). Every other request goes to `next` (the
+ * OpenNext handler).
+ * GET·HEAD 요청에 랜딩 페이지의 마크다운으로 응답한다. 사본 주소에서는 언제나, 페이지
+ * 주소에서는 Accept 헤더가 마크다운을 원할 때(lib/prefers-markdown.ts)다. 나머지 요청은
  * `next`(OpenNext 핸들러)에 넘긴다.
  */
 export async function serveLandingMarkdown(
   request: Request,
   next: () => Promise<Response>,
 ): Promise<Response> {
-  const safe = request.method === "GET" || request.method === "HEAD";
-  const lang = safe ? copyAt(new URL(request.url).pathname) : null;
-  if (lang) {
-    return markdownResponse(request, lang);
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return next();
   }
-  return next();
+  const { pathname } = new URL(request.url);
+  const copy = copyAt(pathname);
+  if (copy) {
+    return markdownResponse(request, copy);
+  }
+  const page = pageAt(pathname);
+  if (!page) {
+    return next();
+  }
+  const response = prefersMarkdown(request.headers.get("accept"))
+    ? markdownResponse(request, page)
+    : await next();
+  return varyAccept(response);
 }

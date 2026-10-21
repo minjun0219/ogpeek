@@ -120,7 +120,9 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
   limiter 를 써야 한다. `ogpeek_parse` 는 넘겨받은 HTML 만 파싱하고 fetch 하지 않는다.
 - 랜딩 페이지에는 마크다운 사본(`/ogpeek/index.md`, `/ogpeek/ko.md`)이 있다. `lib/landing-markdown.ts` 가
   페이지와 같은 사전(`lib/i18n.ts`)과 번역하지 않는 값(`lib/landing.ts`)으로 만들고 `worker.ts` 가
-  응답한다. 랜딩에 섹션이나 값을 더하면 사본에도 더한다.
+  응답한다. 랜딩에 섹션이나 값을 더하면 사본에도 더한다. 페이지 주소(`/ogpeek/`, `/ogpeek/ko`)도
+  `Accept` 가 마크다운을 원하면 사본으로 응답하고(`lib/prefers-markdown.ts`, mdwire 와 같은 규칙), 두 형태
+  모두 `Vary: Accept` 를 단다.
 
 ## 배포
 

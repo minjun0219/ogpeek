@@ -24,7 +24,14 @@ the OpenNext output: it 301s the former hosts (`ogpeek.minjun.dev`,
 slash. It also serves the landing page as Markdown at `/ogpeek/index.md` and
 `/ogpeek/ko.md` (`lib/landing-markdown.ts`, built from the page's own
 dictionary); the page points at the copy with
-`<link rel="alternate" type="text/markdown">`.
+`<link rel="alternate" type="text/markdown">`. The page URLs (`/ogpeek/`,
+`/ogpeek/ko`) answer with the copy as well when the `Accept` header prefers
+Markdown: `text/markdown` listed explicitly at a q no lower than HTML's, as
+Claude Code's WebFetch sends (`lib/prefers-markdown.ts`, the same rule as
+mdwire). Browsers and `Accept: */*` keep getting HTML, and both forms carry
+`Vary: Accept`. To check a deploy,
+`curl -sI -H 'Accept: text/markdown' https://minjun.kim/ogpeek/` shows
+`content-type: text/markdown` and `vary: Accept`.
 
 `_headers` holds the header rules for static assets (`llms.txt` and
 `llms-full.txt` get `charset=utf-8`). Workers Static Assets reads the file

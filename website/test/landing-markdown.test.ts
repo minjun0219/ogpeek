@@ -9,6 +9,16 @@ import {
 
 const ORIGIN = "https://minjun.kim";
 
+// Claude Code's WebFetch and a browser navigation.
+// Claude Code 의 WebFetch 와 브라우저 페이지 이동이다.
+const AGENT_ACCEPT = "text/markdown, text/html, */*";
+const BROWSER_ACCEPT =
+  "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+
+// Next already varies the landing page on its router headers.
+// Next 는 랜딩 페이지에 라우터 헤더로 Vary 를 이미 단다.
+const NEXT_VARY = "rsc, next-router-state-tree";
+
 // A stand-in for the OpenNext handler that records whether it was reached.
 // OpenNext 핸들러 대신 쓰고, 요청이 여기까지 왔는지 기록한다.
 function fakeNext() {
@@ -16,10 +26,17 @@ function fakeNext() {
   const next = async () => {
     calls.push(1);
     return new Response("<!doctype html>", {
-      headers: { "content-type": "text/html; charset=utf-8" },
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        vary: NEXT_VARY,
+      },
     });
   };
   return { next, calls };
+}
+
+function get(path: string, accept: string, method = "GET") {
+  return new Request(`${ORIGIN}${path}`, { method, headers: { accept } });
 }
 
 describe("MARKDOWN_PATHS", () => {
@@ -88,41 +105,86 @@ describe("landingMarkdown", () => {
 });
 
 describe("serveLandingMarkdown", () => {
-  it("answers the copy addresses with Markdown in the page's language", async () => {
-    for (const [path, lang] of [
-      ["/ogpeek/index.md", "en"],
-      ["/ogpeek/ko.md", "ko"],
-    ] as const) {
-      const { next, calls } = fakeNext();
+  describe("at a copy address", () => {
+    it("answers with Markdown in the page's language, whatever the Accept", async () => {
+      for (const [path, lang] of [
+        ["/ogpeek/index.md", "en"],
+        ["/ogpeek/ko.md", "ko"],
+      ] as const) {
+        for (const accept of [AGENT_ACCEPT, BROWSER_ACCEPT, "*/*"]) {
+          const { next, calls } = fakeNext();
+          const res = await serveLandingMarkdown(get(path, accept), next);
+          expect(calls).toHaveLength(0);
+          expect(res.status).toBe(200);
+          expect(res.headers.get("content-type")).toBe(
+            "text/markdown; charset=utf-8",
+          );
+          expect(res.headers.get("vary")).toBeNull();
+          expect(await res.text()).toBe(landingMarkdown(lang));
+        }
+      }
+    });
+
+    it("sends the headers without a body for HEAD", async () => {
+      const { next } = fakeNext();
       const res = await serveLandingMarkdown(
-        new Request(`${ORIGIN}${path}`),
+        get("/ogpeek/index.md", "*/*", "HEAD"),
         next,
       );
-      expect(calls).toHaveLength(0);
-      expect(res.status).toBe(200);
       expect(res.headers.get("content-type")).toBe(
         "text/markdown; charset=utf-8",
       );
-      expect(res.headers.get("vary")).toBeNull();
-      expect(await res.text()).toBe(landingMarkdown(lang));
-    }
+      expect(res.body).toBeNull();
+    });
   });
 
-  it("sends the headers without a body for HEAD", async () => {
-    const { next } = fakeNext();
-    const res = await serveLandingMarkdown(
-      new Request(`${ORIGIN}/ogpeek/index.md`, { method: "HEAD" }),
-      next,
-    );
-    expect(res.headers.get("content-type")).toBe(
-      "text/markdown; charset=utf-8",
-    );
-    expect(res.body).toBeNull();
+  describe("at the page URL", () => {
+    it("answers with Markdown when the Accept prefers it", async () => {
+      for (const [path, lang] of [
+        ["/ogpeek/", "en"],
+        ["/ogpeek/ko", "ko"],
+      ] as const) {
+        const { next, calls } = fakeNext();
+        const res = await serveLandingMarkdown(get(path, AGENT_ACCEPT), next);
+        expect(calls).toHaveLength(0);
+        expect(res.headers.get("content-type")).toBe(
+          "text/markdown; charset=utf-8",
+        );
+        expect(res.headers.get("vary")).toBe("Accept");
+        expect(await res.text()).toBe(landingMarkdown(lang));
+      }
+    });
+
+    it("leaves HTML to Next and adds Accept to its Vary", async () => {
+      for (const path of ["/ogpeek/", "/ogpeek/ko"]) {
+        for (const accept of [BROWSER_ACCEPT, "*/*", "text/html"]) {
+          const { next, calls } = fakeNext();
+          const res = await serveLandingMarkdown(get(path, accept), next);
+          expect(calls).toHaveLength(1);
+          expect(res.headers.get("content-type")).toBe(
+            "text/html; charset=utf-8",
+          );
+          expect(res.headers.get("vary")).toBe(`${NEXT_VARY}, Accept`);
+        }
+      }
+    });
+
+    it("sends the headers without a body for HEAD", async () => {
+      const { next } = fakeNext();
+      const res = await serveLandingMarkdown(
+        get("/ogpeek/", AGENT_ACCEPT, "HEAD"),
+        next,
+      );
+      expect(res.headers.get("vary")).toBe("Accept");
+      expect(res.body).toBeNull();
+    });
   });
 
-  it("leaves other methods and other paths to Next", async () => {
+  it("leaves other methods and other paths to Next untouched", async () => {
     const cases: Array<[string, string]> = [
       ["POST", "/ogpeek/index.md"],
+      ["POST", "/ogpeek/"],
+      ["GET", "/ogpeek/ko/"],
       ["GET", "/ogpeek/inspect"],
       ["GET", "/ogpeek/en.md"],
       ["GET", "/ogpeek/ko/index.md"],
@@ -131,11 +193,12 @@ describe("serveLandingMarkdown", () => {
     for (const [method, path] of cases) {
       const { next, calls } = fakeNext();
       const res = await serveLandingMarkdown(
-        new Request(`${ORIGIN}${path}`, { method }),
+        get(path, AGENT_ACCEPT, method),
         next,
       );
       expect(calls).toHaveLength(1);
       expect(res.headers.get("content-type")).toBe("text/html; charset=utf-8");
+      expect(res.headers.get("vary")).toBe(NEXT_VARY);
     }
   });
 });
