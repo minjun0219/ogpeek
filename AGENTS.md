@@ -110,7 +110,7 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
   ② `validate.ts` 의 구현,
   ③ `test/validate.test.ts` 의 테스트,
   ④ `packages/ogpeek/README.md` 의 표.
-  하나라도 빠지면 PR 을 받지 않는다. 웹사이트의 검증 항목 목록(`website/components/landing/Checks.tsx`
+  하나라도 빠지면 PR 을 받지 않는다. 웹사이트의 검증 항목 목록(`website/lib/landing.ts` 의 `RULES`
   와 `lib/i18n.ts` 의 `checks.rules`)은 `Record<WarningCode, …>` 타입이라서, 빠뜨리면 website 타입
   체크가 실패한다.
 - SSR 페이지 방문(`/{lang}/inspect?url=...`)은 `/api/parse` 와 같은 per-IP rate limiter 를 써야 한다.
@@ -118,6 +118,9 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
 - `website/components/WebMcpTools.tsx` 가 브라우저 에이전트용 WebMCP 도구(`ogpeek_inspect`,
   `ogpeek_parse`)를 등록한다. `ogpeek_inspect` 는 반드시 `/api/parse` 를 거쳐서 같은 가드와 rate
   limiter 를 써야 한다. `ogpeek_parse` 는 넘겨받은 HTML 만 파싱하고 fetch 하지 않는다.
+- 랜딩 페이지에는 마크다운 사본(`/ogpeek/index.md`, `/ogpeek/ko.md`)이 있다. `lib/landing-markdown.ts` 가
+  페이지와 같은 사전(`lib/i18n.ts`)과 번역하지 않는 값(`lib/landing.ts`)으로 만들고 `worker.ts` 가
+  응답한다. 랜딩에 섹션이나 값을 더하면 사본에도 더한다.
 
 ## 배포
 

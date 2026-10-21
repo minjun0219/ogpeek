@@ -21,7 +21,10 @@ keeps the `nodejs_compat` flag enabled and mounts the site at
 `minjun.kim/ogpeek/` (Next `basePath`) through zone routes. `worker.ts` wraps
 the OpenNext output: it 301s the former hosts (`ogpeek.minjun.dev`,
 `ogpeek.dev`) to `minjun.kim/ogpeek/` and gives the app root its trailing
-slash.
+slash. It also serves the landing page as Markdown at `/ogpeek/index.md` and
+`/ogpeek/ko.md` (`lib/landing-markdown.ts`, built from the page's own
+dictionary); the page points at the copy with
+`<link rel="alternate" type="text/markdown">`.
 
 `_headers` holds the header rules for static assets (`llms.txt` and
 `llms-full.txt` get `charset=utf-8`). Workers Static Assets reads the file

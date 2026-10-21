@@ -1,13 +1,12 @@
 import { Section } from "@/components/landing/Section";
 import type { Dict } from "@/lib/i18n";
-
-const PIPELINE = ["URL", "fetch", "parse", "validate", "preview"];
+import { PIPELINE, STEP_CODES } from "@/lib/landing";
 
 export function HowItWorks({ dict }: { dict: Dict }) {
   const steps = [
-    { code: "ogpeek/fetch", ...dict.how.steps.fetch },
-    { code: "parse()", ...dict.how.steps.parse },
-    { code: "result.warnings", ...dict.how.steps.validate },
+    { code: STEP_CODES.fetch, ...dict.how.steps.fetch },
+    { code: STEP_CODES.parse, ...dict.how.steps.parse },
+    { code: STEP_CODES.validate, ...dict.how.steps.validate },
   ];
 
   return (

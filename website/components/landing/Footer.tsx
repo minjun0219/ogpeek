@@ -1,3 +1,4 @@
+import { LICENSE_URL, REPO_URL } from "@/lib/landing";
 import { withBase } from "@/lib/site";
 
 // UTM tags let the personal site attribute visits that came from ogpeek.
@@ -10,7 +11,7 @@ export function Footer() {
       <div className="flex gap-3">
         <a
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
-          href="https://github.com/minjun0219/ogpeek"
+          href={REPO_URL}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -19,7 +20,7 @@ export function Footer() {
         <span aria-hidden>·</span>
         <a
           className="hover:text-[color:rgb(var(--foreground))] hover:underline"
-          href="https://github.com/minjun0219/ogpeek/blob/main/LICENSE"
+          href={LICENSE_URL}
           target="_blank"
           rel="noopener noreferrer"
         >
