@@ -21,6 +21,11 @@ pnpm -F website typecheck
 (`ogpeek.minjun.dev`, `ogpeek.dev`)를 `minjun.kim/ogpeek/` 로 301 하고, 앱 루트에
 끝 슬래시를 붙인다.
 
+`_headers` 는 정적 자산의 헤더 규칙이다(`llms.txt` · `llms-full.txt` 에 `charset=utf-8` 을
+붙인다). Workers Static Assets 는 이 파일을 자산 디렉터리 루트에서만 읽는데 OpenNext 는
+`public/` 을 base 경로 아래에 둔다. 그래서 `cf:build` 가 OpenNext 빌드 뒤에
+`.open-next/assets/_headers` 로 복사한다.
+
 **`main` 에 푸시하는 것이 곧 배포다** — Workers Builds 가 `main` 커밋마다
 새 클론에서 빌드한다. 아래 명령은 로컬 확인용이고, `cf:deploy` 는 부트스트랩·
 긴급용 경로다.

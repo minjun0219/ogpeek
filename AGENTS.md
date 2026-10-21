@@ -126,12 +126,16 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
 
 ### Cloudflare Workers
 
-`@opennextjs/cloudflare` 로 빌드한다. 설정 파일은 다음 셋이다.
+`@opennextjs/cloudflare` 로 빌드한다. 설정 파일은 다음 넷이다.
 
 - `website/wrangler.json`: `compatibility_flags: ["nodejs_compat"]` 가 필요하다.
   `compatibility_date` 는 `2025-09-23` 이다.
 - `website/open-next.config.ts`: OpenNext 어댑터 설정. 기본은 인메모리 캐시다.
 - `website/package.json`: `cf:build`, `cf:preview`, `cf:deploy` 스크립트.
+- `website/_headers`: 정적 자산의 헤더 규칙(`llms.txt` · `llms-full.txt` 의 `charset=utf-8`). Workers Static
+  Assets 는 자산 디렉터리 루트의 `_headers` 만 읽는데 OpenNext 는 `public/` 을 base 경로 아래
+  (`.open-next/assets/ogpeek/`)에 둔다. 그래서 `cf:build` 가 OpenNext 빌드 뒤에 `scripts/copy-asset-headers.mjs` 로
+  루트에 복사한다. `public/_headers` 는 읽히지 않는다. 규칙은 정적 자산에만 붙고 `worker.ts` 의 응답에는 붙지 않는다.
 
 사이트는 `minjun.kim/ogpeek/` 에 붙는다. minjun.kim 은 개인 사이트(Custom Domain)와 origin 을 함께
 쓰고, ogpeek 워커는 zone route `minjun.kim/ogpeek` · `minjun.kim/ogpeek/*` 로 그 앞에서 먼저 실행된다.

@@ -23,6 +23,12 @@ the OpenNext output: it 301s the former hosts (`ogpeek.minjun.dev`,
 `ogpeek.dev`) to `minjun.kim/ogpeek/` and gives the app root its trailing
 slash.
 
+`_headers` holds the header rules for static assets (`llms.txt` and
+`llms-full.txt` get `charset=utf-8`). Workers Static Assets reads the file
+only at the root of the assets directory, while OpenNext puts `public/` under
+the base path, so `cf:build` copies it to `.open-next/assets/_headers` after
+the OpenNext build.
+
 **Pushing to `main` is the deploy** — Workers Builds builds every `main`
 commit from a fresh clone. The commands below are for local verification;
 `cf:deploy` is a bootstrap / emergency path only.
