@@ -1,0 +1,18 @@
+# Header rules for Workers Static Assets. They are read only at the root of
+# the assets directory, so `cf:build` copies this file to
+# .open-next/assets/_headers (OpenNext puts `public/` under the base path).
+# The rules apply to static assets only, not to responses from worker.ts.
+# Workers Static Assets 의 헤더 규칙이다. 자산 디렉터리 루트에서만 읽히므로
+# `cf:build` 가 이 파일을 .open-next/assets/_headers 로 복사한다(OpenNext 는
+# `public/` 을 base 경로 아래에 둔다). 규칙은 정적 자산에만 붙고 worker.ts 의
+# 응답에는 붙지 않는다.
+
+# Cloudflare serves `.txt` as `text/plain` with no charset, and llms.txt
+# carries non-ASCII such as `—` and `→`.
+# Cloudflare 는 `.txt` 를 charset 없는 `text/plain` 으로 응답하는데, llms.txt
+# 에는 `—` · `→` 같은 비ASCII 문자가 있다.
+/ogpeek/llms.txt
+  Content-Type: text/plain; charset=utf-8
+
+/ogpeek/llms-full.txt
+  Content-Type: text/plain; charset=utf-8

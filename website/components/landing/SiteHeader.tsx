@@ -1,8 +1,7 @@
 import { LangToggle } from "@/components/LangToggle";
 import { type Dict, type Lang, langPath } from "@/lib/i18n";
+import { REPO_URL } from "@/lib/landing";
 import { withBase } from "@/lib/site";
-
-const REPO_URL = "https://github.com/minjun0219/ogpeek";
 
 export function SiteHeader({ lang, dict }: { lang: Lang; dict: Dict }) {
   // Section anchors point at the landing page (langPath + #id) so they work

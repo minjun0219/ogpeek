@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { UrlInput } from "@/components/UrlInput";
 import { type Dict, type Lang, langPath } from "@/lib/i18n";
+import { EXAMPLES } from "@/lib/landing";
 import { withBase } from "@/lib/site";
-
-// Pages with well-formed OG markup, so a first click shows a full result.
-const EXAMPLES = ["ogp.me", "github.com/minjun0219/ogpeek", "nextjs.org"];
 
 export function Hero({
   lang,

@@ -19,7 +19,20 @@ pnpm -F website typecheck
 `nodejs_compat` 플래그를 켜둔 상태이고, zone route 로 사이트를 `minjun.kim/ogpeek/`
 (Next `basePath`)에 붙인다. `worker.ts` 가 OpenNext 결과를 감싸서 옛 호스트
 (`ogpeek.minjun.dev`, `ogpeek.dev`)를 `minjun.kim/ogpeek/` 로 301 하고, 앱 루트에
-끝 슬래시를 붙인다.
+끝 슬래시를 붙인다. 랜딩 페이지의 마크다운 사본도 `/ogpeek/index.md` · `/ogpeek/ko.md` 에서
+응답한다(`lib/landing-markdown.ts`, 페이지와 같은 사전으로 만든다). 페이지는
+`<link rel="alternate" type="text/markdown">` 로 사본을 가리킨다. 페이지 주소(`/ogpeek/`,
+`/ogpeek/ko`)도 `Accept` 가 마크다운을 원하면 사본으로 응답한다. `text/markdown` 이 직접 적혀
+있고 그 q 가 HTML 의 q 이상이어야 한다(Claude Code 의 WebFetch 가 이렇게 요청한다.
+`lib/prefers-markdown.ts`, mdwire 와 같은 규칙). 브라우저와 `Accept: */*` 는 그대로 HTML 을 받고,
+두 형태 모두 `Vary: Accept` 를 단다. 배포 뒤에는
+`curl -sI -H 'Accept: text/markdown' https://minjun.kim/ogpeek/` 로 `content-type: text/markdown` 과
+`vary: Accept` 를 확인한다.
+
+`_headers` 는 정적 자산의 헤더 규칙이다(`llms.txt` · `llms-full.txt` 에 `charset=utf-8` 을
+붙인다). Workers Static Assets 는 이 파일을 자산 디렉터리 루트에서만 읽는데 OpenNext 는
+`public/` 을 base 경로 아래에 둔다. 그래서 `cf:build` 가 OpenNext 빌드 뒤에
+`.open-next/assets/_headers` 로 복사한다.
 
 **`main` 에 푸시하는 것이 곧 배포다** — Workers Builds 가 `main` 커밋마다
 새 클론에서 빌드한다. 아래 명령은 로컬 확인용이고, `cf:deploy` 는 부트스트랩·

@@ -1,25 +1,7 @@
 import type { WarningCode, WarningSeverity } from "ogpeek";
 import { Section } from "@/components/landing/Section";
 import type { Dict } from "@/lib/i18n";
-
-// Mirrors the severities in packages/ogpeek/src/validate.ts, ordered by
-// severity for display. Typed as a full Record so a new WarningCode fails
-// the website typecheck until it is listed here and in the dictionaries.
-const RULES: Record<WarningCode, WarningSeverity> = {
-  OG_TITLE_MISSING: "error",
-  OG_TYPE_MISSING: "error",
-  OG_IMAGE_MISSING: "error",
-  OG_URL_MISSING: "error",
-  OG_TITLE_TOO_LONG: "warn",
-  OG_URL_MISMATCH: "warn",
-  OG_TYPE_UNKNOWN: "warn",
-  URL_NOT_ABSOLUTE: "warn",
-  DUPLICATE_SINGLETON: "warn",
-  ORPHAN_STRUCTURED_PROPERTY: "warn",
-  INVALID_DIMENSION: "warn",
-  JSONLD_PARSE_ERROR: "warn",
-  MISSING_PREFIX_ATTR: "info",
-};
+import { RULES } from "@/lib/landing";
 
 const SEVERITY_TOKEN: Record<WarningSeverity, string> = {
   error: "--danger",

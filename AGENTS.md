@@ -110,7 +110,7 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
   ② `validate.ts` 의 구현,
   ③ `test/validate.test.ts` 의 테스트,
   ④ `packages/ogpeek/README.md` 의 표.
-  하나라도 빠지면 PR 을 받지 않는다. 웹사이트의 검증 항목 목록(`website/components/landing/Checks.tsx`
+  하나라도 빠지면 PR 을 받지 않는다. 웹사이트의 검증 항목 목록(`website/lib/landing.ts` 의 `RULES`
   와 `lib/i18n.ts` 의 `checks.rules`)은 `Record<WarningCode, …>` 타입이라서, 빠뜨리면 website 타입
   체크가 실패한다.
 - SSR 페이지 방문(`/{lang}/inspect?url=...`)은 `/api/parse` 와 같은 per-IP rate limiter 를 써야 한다.
@@ -118,6 +118,11 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
 - `website/components/WebMcpTools.tsx` 가 브라우저 에이전트용 WebMCP 도구(`ogpeek_inspect`,
   `ogpeek_parse`)를 등록한다. `ogpeek_inspect` 는 반드시 `/api/parse` 를 거쳐서 같은 가드와 rate
   limiter 를 써야 한다. `ogpeek_parse` 는 넘겨받은 HTML 만 파싱하고 fetch 하지 않는다.
+- 랜딩 페이지에는 마크다운 사본(`/ogpeek/index.md`, `/ogpeek/ko.md`)이 있다. `lib/landing-markdown.ts` 가
+  페이지와 같은 사전(`lib/i18n.ts`)과 번역하지 않는 값(`lib/landing.ts`)으로 만들고 `worker.ts` 가
+  응답한다. 랜딩에 섹션이나 값을 더하면 사본에도 더한다. 페이지 주소(`/ogpeek/`, `/ogpeek/ko`)도
+  `Accept` 가 마크다운을 원하면 사본으로 응답하고(`lib/prefers-markdown.ts`, mdwire 와 같은 규칙), 두 형태
+  모두 `Vary: Accept` 를 단다.
 
 ## 배포
 
@@ -126,12 +131,16 @@ pnpm check:fix              # biome 자동 수정 (포맷 + 안전한 린트 수
 
 ### Cloudflare Workers
 
-`@opennextjs/cloudflare` 로 빌드한다. 설정 파일은 다음 셋이다.
+`@opennextjs/cloudflare` 로 빌드한다. 설정 파일은 다음 넷이다.
 
 - `website/wrangler.json`: `compatibility_flags: ["nodejs_compat"]` 가 필요하다.
   `compatibility_date` 는 `2025-09-23` 이다.
 - `website/open-next.config.ts`: OpenNext 어댑터 설정. 기본은 인메모리 캐시다.
 - `website/package.json`: `cf:build`, `cf:preview`, `cf:deploy` 스크립트.
+- `website/_headers`: 정적 자산의 헤더 규칙(`llms.txt` · `llms-full.txt` 의 `charset=utf-8`). Workers Static
+  Assets 는 자산 디렉터리 루트의 `_headers` 만 읽는데 OpenNext 는 `public/` 을 base 경로 아래
+  (`.open-next/assets/ogpeek/`)에 둔다. 그래서 `cf:build` 가 OpenNext 빌드 뒤에 `scripts/copy-asset-headers.mjs` 로
+  루트에 복사한다. `public/_headers` 는 읽히지 않는다. 규칙은 정적 자산에만 붙고 `worker.ts` 의 응답에는 붙지 않는다.
 
 사이트는 `minjun.kim/ogpeek/` 에 붙는다. minjun.kim 은 개인 사이트(Custom Domain)와 origin 을 함께
 쓰고, ogpeek 워커는 zone route `minjun.kim/ogpeek` · `minjun.kim/ogpeek/*` 로 그 앞에서 먼저 실행된다.

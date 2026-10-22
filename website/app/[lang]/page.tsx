@@ -10,7 +10,9 @@ import { Section } from "@/components/landing/Section";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { PackageDetail } from "@/components/packages/PackageDetail";
 import { getDict, hasLang, type Lang } from "@/lib/i18n";
-import { langAlternates } from "@/lib/site";
+import { ENGINE_QUICK_START, PACKAGES } from "@/lib/landing";
+import { MARKDOWN_PATHS } from "@/lib/landing-markdown";
+import { langAlternates, withBase } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -25,17 +27,15 @@ export async function generateMetadata({
   if (!hasLang(lang)) {
     return {};
   }
-  return { alternates: langAlternates(lang, "") };
+  return {
+    alternates: {
+      ...langAlternates(lang, ""),
+      // The Markdown copy the worker entry serves (lib/landing-markdown.ts).
+      // 워커 엔트리가 응답하는 마크다운 사본이다(lib/landing-markdown.ts).
+      types: { "text/markdown": withBase(MARKDOWN_PATHS[lang]) },
+    },
+  };
 }
-
-const ENGINE_QUICK_START = `import { parse } from "ogpeek";
-import { fetchHtml } from "ogpeek/fetch";
-
-const { html, finalUrl } = await fetchHtml(url);
-const result = parse(html, { url: finalUrl });
-
-result.ogp.title; // normalized Open Graph tree
-result.warnings; // [{ code, severity, message }]`;
 
 export default async function Page({ params }: { params: Params }) {
   const { lang: rawLang } = await params;
@@ -62,13 +62,13 @@ export default async function Page({ params }: { params: Params }) {
         lead={dict.packages.sectionLead}
       >
         <PackageDetail
-          name="ogpeek"
-          pkg="ogpeek"
+          name={PACKAGES.engine.name}
+          pkg={PACKAGES.engine.name}
           tagline={dict.packages.engine.tagline}
           quickStartTitle={dict.packages.quickStartTitle}
           quickStartCode={ENGINE_QUICK_START}
-          npmHref="https://www.npmjs.com/package/ogpeek"
-          readmeHref="https://github.com/minjun0219/ogpeek/tree/main/packages/ogpeek#readme"
+          npmHref={PACKAGES.engine.npmHref}
+          readmeHref={PACKAGES.engine.readmeHref}
           npmLinkLabel={dict.packages.npmLink}
           readmeLinkLabel={dict.packages.readmeLink}
           badges={[
@@ -90,7 +90,7 @@ export default async function Page({ params }: { params: Params }) {
         <aside className="flex flex-col gap-3 rounded-2xl border border-dashed border-[color:rgb(var(--border))] px-6 py-5">
           <div className="flex flex-col gap-2">
             <h2 className="font-mono text-base font-medium tracking-tight">
-              @ogpeek/react
+              {PACKAGES.react.name}
             </h2>
             <div className="flex flex-wrap gap-2">
               {[
@@ -109,7 +109,7 @@ export default async function Page({ params }: { params: Params }) {
               ].map((badge) => (
                 <a
                   key={badge.src}
-                  href="https://www.npmjs.com/package/@ogpeek/react"
+                  href={PACKAGES.react.npmHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex"
@@ -130,11 +130,11 @@ export default async function Page({ params }: { params: Params }) {
               {dict.packages.react.tagline}
             </p>
           </div>
-          <InstallCopy pkg="@ogpeek/react" />
+          <InstallCopy pkg={PACKAGES.react.name} />
           <div className="flex flex-wrap gap-3 text-xs text-[color:rgb(var(--muted))]">
             <a
               className="hover:text-[color:rgb(var(--foreground))] hover:underline"
-              href="https://www.npmjs.com/package/@ogpeek/react"
+              href={PACKAGES.react.npmHref}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -143,7 +143,7 @@ export default async function Page({ params }: { params: Params }) {
             <span aria-hidden>·</span>
             <a
               className="hover:text-[color:rgb(var(--foreground))] hover:underline"
-              href="https://github.com/minjun0219/ogpeek/tree/main/packages/ogpeek-react#readme"
+              href={PACKAGES.react.readmeHref}
               target="_blank"
               rel="noopener noreferrer"
             >
