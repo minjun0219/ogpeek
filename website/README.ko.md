@@ -2,7 +2,7 @@
 
 > English: [README.md](./README.md)
 
-`packages/ogpeek` 엔진의 **예제 / 소개용 데모 사이트**. Next.js 15 (App
+`packages/ogpeek` 엔진의 **예제 / 소개용 데모 사이트**. Next.js 16 (App
 Router) 로 작성됐고 Cloudflare Workers 한 곳에만 배포한다. 운영용 도구가
 아니다 — 엔진을 어떻게 쓰는지 보여주는 자리.
 

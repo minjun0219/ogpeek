@@ -19,7 +19,7 @@ msapplication 타일, `application-name` / `theme-color`, JSON-LD 블록)도 같
   않고, 압축한 unpacked 확장을 GitHub Release 에 올린다. 같은 소스로 Chrome, Firefox, Safari 를
   빌드하며(`BROWSER=` 환경변수로 고른다) v1 파이프라인은 Chrome 만 출력한다. 나머지 매니페스트는 골격만
   있다.
-- `website` 는 Next.js 15 App Router + TypeScript strict + Tailwind 로 만든 엔진의 **예제·소개용 데모
+- `website` 는 Next.js 16 App Router + TypeScript strict + Tailwind 로 만든 엔진의 **예제·소개용 데모
   사이트**다. 운영 도구로 만들지 않았고, 패키지를 어떻게 쓰는지 보여 주는 곳이다. Cloudflare Workers
   한 곳에만 배포한다.
 - `skills/ogpeek/SKILL.md` 와 `.claude-plugin/` 은 코딩 에이전트에게 언제 ogpeek 을 고르고 어떻게
@@ -174,6 +174,25 @@ PostHog 는 minjun.kim origin 의 다른 앱(사이트·mdwire)과 같은 프로
 페이지뷰·떠남과 커스텀 이벤트 `webmcp_tool_called` 만 모으고, 클릭 자동 수집·히트맵·dead click·Web Vitals·예외·
 세션 녹화·설문은 `lib/posthog.tsx` 에서 명시적으로 끈다. full 번들이라 끄지 않으면 프로젝트 설정만으로 다시
 켜진다. 크롤러는 코드가 아니라 PostHog 프로젝트의 "내부·테스트 사용자 제외" 필터로 뺀다.
+
+### Next 16 과 OpenNext
+
+- website 의 `dev` 와 `build` 스크립트는 `--webpack` 으로 실행한다. `opennextjs-cloudflare build` 도 이
+  `build` 스크립트로 빌드하므로 `cf:build` 도 webpack 을 쓴다. Next 16 기본값인 Turbopack 으로 빌드하면
+  `[lang]` 아래 페이지에서 `og:image` 와 `twitter:image` 가 빠진다(16.4.2 에서 확인). Turbopack 으로
+  되돌리려면 두 태그가 나오는지 먼저 확인해라.
+- `website/middleware.ts` 를 `proxy.ts` 로 바꾸지 마라. `proxy` 는 Node.js 런타임에서만 실행된다.
+  OpenNext 는 Workers 에서 Node.js 미들웨어를 실험 기능으로만 지원한다. `middleware.ts` 로 두어야
+  OpenNext 가 지원하는 edge 런타임에서 실행된다. 빌드할 때 나오는 deprecated 경고는 이 때문이다.
+- `website/next-env.d.ts` 는 커밋하지 않는다. `next dev` 와 `next build` 가 서로 다른 내용으로 다시 쓰는
+  파일이다. website 의 `typecheck` 스크립트와 CI 는 `next typegen` 으로 이 파일과 `.next/types` 를 먼저
+  만든다.
+- 설치된 버전에 맞는 Next 문서가 `website/node_modules/next/dist/docs/` 에 있다. Next API 를 고치기 전에
+  학습 데이터 대신 이 문서를 읽어라. `next dev` 가 같은 안내를 영어 `website/AGENTS.md` 로 만들지 않게
+  `website/next.config.ts` 에서 `agentRules` 를 껐다.
+- OpenNext 는 빌드할 때 Next major 의 지원 기간을 검사한다. 출시 후 2년이 지났고 두 단계 위 major 도
+  나왔으면 `cf:build` 가 실패한다. OpenNext 1.20.12 는 2년만 검사해서 2026-10-21 에 Next 15 빌드가
+  멈췄다.
 
 ### SSRF 가드와 런타임
 
