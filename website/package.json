@@ -4,13 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm -w libs:build && pnpm -w gen:llms && next dev -p 3000",
-    "build": "pnpm -w libs:build && pnpm -w gen:llms && next build",
+    "dev": "pnpm -w libs:build && pnpm -w gen:llms && next dev --webpack -p 3000",
+    "build": "pnpm -w libs:build && pnpm -w gen:llms && next build --webpack",
     "start": "next start -p 3000",
-    "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "pnpm -w libs:build && tsc --noEmit",
+    "typecheck": "pnpm -w libs:build && next typegen && tsc --noEmit",
     "cf:build": "node scripts/require-analytics-env.mjs && pnpm -w libs:build && pnpm -w gen:llms && opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy"
@@ -18,15 +17,15 @@
   "dependencies": {
     "@ogpeek/react": "workspace:*",
     "ipaddr.js": "2.5.0",
-    "next": "15.5.28",
+    "next": "16.4.2",
     "ogpeek": "workspace:*",
     "posthog-js": "1.438.12",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "@next/env": "15.5.28",
-    "@opennextjs/cloudflare": "^1.20.12",
+    "@next/env": "16.4.2",
+    "@opennextjs/cloudflare": "^1.20.13",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

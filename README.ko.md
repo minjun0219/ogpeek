@@ -23,7 +23,7 @@ JSON-LD 블록)도 같은 자리에서 보여줘서 "이 페이지가 다른 곳
 - `packages/ogpeek` — `fetch` · `parse` · `validate`를 담당하는 순수 엔진.
   레포의 본체. 외부 의존성은 `htmlparser2` 하나. Node 22.19+ (개발은 Node
   24 LTS).
-- `website` — Next.js 15 (App Router) 기반 **데모 사이트**. 엔진 사용 예제이자
+- `website` — Next.js 16 (App Router) 기반 **데모 사이트**. 엔진 사용 예제이자
   랜딩. Cloudflare Workers (OpenNext) 한 곳에만 배포한다.
 
 ## 빠른 시작
