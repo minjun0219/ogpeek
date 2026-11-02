@@ -17,24 +17,24 @@
   "dependencies": {
     "@ogpeek/react": "workspace:*",
     "ipaddr.js": "2.5.0",
-    "next": "16.4.2",
+    "next": "16.4.3",
     "ogpeek": "workspace:*",
-    "posthog-js": "1.438.19",
+    "posthog-js": "1.442.1",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "@next/env": "16.4.2",
-    "@opennextjs/cloudflare": "^1.20.13",
+    "@next/env": "16.4.3",
+    "@opennextjs/cloudflare": "^1.20.14",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "autoprefixer": "10.6.1",
-    "postcss": "8.5.31",
+    "autoprefixer": "10.6.2",
+    "postcss": "8.5.32",
     "sharp": "^0.34.5",
     "tailwindcss": "3.4.19",
     "typescript": "5.9.3",
     "vitest": "2.1.9",
-    "wrangler": "^4.152.0"
+    "wrangler": "^4.156.0"
   }
 }
