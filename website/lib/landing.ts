@@ -1,5 +1,6 @@
 import type { WarningCode, WarningSeverity } from "ogpeek";
 import type { Lang } from "./i18n";
+import { SITE_URL } from "./site";
 
 // Landing-page values that are not translated. The page components and the
 // Markdown copy (lib/landing-markdown.ts) both read them, so the copy keeps
@@ -67,6 +68,15 @@ export const PACKAGES = {
     npmHref: "https://www.npmjs.com/package/@ogpeek/react",
     readmeHref: `${REPO_URL}/tree/main/packages/ogpeek-react#readme`,
   },
+} as const;
+
+// The demo site's own parse endpoint (app/api/parse/route.ts), shown in the
+// Packages section so agents and people find it without llms.txt.
+// 데모 사이트의 파싱 엔드포인트(app/api/parse/route.ts)다. llms.txt 를 열지 않아도
+// 찾을 수 있게 패키지 절에 보여 준다.
+export const DEMO_API = {
+  request: `GET ${SITE_URL}/api/parse?url=<url>`,
+  response: "{ ok, finalUrl, status, redirects, result }",
 } as const;
 
 export const EXTENSION_BADGE = "Chrome · MV3";

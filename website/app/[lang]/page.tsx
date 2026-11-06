@@ -10,7 +10,7 @@ import { Section } from "@/components/landing/Section";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { PackageDetail } from "@/components/packages/PackageDetail";
 import { getDict, hasLang, type Lang } from "@/lib/i18n";
-import { ENGINE_QUICK_START, PACKAGES } from "@/lib/landing";
+import { DEMO_API, ENGINE_QUICK_START, PACKAGES } from "@/lib/landing";
 import { MARKDOWN_PATHS } from "@/lib/landing-markdown";
 import { langAlternates, withBase } from "@/lib/site";
 
@@ -150,6 +150,22 @@ export default async function Page({ params }: { params: Params }) {
               {dict.packages.readmeLink}
             </a>
           </div>
+        </aside>
+
+        <aside className="flex flex-col gap-3 rounded-2xl border border-dashed border-[color:rgb(var(--border))] px-6 py-5">
+          <h2 className="font-mono text-base font-medium tracking-tight">
+            {dict.packages.api.title}
+          </h2>
+          <p className="text-sm leading-relaxed text-[color:rgb(var(--muted))]">
+            {dict.packages.api.body}
+          </p>
+          <pre className="overflow-x-auto rounded-lg border border-[color:rgb(var(--border))] bg-[color:rgb(var(--background))] px-4 py-3 text-xs leading-relaxed">
+            <code className="font-mono">{DEMO_API.request}</code>
+          </pre>
+          <p className="text-xs text-[color:rgb(var(--muted))]">
+            {dict.packages.api.responseLabel}:{" "}
+            <code className="font-mono">{DEMO_API.response}</code>
+          </p>
         </aside>
       </Section>
 

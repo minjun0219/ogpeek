@@ -97,6 +97,11 @@ describe("landingMarkdown", () => {
         expect(md).not.toMatch(/(^|[^`])<html prefix>/);
       });
 
+      it("shows the demo API with an absolute URL", () => {
+        expect(md).toContain(`\n### ${dict.packages.api.title}\n`);
+        expect(md).toContain(`GET ${ORIGIN}/ogpeek/api/parse?url=<url>`);
+      });
+
       it("links llms.txt with an absolute URL", () => {
         expect(md).toContain(`[llms.txt](${ORIGIN}/ogpeek/llms.txt)`);
       });

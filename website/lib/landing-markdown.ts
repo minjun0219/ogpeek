@@ -1,6 +1,7 @@
 import type { WarningCode, WarningSeverity } from "ogpeek";
 import { getDict, LANGS, type Lang, langPath } from "./i18n";
 import {
+  DEMO_API,
   ENGINE_QUICK_START,
   EXAMPLES,
   EXTENSION_BADGE,
@@ -143,6 +144,16 @@ export function landingMarkdown(lang: Lang): string {
     "```",
     "",
     packageLinks(PACKAGES.react, npmLink, readmeLink),
+    "",
+    `### ${dict.packages.api.title}`,
+    "",
+    text(dict.packages.api.body),
+    "",
+    "```http",
+    DEMO_API.request,
+    "```",
+    "",
+    `${dict.packages.api.responseLabel}: \`${DEMO_API.response}\``,
     "",
     `## ${dict.extension.title}`,
     "",

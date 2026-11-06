@@ -70,6 +70,7 @@ export type Dict = {
     quickStartTitle: string;
     engine: { tagline: string };
     react: { tagline: string };
+    api: { title: string; body: string; responseLabel: string };
     npmLink: string;
     readmeLink: string;
   };
@@ -204,6 +205,11 @@ const en: Dict = {
       tagline:
         "If you render results in React, you can drop in the same Result, Preview, ValidationPanel, RedirectFlow, and TagTable components this site uses.",
     },
+    api: {
+      title: "Demo API",
+      body: "Want to try it without installing? This site's endpoint fetches a URL and returns the parse result as JSON, the same result object as parse(). It is rate-limited per IP and only reaches public hosts, so install the package for repeated use.",
+      responseLabel: "Response",
+    },
     npmLink: "View on npm",
     readmeLink: "README",
   },
@@ -332,6 +338,11 @@ const ko: Dict = {
     react: {
       tagline:
         "React에서 결과를 렌더링한다면, 이 사이트가 쓰는 Result, Preview, ValidationPanel, RedirectFlow, TagTable 컴포넌트를 그대로 가져다 쓸 수 있습니다.",
+    },
+    api: {
+      title: "데모 API",
+      body: "설치하기 전에 먼저 써 보고 싶다면 이 사이트의 엔드포인트를 부르세요. URL을 가져와서 엔진과 같은 파싱 결과를 JSON으로 돌려줍니다. IP마다 요청 수를 제한하고 공개 호스트만 가져오므로, 자주 쓴다면 패키지를 설치하세요.",
+      responseLabel: "응답",
     },
     npmLink: "npm에서 보기",
     readmeLink: "README",
